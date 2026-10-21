@@ -1,0 +1,26 @@
+WeSarafi Optimized Original Edition — Source Verification
+Date: 2026-09-05
+
+Completed in this build environment:
+- PHP syntax lint: 211 PHP files checked, 0 syntax errors.
+- Route/controller static check: 216 controller actions referenced by routes, 0 missing methods.
+- Blade static asset check: 0 missing literal public asset() references.
+- External page-load dependency scan: 0 HTTP(S) <script>/<link> CDN assets in Blade views.
+- Boxicons scan: 99 bx-* classes referenced by views, 0 missing glyph definitions in the slim local bundle.
+- JavaScript syntax checks: resources/js/app.js, vite.config.js, postcss.config.js and tailwind.config.js passed node --check.
+- Sensitive/runtime release cleanup: no .env, no SQL/SQLite dumps, no logs, no client backups, no uploaded customer files; public/uploads contains only the stock no_image.jpg placeholder.
+
+Important runtime boundary:
+This environment does not provide Composer and could not complete npm dependency download, so Laravel migrations, PHPUnit integration tests and the final Vite production build were not executed here. The project keeps the original composer.lock and package-lock.json. On the target Mac/server use `composer install` and `npm ci`, then run `php artisan test` and `npm run build` exactly as documented in README.md.
+
+Key release changes:
+- Original WeSarafi UI/navigation/workflows retained.
+- Remote UI CDNs removed; application libraries compile locally.
+- Icon CSS reduced from ~1.28 MB source to ~84 KB source before later utility additions/compression.
+- Duplicate session middleware removed.
+- Performance indexes added for core transaction/account/customer/remittance queries.
+- Grouped journals centralized through TransactionService::postMany() and AFN debit/credit balance validation.
+- OperationalLedgerService delegates to the central grouped posting engine.
+- FX rate/currency/COA repeated lookups cached within the request.
+- Regression tests added for balanced/unbalanced grouped journal posting.
+- Province migration rollback typo fixed.

@@ -1,0 +1,1 @@
+<div class="row g-3"><div class="col-lg-2">{{ $sidebar }}</div><div class="col-lg-10"><div class="card shadow-sm border-0"><div class="card-body">{{ $slot }}</div></div></div></div>

@@ -1,0 +1,12 @@
+@extends('layouts.layoutMaster') @section('title','Exchange Rates') @section('content')<div class="row g-3"><div class="col-lg-2">@include('layouts.menu.exchange-sidebar')</div><div class="col-lg-10"><div class="card"><div class="card-header"><h4>Branch Exchange Rates</h4></div><div class="card-body">
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+@if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
+@php
+    $formatRate = static function ($value) {
+        if ($value === null || $value === '') return '';
+        $formatted = rtrim(rtrim(number_format((float) $value, 8, '.', ''), '0'), '.');
+        return str_contains($formatted, '.') && strlen(explode('.', $formatted)[1]) > 2
+            ? $formatted : number_format((float) $value, 2, '.', '');
+    };
+@endphp
+<form class="row g-2 mb-3"><div class="col"><select name="branch_id" class="form-select">@foreach($branches as $b)<option value="{{$b->id}}" @selected($branch==$b->id)>{{$b->name}}</option>@endforeach</select></div><div class="col"><input type="date" name="date" value="{{$date}}" class="form-control"></div><div class="col"><button class="btn btn-outline-primary">Load</button></div></form><form method="post" action="{{route('exchange.rates.store')}}">@csrf<input type="hidden" name="branch_id" value="{{$branch}}"><input type="hidden" name="date" value="{{$date}}"><table class="table"><thead><tr><th>Currency</th><th>Opening rate (AFN)</th><th>Closing rate (AFN)</th></tr></thead><tbody>@foreach($currencies as $c) @php($group=$rates->get($c->id,collect())) @php($open=$group->firstWhere('type','open')) @php($close=$group->firstWhere('type','close'))<tr><td>{{$c->code}} — {{$c->name}}</td><td><input type="number" step="any" min=".000001" name="rates[{{$c->id}}][open]" value="{{ $c->code === 'AFN' ? '1' : $formatRate(old('rates.'.$c->id.'.open', $open?->rate_afn_per_unit)) }}" @readonly($c->code === 'AFN') class="form-control" required></td><td><input type="number" step="any" min=".000001" name="rates[{{$c->id}}][close]" value="{{ $c->code === 'AFN' ? '1' : $formatRate(old('rates.'.$c->id.'.close', $close?->rate_afn_per_unit)) }}" @readonly($c->code === 'AFN') class="form-control"></td></tr>@endforeach</tbody></table><button class="btn btn-primary">Save rates</button></form></div></div></div></div>@endsection

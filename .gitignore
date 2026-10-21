@@ -1,0 +1,60 @@
+# WeSarafi: local secrets, credentials, and workstation settings
+.env
+.env.*
+!.env.example
+/auth.json
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.key
+
+# Dependencies and generated frontend files
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+
+# Financial records, uploads and backups are server-specific
+/public/uploads/*
+!/public/uploads/.gitignore
+!/public/uploads/no_image.jpg
+/public/assets/backups/
+/storage/app/backups/
+/storage/app/restore-*/
+/database/*.sqlite
+*.sql
+*.dump
+*.bak
+*.backup
+
+# Laravel runtime artifacts
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/framework/testing/
+/storage/framework/maintenance.php
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/pail/
+/storage/*.key
+/bootstrap/cache/*.php
+.phpunit.result.cache
+/.phpunit.cache/
+
+# Local test outputs and operating-system metadata
+/tmp/
+/__MACOSX/
+.DS_Store
+._*
+Thumbs.db
+/.fleet/
+/.idea/
+/.nova/
+/.vscode/
+/.zed/
+.phpactor.json
+Homestead.json
+Homestead.yaml

@@ -1,0 +1,107 @@
+@extends('layouts.layoutMaster')
+@section('title', __('Exchanges'))
+@section('content')
+<div class="row g-3"><div class="col-lg-2">@include('layouts.menu.exchange-sidebar')</div><div class="col-lg-10">
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+@if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+
+<div class="exchange-hero mb-4"><div><span class="eyebrow">{{ __('Foreign Exchange Desk') }}</span><h3>{{ __('Exchanges') }}</h3><p>{{ __('Live system-rate comparison and profit/loss preview before posting.') }}</p></div><button type="button" id="toggleExchange" class="btn btn-primary" aria-controls="exchangeEditor" aria-expanded="{{ $errors->any() ? 'true' : 'false' }}">{{ $errors->any() ? __('Cancel') : __('New exchange') }}</button></div>
+
+<div id="exchangeEditor" class="card exchange-card mb-4" @if(!$errors->any()) hidden @endif><div class="card-body p-lg-4"><form method="post" action="{{ route('exchange.customers.store') }}" id="exchangeForm" enctype="multipart/form-data">@csrf
+<div class="row g-3">
+    <div class="col-md-3"><label class="form-label">{{ __('Branch') }}</label><select name="branch_id" id="exchangeBranch" class="form-select" required>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected(old('branch_id',auth()->user()->branch_id)==$branch->id)>{{ $branch->name }}</option>@endforeach</select></div>
+    <div class="col-md-3"><label class="form-label">{{ __('Date') }}</label><input type="date" name="date" id="exchangeDate" value="{{ old('date',now()->toDateString()) }}" class="form-control" required></div>
+    <div class="col-md-6"><label class="form-label">{{ __('Customer') }}</label><select name="customer_id" id="exchangeCustomer" class="form-select"><option value="">{{ __('Walk-in customer') }}</option>@foreach($customers as $customer)<option value="{{ $customer->id }}" @selected(old('customer_id')==$customer->id)>{{ $customer->account_code }} — {{ $customer->full_name }}</option>@endforeach</select></div>
+
+    <div class="col-lg-5"><div class="currency-panel sell-panel"><span class="panel-label">{{ __('Customer sells') }}</span><div class="row g-2"><div class="col-5"><select name="from_currency_id" id="sellCurrency" class="form-select no-select2" required>@foreach($currencies as $currency)<option value="{{ $currency->id }}" data-code="{{ $currency->code }}" @selected(old('from_currency_id')==$currency->id)>{{ $currency->code }}</option>@endforeach</select></div><div class="col-7"><input type="number" step="any" min=".0001" name="from_amount" id="sellAmount" value="{{ old('from_amount') }}" class="form-control form-control-lg" placeholder="0.00" required></div></div></div></div>
+    <div class="col-lg-2"><div class="operator-panel"><label>{{ __('Operator') }}</label><select name="rate_operator" id="rateOperator" class="form-select no-select2"><option value="multiply" @selected(old('rate_operator')==='multiply')>× {{ __('Multiply') }}</option><option value="divide" @selected(old('rate_operator','divide')==='divide')>÷ {{ __('Divide') }}</option></select><button type="button" id="swapCurrencies" class="btn btn-outline-primary btn-sm"><i class="bx bx-refresh"></i> {{ __('Swap') }}</button></div></div>
+    <div class="col-lg-5"><div class="currency-panel buy-panel"><span class="panel-label">{{ __('Customer receives') }}</span><div class="row g-2"><div class="col-5"><select name="to_currency_id" id="buyCurrency" class="form-select no-select2" required>@foreach($currencies as $currency)<option value="{{ $currency->id }}" data-code="{{ $currency->code }}" @selected(old('to_currency_id')==$currency->id)>{{ $currency->code }}</option>@endforeach</select></div><div class="col-7"><div class="result-amount" id="buyAmount">0.00</div></div></div></div></div>
+
+    <div class="col-md-4"><label class="form-label">{{ __('Exchange rate') }}</label><input type="number" step="any" min=".00000001" name="rate" id="exchangeRate" value="{{ old('rate') }}" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">{{ __('System rate') }}</label><input type="number" step="any" min=".00000001" name="system_rate" id="systemRate" value="{{ old('system_rate') }}" class="form-control" required><small class="text-muted">{{ __('Enter a custom system rate for this exchange.') }}</small> <button type="button" id="useSystemRate" class="btn btn-link btn-sm p-0">{{ __('Reset to system rate') }}</button></div>
+    <div class="col-md-4"><label class="form-label">{{ __('Rate variance') }}</label><div class="readonly-metric" id="rateVariance">—</div></div>
+    <div class="col-md-4"><label class="form-label">{{ __('Commission') }}</label><input type="number" step="any" min="0" name="commission_amount" value="{{ old('commission_amount',0) }}" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">{{ __('System result') }}</label><div class="readonly-metric" id="systemResult">—</div></div>
+    <div class="col-md-4"><label class="form-label">{{ __('Estimated profit / loss') }}</label><div class="readonly-metric fw-bold" id="profitLoss">—</div></div>
+    <div class="col-12"><label class="form-label">{{ __('Description') }}</label><textarea name="description" class="form-control" rows="2">{{ old('description') }}</textarea></div>
+    <div class="col-12" id="walkInDetails">
+        <fieldset class="border rounded p-3"><legend class="float-none w-auto px-2 fs-6">{{ __('Customer details') }}</legend>
+        <p id="customerDetailsNote" class="text-muted">{{ __('This customer will be saved in Accounts as a Temporary Customer.') }}</p>
+        <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">{{ __('Customer code') }}</label><input id="customerCode" class="form-control" value="{{ $temporaryCustomerCode }}" readonly></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_full_name">{{ __('Customer name') }} *</label><input id="walkIn_full_name" type="text" name="full_name" value="{{ old('full_name') }}" class="form-control" maxlength="255" required></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_father_name">{{ __('Father name') }}</label><input id="walkIn_father_name" type="text" name="father_name" value="{{ old('father_name') }}" class="form-control" maxlength="255" ></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_phone">{{ __('Phone') }}</label><input id="walkIn_phone" type="text" name="phone" value="{{ old('phone') }}" class="form-control" maxlength="255" ></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_email">{{ __('Email') }}</label><input id="walkIn_email" type="email" name="email" value="{{ old('email') }}" class="form-control" maxlength="255" ></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_address">{{ __('Address') }}</label><input id="walkIn_address" type="text" name="address" value="{{ old('address') }}" class="form-control" maxlength="2000" ></div>
+        <div class="col-md-4"><label class="form-label" for="walkIn_id_card_number">{{ __('ID card number') }}</label><input id="walkIn_id_card_number" type="text" name="id_card_number" value="{{ old('id_card_number') }}" class="form-control" maxlength="255" ></div>
+        <div class="col-md-4"><label class="form-label">{{ __('Tazkira / ID type') }}</label><select id="customerIdType" name="id_card_type" class="form-select"><option value="">—</option><option value="etazkira" @selected(old('id_card_type','etazkira')==='etazkira')>{{ __('Electronic Tazkira') }}</option><option value="paper_tazkira" @selected(old('id_card_type')==='paper_tazkira')>{{ __('Paper Tazkira') }}</option><option value="passport" @selected(old('id_card_type')==='passport')>{{ __('Passport') }}</option><option value="other" @selected(old('id_card_type')==='other')>{{ __('Other') }}</option></select></div>
+        <div class="col-md-8" id="customerIdUpload"><label class="form-label" for="walkInIdFile">{{ __('Upload ID card') }}</label><input id="walkInIdFile" type="file" name="id_card_file" accept=".jpg,.jpeg,.png,.pdf" class="form-control"><small class="text-muted">{{ __('JPG, PNG or PDF. Maximum 5 MB.') }}</small></div>
+        <div class="col-12"><a id="customerIdDownload" class="btn btn-outline-primary" hidden>{{ __('Download ID card') }}</a><span id="customerDetailsError" class="text-danger" role="alert"></span></div>
+        <div class="col-12"><div class="form-check"><input type="checkbox" name="is_sanction_list_applied" id="sanctionApplied" value="1" class="form-check-input" @checked(old('is_sanction_list_applied')) required><label class="form-check-label" for="sanctionApplied">{{ __('Sanction list applied') }} *</label></div></div>
+        </div></fieldset>
+    </div>
+    <div class="col-12 d-flex justify-content-end"><button id="postExchange" @disabled(!old('customer_id') && !old('is_sanction_list_applied')) class="btn btn-primary btn-lg"><i class="bx bx-check-circle me-1"></i>{{ __('Post exchange') }}</button></div>
+</div></form></div></div>
+
+<div id="exchangeHistory" class="card" @if($errors->any()) hidden @endif><div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0">{{ __('Exchange history') }}</h5><form method="post" action="{{ route('exchange.customers.bulk-destroy') }}" id="bulkDeleteForm">@csrf @method('DELETE')<div class="bulk-action-bar" id="bulkActionBar"><span><strong id="selectedCount">0</strong> {{ __('selected') }}</span><button class="btn btn-danger btn-sm" onclick="return confirm('{{ __('Delete selected exchanges?') }}')"><i class="bx bx-trash"></i> {{ __('Delete selected') }}</button></div></form></div><div class="card-body">
+<form class="row g-2 mb-3"><div class="col-md-3"><input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}" placeholder="{{ __('From') }}"></div><div class="col-md-3"><input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}" placeholder="{{ __('To') }}"></div><div class="col"><button class="btn btn-outline-primary">{{ __('Filter') }}</button></div></form>
+<div class="table-responsive"><table class="table table-hover"><thead><tr><th><input type="checkbox" class="select-all-rows"></th><th>{{ __('Date') }}</th><th>{{ __('Customer') }}</th><th>{{ __('Sold') }}</th><th>{{ __('Operator / rate') }}</th><th>{{ __('Received') }}</th><th>{{ __('System result') }}</th><th>{{ __('P/L AFN') }}</th><th>{{ __('Status') }}</th></tr></thead><tbody>@forelse($exchanges as $exchange)<tr><td><input type="checkbox" class="row-select" value="{{ $exchange->id }}"></td><td>{{ $exchange->date?->format('Y-m-d') }}</td><td>{{ $exchange->customer?->full_name ?? __('Walk-in') }} @if($exchange->customer?->id_card_file && str_starts_with($exchange->customer->id_card_file, 'exchange-customer-ids/'))<a href="{{ route('exchange.customers.id-card', $exchange->customer) }}" class="ms-1" title="{{ __('Download ID card') }}"><i class="bx bx-id-card"></i></a>@endif</td><td>{{ number_format($exchange->from_amount,2) }} {{ $exchange->fromCurrency?->code }}</td><td>{{ $exchange->rate_operator==='divide'?'÷':'×' }} {{ number_format($exchange->rate,2) }}</td><td>{{ number_format($exchange->to_amount,2) }} {{ $exchange->toCurrency?->code }}</td><td>{{ number_format($exchange->system_to_amount,2) }}</td><td class="fw-bold {{ $exchange->profit_loss_afn < 0 ? 'text-danger' : 'text-success' }}">{{ number_format($exchange->profit_loss_afn,2) }}</td><td><span class="badge bg-success">{{ $exchange->status }}</span></td></tr>@empty<tr><td colspan="9" class="text-center text-muted py-5">{{ __('No exchanges') }}</td></tr>@endforelse</tbody></table></div>{{ $exchanges->links() }}</div></div>
+</div></div>
+@endsection
+
+@section('page-style')<style>#exchangeEditor[hidden],#exchangeHistory[hidden],#walkInDetails [hidden]{display:none!important}.exchange-hero{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 2rem;border-radius:1rem;color:var(--bs-body-color);background:var(--bs-body-bg,#fff);border:1px solid #e0e5eb;gap:1rem;flex-wrap:wrap}.exchange-hero h3{margin:.25rem 0}.exchange-hero p{margin:0;opacity:.8}.eyebrow{text-transform:uppercase;font-size:.72rem;letter-spacing:.12em}.exchange-icon{font-size:3.5rem;opacity:.7}.exchange-card{border:0;box-shadow:0 12px 35px rgba(31,42,55,.08)}.currency-panel{padding:1.25rem;border:1px solid #dce7e3;border-radius:1rem;height:100%}.sell-panel{background:#fff8ed}.buy-panel{background:#effaf6}.panel-label{display:block;font-weight:700;margin-bottom:.8rem}.operator-panel{height:100%;display:flex;flex-direction:column;justify-content:center;gap:.6rem;text-align:center}.result-amount{min-height:48px;padding:.7rem 1rem;background:#fff;border:1px solid #cfe3dc;border-radius:.5rem;font-size:1.2rem;font-weight:700;text-align:end}.readonly-metric{min-height:38px;padding:.55rem .75rem;background:#f7f9fb;border:1px solid #e0e5eb;border-radius:.45rem}</style>@endsection
+@section('page-script')<script>
+$(function(){
+let posting=false, customerLoading=false, customerFailed=false, customerSequence=0, currentCustomer='';
+const detailFields=['full_name','father_name','phone','email','address','id_card_number','id_card_type'];
+let walkInDraft={};
+function captureWalkIn(){detailFields.forEach(name=>walkInDraft[name]=$('#walkInDetails [name="'+name+'"]').val());walkInDraft.sanction=$('#sanctionApplied').prop('checked');}
+captureWalkIn();
+function syncPost(){const walkIn=!$('#exchangeCustomer').val();$('#postExchange').prop('disabled',posting||customerLoading||customerFailed||!$('#sellCurrency').val()||!$('#buyCurrency').val()||$('#sellCurrency').val()===$('#buyCurrency').val()||(walkIn&&!$('#sanctionApplied').prop('checked')));}
+function fillDetails(data){detailFields.forEach(name=>$('#walkInDetails [name="'+name+'"]').val(data[name]||'').trigger('change.select2'));$('#sanctionApplied').prop('checked',!!Number(data.is_sanction_list_applied));}
+async function syncCustomer(){
+    const id=$('#exchangeCustomer').val(), sequence=++customerSequence;
+    if(!currentCustomer)captureWalkIn();
+    currentCustomer=id;
+    const walkIn=!id;
+    $('#walkInDetails :input').prop('disabled',!walkIn);
+    $('#customerIdUpload').prop('hidden',!walkIn);
+    $('#customerIdDownload').prop('hidden',true).removeAttr('href');
+    $('#customerDetailsError').text('');customerFailed=false;customerLoading=!walkIn;
+    $('#customerDetailsNote').text(walkIn?@json(__('This customer will be saved in Accounts as a Temporary Customer.')):@json(__('Saved customer information')));
+    if(walkIn){fillDetails({...walkInDraft,is_sanction_list_applied:walkInDraft.sanction?1:0});$('#customerCode').val(@json($temporaryCustomerCode));syncPost();return;}
+    fillDetails({});$('#customerCode').val('');syncPost();
+    try{
+        const data=await $.get(@json(route('exchange.customers.details', ['account'=>'__ACCOUNT__'])).replace('__ACCOUNT__',encodeURIComponent(id)));
+        if(sequence!==customerSequence)return;
+        fillDetails(data);$('#customerCode').val(data.account_code);
+        if(data.id_card_url)$('#customerIdDownload').attr('href',data.id_card_url).prop('hidden',false);
+    }catch(error){if(sequence!==customerSequence)return;customerFailed=true;$('#customerDetailsError').text(@json(__('Unable to load customer details. Please select the customer again.')));}
+    finally{if(sequence===customerSequence){customerLoading=false;syncPost();}}
+}
+$('#exchangeCustomer').on('change',syncCustomer);$('#sanctionApplied').on('change',syncPost);
+$('#toggleExchange').on('click',function(){const open=$('#exchangeEditor').prop('hidden');$('#exchangeEditor').prop('hidden',!open);$('#exchangeHistory').prop('hidden',open);$(this).attr('aria-expanded',String(open)).text(open?@json(__('Cancel')):@json(__('New exchange')));});
+$('#exchangeForm').on('submit',function(){posting=true;syncPost();$('#toggleExchange').prop('disabled',true);});
+syncCustomer();
+let customRate=!!$('#exchangeRate').val(),customSystemRate=!!$('#systemRate').val(),quoteSequence=0;
+let quote=null;const q=n=>Number(n||0);function selectedCode(id){return $(id+' option:selected').data('code');}async function loadQuote(resetRate=true){const sequence=++quoteSequence;quote=null;$('#systemResult,#profitLoss,#rateVariance').text('—');calculate();if(!$('#exchangeBranch').val()||!$('#sellCurrency').val()||!$('#buyCurrency').val()||$('#sellCurrency').val()===$('#buyCurrency').val())return;try{const response=await $.get('{{ route('exchange.customers.quote') }}',{date:$('#exchangeDate').val(),branch_id:$('#exchangeBranch').val(),from_currency_id:$('#sellCurrency').val(),to_currency_id:$('#buyCurrency').val()});if(sequence!==quoteSequence)return;quote=response;if(!customSystemRate)$('#systemRate').val(q(quote[$('#rateOperator').val()+'_rate']).toFixed(2));if(resetRate&&!customRate){const op=$('#rateOperator').val();$('#exchangeRate').val(q(quote[op+'_rate']).toFixed(2));}calculate();}catch(e){if(sequence!==quoteSequence)return;quote=null;$('#systemResult,#profitLoss,#rateVariance').text('—');}}
+function calculate(){const amount=q($('#sellAmount').val()),rate=q($('#exchangeRate').val()),op=$('#rateOperator').val();const result=op==='divide'?(rate?amount/rate:0):amount*rate;$('#buyAmount').text(result.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(selectedCode('#buyCurrency')||''));if(!quote)return;const systemRate=q($('#systemRate').val()),systemResult=op==='divide'?(systemRate?amount/systemRate:0):amount*systemRate,pl=(amount*q(quote.from_rate_afn))-(result*q(quote.to_rate_afn)),variance=systemRate?((rate-systemRate)/systemRate)*100:0;$('#systemResult').text(systemResult.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+selectedCode('#buyCurrency'));$('#rateVariance').text(variance.toFixed(2)+'%').toggleClass('text-danger',Math.abs(variance)>2);$('#profitLoss').text(pl.toLocaleString(undefined,{maximumFractionDigits:2})+' AFN').toggleClass('text-danger',pl<0).toggleClass('text-success',pl>=0);}
+function syncCurrencies(changed){
+    const sell=$('#sellCurrency'),buy=$('#buyCurrency');
+    if(sell.val()===buy.val()){
+        const other=changed==='#buyCurrency'?sell:buy,selected=changed==='#buyCurrency'?buy.val():sell.val();
+        const alternative=other.find('option').filter(function(){return this.value&&this.value!==selected;}).first().val();
+        other.val(alternative||'');
+    }
+    sell.find('option').each(function(){this.disabled=this.value===buy.val();});
+    buy.find('option').each(function(){this.disabled=this.value===sell.val();});
+    sell.trigger('change.select2');buy.trigger('change.select2');syncPost();
+}
+$('#sellCurrency,#buyCurrency').on('change',function(){syncCurrencies('#'+this.id);loadQuote(true);});
+$('#exchangeDate,#exchangeBranch').on('change',()=>loadQuote(true));
+$('#rateOperator').on('change',()=>loadQuote(true));$('#useSystemRate').on('click',function(){customSystemRate=false;loadQuote(false);});$('#sellAmount').on('input',calculate);$('#systemRate').on('input',function(){customSystemRate=!!this.value;calculate();});$('#exchangeRate').on('input',function(){customRate=!!this.value;calculate();});$('#swapCurrencies').on('click',function(){const a=$('#sellCurrency').val(),b=$('#buyCurrency').val();$('#sellCurrency option,#buyCurrency option').prop('disabled',false);$('#sellCurrency').val(b).trigger('change.select2');$('#buyCurrency').val(a).trigger('change.select2');$('#rateOperator').val($('#rateOperator').val()==='divide'?'multiply':'divide');syncCurrencies();loadQuote(true);});
+function selected(){return $('.row-select:checked').map((_,e)=>e.value).get();}function updateBulk(){const ids=selected();$('#selectedCount').text(ids.length);$('#bulkActionBar').toggleClass('show',ids.length>0);$('#bulkDeleteForm input[name="ids[]"]').remove();ids.forEach(id=>$('<input>',{type:'hidden',name:'ids[]',value:id}).appendTo('#bulkDeleteForm'));}$('.select-all-rows').on('change',function(){$('.row-select').prop('checked',this.checked);updateBulk();});$('.row-select').on('change',updateBulk);
+syncCurrencies();
+if(!customRate&&selectedCode('#sellCurrency')==='AFN'&&selectedCode('#buyCurrency')!=='AFN')$('#rateOperator').val('divide');loadQuote(!$('#exchangeRate').val());
+});</script>@endsection

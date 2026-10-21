@@ -1,0 +1,1 @@
+<div class="table-responsive mt-2"><table class="table table-bordered"><thead><tr>@foreach(array_keys($details[0] ?? []) as $label)<th>{{ $label }}</th>@endforeach</tr></thead><tbody>@foreach($details as $detail)<tr>@foreach($detail as $value)<td>{{ is_float($value) ? number_format($value,2) : $value }}</td>@endforeach</tr>@endforeach</tbody></table></div>
