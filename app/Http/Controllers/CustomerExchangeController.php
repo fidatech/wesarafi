@@ -182,6 +182,9 @@ class CustomerExchangeController extends Controller
         abort_unless($request->user()->hasRole('Super Admin') || $request->user()->can('edit journal'), 403);
         abort_if($request->user()->branch_id && (int) $request->user()->branch_id !== (int) $exchange->branch_id, 403);
         $data = $request->validate(['reason' => 'required|string|min:5|max:1000']);
+        $day = \App\Services\DailyBalanceState::forBranch((int) $exchange->branch_id);
+        abort_if($day['closed'] || (config('business_day.require_open_for_posting', true) && $day['status'] !== 'open'),
+            423, 'The exchange branch business day must be open before posting a reversal.');
         $reference = DB::transaction(function () use ($request, $exchange, $data) {
             $exchange = CustomerExchange::lockForUpdate()->findOrFail($exchange->id);
             abort_if(DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->exists(), 422, 'Exchange already reversed.');
@@ -194,7 +197,7 @@ class CustomerExchangeController extends Controller
             DB::table('journal_reversals')->insert(['original_linked_id' => $exchange->linked_id, 'reversal_linked_id' => $reference,
                 'reason' => $data['reason'], 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
             $entries = $original->map(fn ($line) => [
-                'branch_id' => $line->branch_id, 'date' => now()->toDateString(), 'currency_id' => $line->currency_id,
+                'branch_id' => $line->branch_id, 'date' => now('Asia/Kabul')->toDateString(), 'currency_id' => $line->currency_id,
                 'chart_of_account_id' => $line->chart_of_account_id, 'account_id' => $line->account_id,
                 'accountable_type' => $line->accountable_type, 'accountable_id' => $line->accountable_id,
                 'is_safe' => $line->is_safe, 'amount' => $line->amount, 'amount_afn' => $line->amount_afn,

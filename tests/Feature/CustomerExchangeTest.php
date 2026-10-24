@@ -103,6 +103,40 @@ class CustomerExchangeTest extends TestCase
         $this->assertTrue(Transaction::where('linked_id', $exchange->linked_id)->exists());
     }
 
+    public function test_historical_exchange_reversal_posts_on_current_day_without_rewriting_original_date(): void
+    {
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user);
+        $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $originalDates = Transaction::where('linked_id', $exchange->linked_id)->pluck('date')->map(fn ($date) => substr((string) $date, 0, 10))->unique()->values()->all();
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Reverse historical exchange'])->assertRedirect()->assertSessionHasNoErrors();
+        $reference = \Illuminate\Support\Facades\DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->value('reversal_linked_id');
+        $this->assertNotNull($reference);
+        $this->assertSame($originalDates, Transaction::where('linked_id', $exchange->linked_id)->pluck('date')->map(fn ($date) => substr((string) $date, 0, 10))->unique()->values()->all());
+        $this->assertSame([now('Asia/Kabul')->toDateString()], Transaction::where('linked_id', $reference)->pluck('date')->map(fn ($date) => substr((string) $date, 0, 10))->unique()->values()->all());
+    }
+
+    public function test_closed_exchange_branch_prevents_reversal_without_changing_historical_postings(): void
+    {
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user);
+        $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $originalCount = Transaction::where('linked_id', $exchange->linked_id)->count();
+        \App\Models\FxRate::create([
+            'as_of' => now('Asia/Kabul')->toDateString(), 'type' => 'close',
+            'branch_id' => $exchange->branch_id, 'currency_id' => Currency::firstOrFail()->id,
+            'rate_afn_per_unit' => 1,
+        ]);
+        $this->postJson(route('exchange.customers.reverse', $exchange), ['reason' => 'Incorrect exchange quote'])->assertStatus(423);
+        $this->assertSame($originalCount, Transaction::where('linked_id', $exchange->linked_id)->count());
+        $this->assertFalse(\Illuminate\Support\Facades\DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->exists());
+        $this->assertNotSame('reversed', $exchange->fresh()->status);
+    }
+
     public function test_branch_scoped_financial_report_ignores_requested_branch_override(): void
     {
         $branch = Branch::firstOrFail();
