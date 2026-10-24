@@ -19,7 +19,7 @@
                 <span class="badge rounded-pill bg-primary">1. Upload</span><span class="text-muted">→</span>
                 <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">2. Review</span><span class="text-muted">→</span>
                 <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">3. Confirm</span><span class="text-muted">→</span>
-                <span class="badge rounded-pill bg-label-secondary">4. Recovery</span>
+                <span class="badge rounded-pill bg-label-secondary">4. Verify &amp; recover</span>
             </div>
             <div id="restore-step-upload" @if($staged) style="display:none" @endif>
                 <h5>Step 1 — Upload backup</h5>
@@ -38,7 +38,7 @@
                     <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Destination database</div><strong>{{ config('database.connections.mysql.database') }}</strong><div class="small text-muted mt-1">Currently connected MySQL database</div></div></div>
                     <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Uploaded archive</div><strong>ZIP validated</strong><div class="small text-muted mt-1">Staged for up to 30 minutes</div></div></div>
                 </div>
-                <div class="alert alert-warning">Restoration replaces the current database contents. A safety SQL backup is created before replacement. If import fails, the system attempts to restore the original data.</div>
+                <div class="alert alert-warning">The system first creates a safety backup and tests the uploaded SQL in an isolated temporary database. Only after that test passes does it replace the connected database. If the live import fails, rollback is attempted.</div>
                 <div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-upload').style.display='block';">Choose a different file</button><button type="button" class="btn btn-primary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-confirm').hidden=false;">Continue to confirmation</button></div>
             </div>
             <div id="restore-step-confirm" hidden>
@@ -56,9 +56,9 @@
             </div>
             <div id="restore-step-progress" hidden role="status" aria-live="polite">
                 <h5>Step 4 — Restoring database</h5>
-                <div class="d-flex align-items-center gap-3 my-4"><div class="spinner-border text-primary" role="status"></div><div><strong>Recovery is running</strong><p class="text-muted mb-0">Creating safety backup, importing records and verifying the result. Keep this tab open.</p></div></div>
-                <div class="progress" style="height:8px"><div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div></div>
-                <p class="small text-muted mt-3">This is an activity indicator, not a measured percentage. If the request times out, contact your administrator before retrying.</p>
+                <div class="d-flex align-items-center gap-3 my-4"><div class="spinner-border text-primary" role="status"></div><div><strong>Recovery is running</strong><p class="text-muted mb-0">The server is performing a safety backup, isolated preflight, live import, and verification. Keep this tab open.</p></div></div>
+                <div class="alert alert-info">Waiting for the server to return a verified outcome. No estimated percentage is shown because database imports are not reliably measurable by the browser.</div>
+                <p class="small text-muted mt-3">This is not a measured progress percentage. A restore can continue after an HTTP timeout. Do not submit another restore until the administrator checks the restore history and database state.</p>
             </div>
             <script>
             document.getElementById('restore-apply-form')?.addEventListener('submit', function(e) {
@@ -70,6 +70,12 @@
                 this.querySelector('[type="submit"]').disabled = true;
             });
             </script>
+            @endif
+            @if(!empty($restoreHistory))
+            <hr class="my-4"><h5>Recent recovery events</h5>
+            <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Time</th><th>Stage</th><th>Result</th></tr></thead><tbody>
+            @foreach($restoreHistory as $event)<tr><td>{{ $event['time'] ?? '—' }}</td><td>{{ ucfirst(str_replace('_', ' ', $event['stage'] ?? 'unknown')) }}</td><td>{{ ucfirst($event['outcome'] ?? 'unknown') }}</td></tr>@endforeach
+            </tbody></table></div>
             @endif
             <hr class="my-4"><p class="text-muted small mb-0">For large databases, use the protected maintenance command instead of the browser to avoid HTTP timeouts. Recovery does not include uploaded files or documents.</p>
         </div></div>

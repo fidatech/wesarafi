@@ -14,7 +14,15 @@ class BackupController extends Controller
     public function index()
     {
         abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
-        return view('configuration.backups.index');
+        $path = storage_path('app/backups/restore-history.jsonl');
+        $history = [];
+        if (is_file($path)) {
+            foreach (array_slice(file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [], -20) as $line) {
+                $event = json_decode($line, true);
+                if (is_array($event)) $history[] = $event;
+            }
+        }
+        return view('configuration.backups.index', ['restoreHistory' => array_reverse($history)]);
     }
 
     public function download()

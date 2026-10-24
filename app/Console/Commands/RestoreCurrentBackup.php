@@ -73,23 +73,46 @@ class RestoreCurrentBackup extends Command
             }
             chmod($safety, 0600);
             $this->warn('Safety backup retained: '.$safety);
+            $this->record('safety_backup', 'completed', ['path' => $safety]);
             $expectedTables = preg_match_all('/^CREATE TABLE `[^`]+`/m', $sql);
             if ($expectedTables < 1) { $this->error('No CREATE TABLE statements found. No changes made.'); return self::FAILURE; }
+            // Verify that the archive can actually import before touching the live schema.
+            // Use an isolated temporary database and remove it regardless of outcome.
+            $preflightDb = 'ws_preflight_'.bin2hex(random_bytes(6));
+            try {
+                DB::statement('CREATE DATABASE `'.$preflightDb.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                $this->info('Preflight: importing backup into temporary isolated database.');
+                $this->importSql($mysql, $common, $env, $preflightDb, $source);
+                $preflightTables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$preflightDb]);
+                if ((int)$preflightTables->n !== $expectedTables) throw new \RuntimeException('Preflight table count mismatch.');
+                $this->info('Preflight verified '.$preflightTables->n.' tables.');
+                $this->record('preflight', 'completed', ['tables' => (int) $preflightTables->n]);
+            } catch (\Throwable $e) {
+                $this->record('preflight', 'failed');
+                $this->error('Preflight failed: '.$e->getMessage().'. Current database was NOT modified.');
+                return self::FAILURE;
+            } finally {
+                DB::statement('DROP DATABASE IF EXISTS `'.$preflightDb.'`');
+            }
             // Drop existing tables, views and routines before importing; the original snapshot is preserved.
             try {
                 $this->clearSchema($db);
                 $this->importSql($mysql, $common, $env, $db, $source);
                 $tables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$db]);
                 if ((int)$tables->n !== $expectedTables) throw new \RuntimeException('Restored table count mismatch: expected '.$expectedTables.', got '.$tables->n);
+                $this->record('restore', 'completed', ['tables' => (int) $tables->n]);
                 $this->info('Restored '.$tables->n.' tables into '.$db.'. Safety backup: '.$safety);
                 return self::SUCCESS;
             } catch (\Throwable $e) {
+                $this->record('restore', 'failed');
                 $this->error('Restore failed: '.$e->getMessage().'. Attempting rollback.');
                 try {
                     $this->clearSchema($db);
                     $this->importSql($mysql, $common, $env, $db, $safety);
+                    $this->record('rollback', 'completed');
                     $this->warn('Rollback imported. Verify data before bringing application online. Safety file: '.$safety);
                 } catch (\Throwable $rollback) {
+                    $this->record('rollback', 'failed');
                     $this->error('ROLLBACK FAILED: '.$rollback->getMessage().'. Keep maintenance mode enabled. Safety file: '.$safety);
                 }
                 return self::FAILURE;
@@ -97,6 +120,19 @@ class RestoreCurrentBackup extends Command
         } finally {
             $zip->close(); File::deleteDirectory($work);
         }
+    }
+
+    private function record(string $stage, string $outcome, array $details = []): void
+    {
+        $path = storage_path('app/backups/restore-history.jsonl');
+        File::ensureDirectoryExists(dirname($path), 0700, true);
+        file_put_contents($path, json_encode(array_merge([
+            'time' => now()->toIso8601String(),
+            'database' => config('database.connections.mysql.database'),
+            'stage' => $stage,
+            'outcome' => $outcome,
+        ], $details), JSON_UNESCAPED_SLASHES).'\n', FILE_APPEND | LOCK_EX);
+        chmod($path, 0600);
     }
 
     private function clearSchema(string $database): void
