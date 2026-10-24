@@ -25,6 +25,9 @@
                 <div class="layout-page">
 
                     @include('layouts.menubar')
+                @if(auth()->check() && \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1))['closed'])
+                    <div class="alert alert-warning mx-3 mt-3 mb-0" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
+                @endif
 
                     <div class="content-wrapper">
                         {{-- ✅ Optional Breadcrumb (Remove if not needed) --}}
@@ -75,6 +78,19 @@
                 }
                 template.remove();
             }, { once: true });
+        </script>
+        <script>
+            // Roll the business day over at midnight in Asia/Kabul, even for an open tab.
+            (() => {
+                const kabulDate = () => new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Kabul', year: 'numeric', month: '2-digit', day: '2-digit'
+                }).format(new Date());
+                let currentDay = kabulDate();
+                setInterval(() => {
+                    const day = kabulDate();
+                    if (day !== currentDay) window.location.reload();
+                }, 30000);
+            })();
         </script>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -152,6 +168,7 @@
                                 showConfirmButton: false
                             });
                             bootstrap.Modal.getInstance(document.getElementById('modalFxOpen')).hide();
+                            setTimeout(() => location.reload(), 1250);
                         },
                         error: xhr => {
                             Swal.fire({

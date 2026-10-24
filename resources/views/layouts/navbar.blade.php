@@ -21,13 +21,17 @@
                 </button>
             </li>
 
+            @php($dailyBalanceState = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
             <li class="nav-item d-none d-md-flex align-items-center gap-1 me-2 navbar-balance-actions" aria-label="Opening and closing balances">
-                <button class="navbar-balance-icon" id="btnFxOpen" type="button" aria-label="Opening balances and rates" title="Opening balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <button class="navbar-balance-icon" id="btnFxOpen" type="button" @if(!$dailyBalanceState['can_open']) disabled hidden @endif aria-label="Opening balances and rates" title="Opening balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
                     <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-open" aria-hidden="true"><i class="bx bx-plus"></i></span>
                 </button>
-                <button class="navbar-balance-icon" id="btnFxClose" type="button" aria-label="Closing balances and rates" title="Closing balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <button class="navbar-balance-icon" id="btnFxClose" type="button" @if(!$dailyBalanceState['can_close']) disabled hidden @endif aria-label="Closing balances and rates" title="Closing balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
                     <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-close" aria-hidden="true"><i class="bx bx-minus"></i></span>
                 </button>
+                @if($dailyBalanceState['closed'])
+                    <span class="badge bg-label-warning" title="Data entry is locked for today"><i class="bx bx-lock-alt me-1"></i>Day closed</span>
+                @endif
             </li>
 
             <li class="nav-item dropdown">

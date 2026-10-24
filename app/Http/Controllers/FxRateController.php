@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Currency;
+use App\Services\DailyBalanceState;
 use App\Services\DailyValuationService;
 use App\Services\FxValuationService as FX;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,7 @@ class FxRateController extends Controller
         });
 
         return response()->json([
+            'day_state' => DailyBalanceState::forBranch($branchId),
             'date' => $date,
             'branch_id' => $branchId,
             'currencies' => $data,
@@ -45,6 +47,9 @@ class FxRateController extends Controller
             'rates.*' => 'numeric|min:0.000001',
         ]);
 
+        $this->validateCurrentDay($v['date'], (int) $v['branch_id']);
+        $state = DailyBalanceState::forBranch((int) $v['branch_id']);
+        if (!$state['can_open']) return response()->json(['message' => 'Opening balances have already been saved for today.'], 409);
         // Store opening rates
         DailyValuationService::setOpeningRates($v['date'], (int) $v['branch_id'], $v['rates']);
         return response()->json(['success'=>true,'message'=>'Opening rates saved']);
@@ -59,6 +64,9 @@ class FxRateController extends Controller
             'rates.*' => 'numeric|min:0.000001',
         ]);
 
+        $this->validateCurrentDay($v['date'], (int) $v['branch_id']);
+        $state = DailyBalanceState::forBranch((int) $v['branch_id']);
+        if (!$state['can_close']) return response()->json(['message' => 'Closing requires saved opening balances and cannot be repeated.'], 409);
         // Store closing + build snapshot (realized/unrealized/temp P&L)
         $vid = \App\Services\DailyValuationService::setClosingAndValue($v['date'], (int) $v['branch_id'], $v['rates']);
         $val = \App\Models\FxDailyValuation::find($vid);
@@ -73,4 +81,10 @@ class FxRateController extends Controller
             ]
         ]);
     }
+    private function validateCurrentDay(string $date, int $branchId): void
+    {
+        abort_unless($date === now('Asia/Kabul')->toDateString(), 422, 'Only today’s business day may be opened or closed.');
+        abort_unless((int) (Auth::user()?->branch_id ?: 1) === $branchId || Auth::user()?->hasRole('Super Admin'), 403);
+    }
+
 }

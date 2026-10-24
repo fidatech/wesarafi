@@ -13,7 +13,7 @@
           <div class="row g-2 mb-3">
             <div class="col-md-4">
               <label class="form-label">Date</label>
-              <input type="date" class="form-control" id="open_date" name="date" value="{{ now()->toDateString() }}">
+              <input type="date" class="form-control" id="open_date" name="date" value="{{ now('Asia/Kabul')->toDateString() }}" readonly>
             </div>
             <div class="col-md-4">
               <label class="form-label">Branch</label>
@@ -51,7 +51,7 @@
           <div class="row g-2 mb-3">
             <div class="col-md-4">
               <label class="form-label">Date</label>
-              <input type="date" class="form-control" id="close_date" name="date" value="{{ now()->toDateString() }}">
+              <input type="date" class="form-control" id="close_date" name="date" value="{{ now('Asia/Kabul')->toDateString() }}" readonly>
             </div>
             <div class="col-md-4">
               <label class="form-label">Branch</label>
