@@ -83,9 +83,9 @@ class BackupUploadTest extends TestCase
     public function test_restore_page_explains_current_database_replacement(): void
     {
         \Illuminate\Support\Facades\View::share('errors', new \Illuminate\Support\ViewErrorBag());
-        $this->withSession(['backup_restore_pending' => ['id' => 'test']])->get(route('configuration.backups.index'))
+        $this->withSession(['backup_restore_pending' => ['id' => 'test', 'time' => time()]])->get(route('configuration.backups.index'))
             ->assertOk()
-            ->assertSee('Restore current database');
+            ->assertSee('Review restore destination');
     }
 
 }

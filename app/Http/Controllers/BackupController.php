@@ -72,7 +72,7 @@ class BackupController extends Controller
 
         $request->validate([
             'backup' => ['required', 'file', 'max:102400'],
-            'confirmation' => ['required', 'in:VALIDATE'],
+            'confirmation' => ['nullable', 'in:VALIDATE'],
         ]);
 
         $file = $request->file('backup');
@@ -108,6 +108,9 @@ class BackupController extends Controller
             $zip->close();
         }
 
+        if ($old = session('backup_restore_pending')) {
+            if (isset($old['id']) && preg_match('/^[a-f0-9-]{36}$/D', $old['id'])) File::delete(storage_path('app/backups/pending/'.$old['id'].'.zip'));
+        }
         $id = (string) Str::uuid();
         $directory = storage_path('app/backups/pending');
         File::ensureDirectoryExists($directory, 0700, true);

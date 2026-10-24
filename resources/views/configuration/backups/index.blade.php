@@ -1,45 +1,77 @@
 @extends('layouts.layoutMaster')
-@section('title', 'Backups')
+@section('title', 'Backup & Restore')
 @section('content')
+@php
+    $pending = session('backup_restore_pending');
+    $staged = is_array($pending) && isset($pending['id'], $pending['time']) && (time() - $pending['time'] < 1800);
+@endphp
 <div class="row g-3">
     <div class="col-lg-2">@include('layouts.menu.configuration-sidebar')</div>
     <div class="col-lg-10">
-        <div class="card mb-3"><div class="card-body">
-            <h4>Download Backup</h4>
-            <p>Download a ZIP containing a snapshot of the current database.</p>
-            <a href="{{ route('configuration.backups.download') }}" class="btn btn-primary">Download backup</a>
+        <div class="card mb-3"><div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div><h4 class="mb-1">Backup &amp; Restore</h4><p class="text-muted mb-0">Guided database recovery for WeSarafi</p></div>
+            <a href="{{ route('configuration.backups.download') }}" class="btn btn-outline-primary">Download safety backup</a>
         </div></div>
-        <div class="card"><div class="card-body">
-            <h4>Validate Backup for Restore</h4>
-            <p>Upload a backup to check its ZIP structure and SQL format. This does not change your database.</p>
-            @if(session('backup_validation'))
-                <div class="alert alert-success" role="status">{{ session('backup_validation') }}</div>
+        <div class="card"><div class="card-body p-4">
+            @if(session('backup_validation'))<div class="alert alert-success" role="status">{{ session('backup_validation') }}</div>@endif
+            @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
+            <div class="d-flex align-items-center gap-2 mb-4 flex-wrap" aria-label="Restore wizard steps">
+                <span class="badge rounded-pill bg-primary">1. Upload</span><span class="text-muted">→</span>
+                <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">2. Review</span><span class="text-muted">→</span>
+                <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">3. Confirm</span><span class="text-muted">→</span>
+                <span class="badge rounded-pill bg-label-secondary">4. Recovery</span>
+            </div>
+            <div id="restore-step-upload" @if($staged) style="display:none" @endif>
+                <h5>Step 1 — Upload backup</h5>
+                <p class="text-muted">Select a WeSarafi ZIP backup. We validate its structure before offering the next step. Uploading does not change the database.</p>
+                <form method="post" enctype="multipart/form-data" action="{{ route('configuration.backups.restore') }}">
+                    @csrf
+                    <label for="backup" class="form-label">Backup ZIP file</label>
+                    <input id="backup" type="file" name="backup" accept=".zip" class="form-control mb-3" required>
+                    <button type="submit" class="btn btn-primary">Validate &amp; continue <i class="ti ti-arrow-right ms-1"></i></button>
+                </form>
+            </div>
+            @if($staged)
+            <div id="restore-step-review">
+                <h5>Step 2 — Review restore destination</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Destination database</div><strong>{{ config('database.connections.mysql.database') }}</strong><div class="small text-muted mt-1">Currently connected MySQL database</div></div></div>
+                    <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Uploaded archive</div><strong>ZIP validated</strong><div class="small text-muted mt-1">Staged for up to 30 minutes</div></div></div>
+                </div>
+                <div class="alert alert-warning">Restoration replaces the current database contents. A safety SQL backup is created before replacement. If import fails, the system attempts to restore the original data.</div>
+                <div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-upload').style.display='block';">Choose a different file</button><button type="button" class="btn btn-primary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-confirm').hidden=false;">Continue to confirmation</button></div>
+            </div>
+            <div id="restore-step-confirm" hidden>
+                <h5>Step 3 — Confirm restoration</h5>
+                <p class="text-muted">For your security, confirm the exact operation and enter your current account password.</p>
+                <form id="restore-apply-form" method="post" action="{{ route('configuration.backups.restore.apply') }}">
+                    @csrf
+                    <label for="restore_confirmation" class="form-label">Type <strong>RESTORE CURRENT DATABASE</strong></label>
+                    <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off" spellcheck="false" placeholder="RESTORE CURRENT DATABASE">
+                    <label for="restore_password" class="form-label">Account password</label>
+                    <input id="restore_password" type="password" name="password" class="form-control mb-3" required autocomplete="current-password">
+                    <div class="form-check mb-3"><input id="restore_ack" type="checkbox" class="form-check-input" required><label for="restore_ack" class="form-check-label">I understand the current database will be replaced and the application may be temporarily unavailable.</label></div>
+                    <div class="d-flex gap-2"><button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('restore-step-confirm').hidden=true;document.getElementById('restore-step-review').hidden=false;">Back</button><button type="submit" class="btn btn-danger">Start database restore</button></div>
+                </form>
+            </div>
+            <div id="restore-step-progress" hidden role="status" aria-live="polite">
+                <h5>Step 4 — Restoring database</h5>
+                <div class="d-flex align-items-center gap-3 my-4"><div class="spinner-border text-primary" role="status"></div><div><strong>Recovery is running</strong><p class="text-muted mb-0">Creating safety backup, importing records and verifying the result. Keep this tab open.</p></div></div>
+                <div class="progress" style="height:8px"><div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div></div>
+                <p class="small text-muted mt-3">This is an activity indicator, not a measured percentage. If the request times out, contact your administrator before retrying.</p>
+            </div>
+            <script>
+            document.getElementById('restore-apply-form')?.addEventListener('submit', function(e) {
+                if (!this.reportValidity()) return;
+                if (document.getElementById('restore_confirmation').value !== 'RESTORE CURRENT DATABASE') { e.preventDefault(); alert('Type RESTORE CURRENT DATABASE exactly.'); return; }
+                if (!window.confirm('Replace the currently connected WeSarafi database?')) { e.preventDefault(); return; }
+                document.getElementById('restore-step-confirm').hidden = true;
+                document.getElementById('restore-step-progress').hidden = false;
+                this.querySelector('[type="submit"]').disabled = true;
+            });
+            </script>
             @endif
-            @if($errors->any())
-                <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>
-            @endif
-            <form method="post" enctype="multipart/form-data" action="{{ route('configuration.backups.restore') }}">
-                @csrf
-                <label for="backup" class="form-label">Backup ZIP</label>
-                <input id="backup" type="file" name="backup" accept=".zip" class="form-control mb-3" required>
-                <label for="confirmation" class="form-label">Type VALIDATE to confirm</label>
-                <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
-                <button type="submit" class="btn btn-primary">Validate backup</button>
-            </form>
-            @if(session('backup_restore_pending'))
-            <hr>
-            <h5>Restore current database</h5>
-            <div class="alert alert-danger">This replaces all data in the currently connected <strong>{{ config('database.connections.mysql.database') }}</strong> database. An automatic safety backup is created first. The application enters maintenance mode and rollback is attempted if the import fails.</div>
-            <form method="post" action="{{ route('configuration.backups.restore.apply') }}" onsubmit="return confirm('Replace the CURRENT WeSarafi database with the uploaded backup?');">
-                @csrf
-                <label for="restore_confirmation" class="form-label">Type RESTORE CURRENT DATABASE</label>
-                <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off">
-                <label for="restore_password" class="form-label">Confirm your password</label>
-                <input id="restore_password" name="password" type="password" class="form-control mb-3" required autocomplete="current-password">
-                <button class="btn btn-danger" type="submit">Restore current database</button>
-            </form>
-            @endif
-            <p class="text-muted mt-3">Large restores may exceed web-server time limits. Use the maintenance CLI for large backups.</p>
+            <hr class="my-4"><p class="text-muted small mb-0">For large databases, use the protected maintenance command instead of the browser to avoid HTTP timeouts. Recovery does not include uploaded files or documents.</p>
         </div></div>
     </div>
 </div>
