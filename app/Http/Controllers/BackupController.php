@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 use ZipArchive;
@@ -107,8 +109,55 @@ class BackupController extends Controller
             $zip->close();
         }
 
-        // Deliberately no SQL execution here. A verified backup must be restored
-        // by an isolated maintenance process with a tested rollback procedure.
-        return back()->with('backup_validation', 'Backup ZIP passed preliminary format checks. Its SQL has not been executed or fully verified. No database was modified.');
+        $id = (string) Str::uuid();
+        $directory = storage_path('app/backups/pending');
+        File::ensureDirectoryExists($directory, 0700, true);
+        $destination = $directory.'/'.$id.'.zip';
+        if (!copy($file->getRealPath(), $destination)) {
+            return back()->withErrors(['backup' => 'Unable to stage backup for recovery.']);
+        }
+        chmod($destination, 0600);
+        session(['backup_restore_pending' => ['id' => $id, 'sha256' => hash_file('sha256', $destination), 'time' => time()]]);
+        return back()->with('backup_validation', 'Archive staged for isolated restoration. Enter an existing EMPTY test database name below and confirm. The active database cannot be selected.');
     }
+
+    public function applyRestore(Request $request)
+    {
+        abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
+        $request->validate([
+            'database' => ['required', 'regex:/^[A-Za-z0-9_]+$/D'],
+            'confirmation' => ['required', 'in:RESTORE TO TEST DATABASE'],
+        ]);
+        $pending = session('backup_restore_pending');
+        if (!is_array($pending) || !isset($pending['id'], $pending['sha256'], $pending['time']) || time() - $pending['time'] > 1800) {
+            return back()->withErrors(['backup' => 'Staged backup expired. Upload it again.']);
+        }
+        $database = $request->input('database');
+        if (config('database.default') !== 'mysql' || strcasecmp($database, (string) config('database.connections.mysql.database')) === 0) {
+            return back()->withErrors(['database' => 'The active database cannot be restored from the web interface.']);
+        }
+        $archive = storage_path('app/backups/pending/'.$pending['id'].'.zip');
+        if (!is_file($archive) || !hash_equals($pending['sha256'], hash_file('sha256', $archive))) {
+            return back()->withErrors(['backup' => 'Staged backup is missing or has changed.']);
+        }
+        $exists = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?', [$database]);
+        $tables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$database]);
+        if ((int) $exists->n !== 1 || (int) $tables->n !== 0) {
+            return back()->withErrors(['database' => 'Destination must exist and contain zero tables.']);
+        }
+        // Use the same guarded command as CLI. The web request may time out for
+        // large backups; production cutover is intentionally unsupported.
+        try {
+            $process = new Process([PHP_BINARY, base_path('artisan'), 'backup:restore', $archive, '--database='.$database, '--yes'], base_path(), null, null, 600);
+            $process->run();
+            if (!$process->isSuccessful()) {
+                return back()->withErrors(['backup' => 'Isolated restore failed. Destination may be partially imported. Check the recovery logs and use a new empty database.']);
+            }
+            return back()->with('backup_validation', 'Backup imported into isolated database '.$database.'. Verify tables and records before any cutover.');
+        } finally {
+            session()->forget('backup_restore_pending');
+            File::delete($archive);
+        }
+    }
+
 }

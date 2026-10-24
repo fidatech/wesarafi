@@ -56,4 +56,20 @@ class BackupUploadTest extends TestCase
             'confirmation' => 'RESTORE',
         ])->assertSessionHasErrors('confirmation');
     }
+    public function test_apply_requires_staged_backup(): void
+    {
+        $this->post(route('configuration.backups.restore.apply'), [
+            'database' => 'wesarafi_restore_test3',
+            'confirmation' => 'RESTORE TO TEST DATABASE',
+        ])->assertRedirect()->assertSessionHasErrors('backup');
+    }
+
+    public function test_apply_rejects_bad_confirmation(): void
+    {
+        $this->post(route('configuration.backups.restore.apply'), [
+            'database' => 'wesarafi_restore_test3',
+            'confirmation' => 'RESTORE',
+        ])->assertSessionHasErrors('confirmation');
+    }
+
 }

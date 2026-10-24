@@ -26,7 +26,20 @@
                 <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
                 <button type="submit" class="btn btn-primary">Validate backup</button>
             </form>
-            <div class="alert alert-warning mt-3 mb-0">To restore into a separate, empty MySQL database, use the server terminal: <code>php artisan backup:restore /absolute/path/to/backup.zip --database=empty_restore_database</code>. The target database must exist and must not be the active database. This page only validates uploads; it never overwrites financial records.</div>
+            @if(session('backup_restore_pending'))
+            <hr>
+            <h5>Restore into a separate empty database</h5>
+            <p>This step imports the staged backup into a separate database only. It cannot overwrite the current database.</p>
+            <form method="post" action="{{ route('configuration.backups.restore.apply') }}">
+                @csrf
+                <label for="database" class="form-label">Existing empty MySQL database</label>
+                <input id="database" name="database" class="form-control mb-3" required placeholder="wesarafi_restore_test3">
+                <label for="restore_confirmation" class="form-label">Type RESTORE TO TEST DATABASE</label>
+                <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required>
+                <button type="submit" class="btn btn-danger">Restore to empty test database</button>
+            </form>
+            @endif
+            <div class="alert alert-warning mt-3 mb-0">To restore into a separate, empty MySQL database, use the server terminal: <code>php artisan backup:restore /absolute/path/to/backup.zip --database=empty_restore_database</code>. The target database must exist and must not be the active database. The page can import into an empty, separate database after confirmation; it never overwrites the active database. Large imports may exceed web request limits.</div>
         </div></div>
     </div>
 </div>

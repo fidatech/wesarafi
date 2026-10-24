@@ -10,7 +10,7 @@ use ZipArchive;
 
 class RestoreBackup extends Command
 {
-    protected $signature = 'backup:restore {archive : Absolute path to WeSarafi ZIP} {--database= : Existing, empty, isolated destination database}';
+    protected $signature = 'backup:restore {archive : Absolute path to WeSarafi ZIP} {--database= : Existing, empty, isolated destination database} {--yes : Confirm isolated restore noninteractively}';
     protected $description = 'Restore a WeSarafi backup into an explicitly selected empty MySQL database (never the active database).';
 
     public function handle(): int
@@ -81,12 +81,12 @@ class RestoreBackup extends Command
                 $this->error('Target database is not empty; refusing to overwrite data.');
                 return self::FAILURE;
             }
-            if (!$this->confirm("Import into EMPTY database {$target}?", false)) {
+            if (!$this->option('yes') && !$this->confirm("Import into EMPTY database {$target}?", false)) {
                 $this->warn('Cancelled.');
                 return self::FAILURE;
             }
             $binary = is_executable('/usr/local/opt/mysql-client/bin/mysql') ? '/usr/local/opt/mysql-client/bin/mysql' : 'mysql';
-            $args = [$binary, '--host='.(string) $cfg['host'], '--port='.(string) $cfg['port'], '--user='.(string) $cfg['username'], '--database='.$target];
+            $args = [$binary, '--host='.(string) $cfg['host'], '--port='.(string) $cfg['port'], '--user='.(string) $cfg['username'], '--binary-mode', '--skip-reconnect', '--database='.$target];
             $handle = fopen($work.'/database.sql', 'rb');
             if (!$handle) {
                 $this->error('Cannot open extracted SQL.');
