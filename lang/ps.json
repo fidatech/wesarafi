@@ -1,0 +1,21 @@
+{
+    "Dashboard": "ډشبورډ", "Accounts": "حسابونه", "Journal": "ورځپاڼه", "Exchanges": "د اسعارو تبادله",
+    "Remittances": "حوالې", "Accounting": "محاسبه", "Human Resources": "بشري سرچینې", "Financial Reports": "مالي راپورونه",
+    "Monitoring": "څارنه", "Configuration": "تنظیمات", "Store remittance": "حواله ثبتول", "Type": "ډول", "Outgoing": "لېږل شوې",
+    "Incoming": "ترلاسه شوې", "Branch transfer": "د څانګو ترمنځ لېږد", "Date": "نېټه", "From branch": "له څانګې", "To branch": "څانګې ته",
+    "Select branch": "څانګه وټاکئ", "Sender details": "د لېږونکي معلومات", "Receiver details": "د ترلاسه کوونکي معلومات",
+    "Select existing customer": "موجود پیرودونکی وټاکئ", "New / temporary customer": "نوی / لنډمهاله پیرودونکی", "Name": "نوم",
+    "Father name": "د پلار نوم", "Phone number": "د تلیفون شمېره", "Tazkira number": "د تذکرې شمېره", "Tazkira scan (optional)": "د تذکرې سکن (اختیاري)",
+    "Amount and commissions": "مبلغ او کمېشنونه", "Currency": "اسعار", "Amount": "مبلغ", "AFN rate": "د افغانۍ نرخ",
+    "Sending branch commission": "د لېږونکي څانګې کمېشن", "Receiving branch commission": "د ترلاسه کوونکي څانګې کمېشن", "Optional": "اختیاري",
+    "Description": "تشریح", "Store": "ثبت", "Reference": "د حوالې شمېره", "Branches": "څانګې", "Sender / receiver": "لېږونکی / ترلاسه کوونکی",
+    "Status": "حالت", "Actions": "کړنې", "To": "ته", "Approve": "تایید", "Reject": "رد", "Pay": "تادیه", "Pending": "پاتې",
+    "Rejected": "رد شوې", "Approved": "تایید شوې", "Completed": "بشپړه شوې", "Pay remittance and verify receiver": "حواله تادیه او د ترلاسه کوونکي هویت تایید",
+    "Receiver name": "د ترلاسه کوونکي نوم", "Scan receiver tazkira": "د ترلاسه کوونکي تذکره سکن کړئ", "Live receiver photo": "د ترلاسه کوونکي ژوندی انځور",
+    "Start camera": "کمره چالان کړئ", "Capture photo": "انځور واخلئ", "Cancel": "لغوه", "Confirm payment": "تادیه تایید کړئ",
+    "Receiving branch": "ترلاسه کوونکې څانګه", "Branch address": "د څانګې پته", "Sender": "لېږونکی", "Receiver": "ترلاسه کوونکی",
+    "Print": "چاپ", "Download PDF": "PDF ښکته کړئ", "All": "ټول", "Branch Transfers": "د څانګو لېږدونه",
+    "Journal Menu": "د ورځپاڼې مېنو", "Journal Entries": "د ورځپاڼې ثبتونه", "Journal Approvals": "د ثبتونو تایید",
+    "Exchange Menu": "د تبادلې مېنو", "Auction Purchases": "د لیلام پیرود", "Customer Exchange": "د پیرودونکي تبادله", "Exchange Rates": "د اسعارو نرخونه",
+    "Customer & Bank Ledgers": "د پیرودونکو او بانکونو حسابونه", "Customer / bank": "پیرودونکی / بانک", "Account type": "د حساب ډول", "Customers and banks": "پیرودونکي او بانکونه", "Customers": "پیرودونکي", "Banks": "بانکونه", "Debit": "ډیبیټ", "Credit": "کریډیټ", "Balance": "بیلانس", "Entries": "ثبتونه", "Statement": "صورت حساب", "New debit / credit": "نوی ډیبیټ / کریډیټ", "Store customer or bank transaction": "د پیرودونکي یا بانک معامله ثبت کړئ", "Debit customer/bank": "پیرودونکی/بانک ډیبیټ", "Credit customer/bank": "پیرودونکی/بانک کریډیټ", "Counterpart account": "مقابل حساب", "Store transaction": "معامله ثبت کړئ"
+}

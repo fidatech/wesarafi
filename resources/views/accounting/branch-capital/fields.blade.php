@@ -1,0 +1,4 @@
+<div class="col-md-4"><label for="amount" class="form-label">Amount</label><input id="amount" type="number" name="amount" min="0.01" step="0.0001" value="{{ old('amount') }}" class="form-control" required></div>
+<div class="col-md-4"><label for="date" class="form-label">Date</label><input id="date" type="date" name="date" value="{{ old('date',now()->toDateString()) }}" class="form-control" required></div>
+<div class="col-md-4"><label for="rate" class="form-label">AFN per currency unit</label><input id="rate" type="number" name="exchange_rate_afn" min="0.00000001" step="0.00000001" value="{{ old('exchange_rate_afn',$rate) }}" class="form-control" required @readonly(($rate ?? '') === 1)></div>
+<div class="col-md-8"><label for="description" class="form-label">Notes / reference</label><textarea id="description" name="description" rows="2" maxlength="2000" class="form-control">{{ old('description') }}</textarea></div>

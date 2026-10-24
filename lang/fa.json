@@ -1,0 +1,22 @@
+{
+    "Dashboard": "داشبورد", "Accounts": "حساب‌ها", "Journal": "روزنامچه", "Exchanges": "تبادله اسعار",
+    "Remittances": "حواله‌ها", "Accounting": "حسابداری", "Human Resources": "منابع بشری",
+    "Financial Reports": "گزارش‌های مالی", "Monitoring": "نظارت", "Configuration": "تنظیمات",
+    "Store remittance": "ثبت حواله", "Create the sender record and payment instruction in one place.": "مشخصات فرستنده و دستور پرداخت را یکجا ثبت کنید.",
+    "Type": "نوع", "Outgoing": "ارسالی", "Incoming": "دریافتی", "Branch transfer": "انتقال بین شعب",
+    "Date": "تاریخ", "From branch": "از شعبه", "To branch": "به شعبه", "Select branch": "انتخاب شعبه",
+    "Sender details": "مشخصات فرستنده", "Receiver details": "مشخصات گیرنده", "Select existing customer": "انتخاب مشتری موجود",
+    "New / temporary customer": "مشتری جدید / موقت", "Name": "نام", "Father name": "نام پدر", "Phone number": "شماره تماس",
+    "Tazkira number": "شماره تذکره", "Tazkira scan (optional)": "اسکن تذکره (اختیاری)", "Amount and commissions": "مبلغ و کمیشن‌ها",
+    "Currency": "اسعار", "Amount": "مبلغ", "AFN rate": "نرخ افغانی", "Sending branch commission": "کمیشن شعبه فرستنده",
+    "Receiving branch commission": "کمیشن شعبه گیرنده", "Optional": "اختیاری", "Description": "توضیحات", "Store": "ثبت",
+    "Reference": "شماره حواله", "Branches": "شعب", "Sender / receiver": "فرستنده / گیرنده", "Status": "وضعیت", "Actions": "عملیات",
+    "To": "به", "Approve": "تایید", "Reject": "رد", "Pay": "پرداخت", "Pending": "در انتظار", "Rejected": "رد شده",
+    "Approved": "تایید شده", "Completed": "تکمیل شده", "Pay remittance and verify receiver": "پرداخت حواله و تثبیت هویت گیرنده",
+    "Receiver name": "نام گیرنده", "Scan receiver tazkira": "اسکن تذکره گیرنده", "Live receiver photo": "عکس زنده گیرنده",
+    "Start camera": "فعال‌سازی کمره", "Capture photo": "گرفتن عکس", "Cancel": "لغو", "Confirm payment": "تایید پرداخت",
+    "Receiving branch": "شعبه گیرنده", "Branch address": "آدرس شعبه", "Sender": "فرستنده", "Receiver": "گیرنده", "Print": "چاپ", "Download PDF": "دانلود PDF",
+    "All": "همه", "Branch Transfers": "انتقالات شعب", "Journal Menu": "منوی روزنامچه", "Journal Entries": "ثبت‌های روزنامچه", "Journal Approvals": "تایید ثبت‌ها",
+    "Exchange Menu": "منوی تبادله", "Auction Purchases": "خریدهای لیلام", "Customer Exchange": "تبادله مشتری", "Exchange Rates": "نرخ اسعار",
+    "Customer & Bank Ledgers": "حساب‌های مشتریان و بانک‌ها", "Customer / bank": "مشتری / بانک", "Account type": "نوع حساب", "Customers and banks": "مشتریان و بانک‌ها", "Customers": "مشتریان", "Banks": "بانک‌ها", "Debit": "بدهکار", "Credit": "بستانکار", "Balance": "بیلانس", "Entries": "ثبت‌ها", "Statement": "صورت حساب", "New debit / credit": "ثبت بدهکار / بستانکار", "Store customer or bank transaction": "ثبت معامله مشتری یا بانک", "Debit customer/bank": "بدهکار کردن مشتری/بانک", "Credit customer/bank": "بستانکار کردن مشتری/بانک", "Counterpart account": "حساب مقابل", "Store transaction": "ثبت معامله"
+}

@@ -1,0 +1,89 @@
+/* rtl.css - RTL support for Sneat / Materio */
+
+html[dir="rtl"],
+body[dir="rtl"] {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* Align icons to the left in RTL */
+.menu-link .menu-icon {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+  float: right;
+}
+
+/* Fix nested submenus */
+.menu-sub {
+  padding-right: 1.5rem;
+  padding-left: 0;
+  text-align: right;
+}
+
+.menu-sub .menu-link {
+  padding-right: 2rem;
+  padding-left: 1rem;
+}
+
+/* Horizontal layout: align menu toggle arrows */
+.menu-item > .menu-link.menu-toggle::after {
+  transform: rotate(180deg); /* flip the toggle arrow */
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Align content inside cards */
+.card .card-body {
+  text-align: right;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Form elements */
+.form-label,
+.form-check-label,
+label {
+  text-align: right;
+  display: block;
+}
+
+.form-control,
+.form-select {
+  text-align: right;
+  direction: rtl;
+}
+
+/* DataTables */
+.table th, .table td {
+  text-align: right;
+}
+
+/* Breadcrumb */
+.breadcrumb-item + .breadcrumb-item::before {
+  float: right;
+  transform: rotate(180deg);
+}
+
+/* Toasts, alerts, modals */
+.toast-body, .alert, .modal-body, .modal-title {
+  text-align: right;
+}
+
+/* Fix offcanvas for RTL */
+.offcanvas-end {
+  left: 0 !important;
+  right: auto !important;
+  border-left: 1px solid #ddd;
+  border-right: none;
+}
+
+.offcanvas-start {
+  right: 0 !important;
+  left: auto !important;
+  border-right: 1px solid #ddd;
+  border-left: none;
+}
