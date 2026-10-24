@@ -61,6 +61,34 @@ class CustomerExchangeTest extends TestCase
         $this->assertSame($original->count(), Transaction::where('linked_id', $exchange->linked_id)->count());
     }
 
+    public function test_exchange_reversal_nets_cash_customer_and_profit_loss_balances_to_zero(): void
+    {
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user);
+        $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Reverse wrong exchange'])->assertRedirect();
+        $audit = \Illuminate\Support\Facades\DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->firstOrFail();
+        $lines = Transaction::whereIn('linked_id', [$exchange->linked_id, $audit->reversal_linked_id])->get();
+        $this->assertGreaterThanOrEqual(4, $lines->count());
+        $this->assertEqualsWithDelta(0, $lines->where('direction', 'debit')->sum('amount_afn') - $lines->where('direction', 'credit')->sum('amount_afn'), 0.02);
+        foreach ($lines->groupBy(fn ($line) => implode(':', [$line->branch_id, $line->currency_id, $line->chart_of_account_id, $line->account_id, $line->accountable_type, $line->accountable_id, $line->is_safe])) as $accountLines) {
+            $this->assertEqualsWithDelta(0, $accountLines->sum(fn ($line) => $line->direction === 'debit' ? (float) $line->amount_afn : -(float) $line->amount_afn), 0.02);
+            $this->assertEqualsWithDelta(0, $accountLines->sum(fn ($line) => $line->direction === 'debit' ? (float) $line->amount : -(float) $line->amount), 0.0001);
+        }
+    }
+
+    public function test_branch_scoped_financial_report_ignores_requested_branch_override(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::firstOrFail();
+        $user->forceFill(['branch_id' => $branch->id])->save();
+        $this->actingAs($user);
+        $this->get(route('financial_reports.commissions.index', ['branch_id' => 0]))->assertOk()
+            ->assertSee('value="'.$branch->id.'" selected', false);
+    }
+
     public function test_posted_exchange_cannot_be_deleted_individually_or_in_bulk(): void
     {
         $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();

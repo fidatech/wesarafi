@@ -17,9 +17,8 @@ abstract class TransactionReportController extends Controller
     ) {
         $from = $request->date('from')?->toDateString() ?? now()->startOfMonth()->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
-        $branchId = $request->filled('branch_id')
-            ? ($request->integer('branch_id') ?: null)
-            : (auth()->user()->branch_id ?? null);
+        $branchId = auth()->user()->branch_id
+            ?: ($request->filled('branch_id') ? ($request->integer('branch_id') ?: null) : null);
 
         $transactions = Transaction::query()
             ->with(['currency', 'chartOfAccount', 'account', 'transactionType', 'branch', 'createdBy'])
@@ -46,7 +45,7 @@ abstract class TransactionReportController extends Controller
             'from' => $from,
             'to' => $to,
             'branchId' => $branchId,
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => auth()->user()->branch_id ? Branch::whereKey(auth()->user()->branch_id)->get() : Branch::orderBy('name')->get(),
         ]);
     }
 }
