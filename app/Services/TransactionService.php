@@ -50,6 +50,9 @@ class TransactionService
 
         return DB::transaction(function () use ($entries, $linkedId) {
             $linkedId ??= (string) Str::uuid();
+            if (Transaction::withTrashed()->where('linked_id', $linkedId)->exists()) {
+                throw new InvalidArgumentException('Journal reference already exists; duplicate posting prevented.');
+            }
             $prepared = [];
             $debitAfn = 0.0;
             $creditAfn = 0.0;

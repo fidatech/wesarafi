@@ -64,6 +64,26 @@ class TransactionPostingTest extends TestCase
         ]);
     }
 
+    public function test_reusing_journal_reference_does_not_post_duplicate_entries(): void
+    {
+        $entries = [
+            ['branch_id' => $this->branch->id, 'chart_of_account_id' => $this->cash->id,
+                'currency_id' => $this->afn->id, 'amount' => 100, 'direction' => 'debit'],
+            ['branch_id' => $this->branch->id, 'chart_of_account_id' => $this->capital->id,
+                'currency_id' => $this->afn->id, 'amount' => 100, 'direction' => 'credit'],
+        ];
+        $reference = (string) \Illuminate\Support\Str::uuid();
+        TransactionService::postMany($entries, $reference);
+        $this->assertSame(2, Transaction::where('linked_id', $reference)->count());
+        try {
+            TransactionService::postMany($entries, $reference);
+            $this->fail('Duplicate journal reference should be rejected.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertStringContainsString('duplicate posting prevented', $e->getMessage());
+        }
+        $this->assertSame(2, Transaction::where('linked_id', $reference)->count());
+    }
+
     public function test_balanced_group_posts_atomically_under_one_linked_id(): void
     {
         $rows = TransactionService::postMany([
