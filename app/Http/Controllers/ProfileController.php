@@ -40,6 +40,7 @@ class ProfileController extends Controller
 
     public function refreshSystem(): RedirectResponse
     {
+        abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
         Artisan::call('optimize:clear');
         return Redirect::route('profile.edit')->with('status', 'system-refreshed');
     }
