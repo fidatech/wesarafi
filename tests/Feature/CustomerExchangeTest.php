@@ -79,6 +79,30 @@ class CustomerExchangeTest extends TestCase
         }
     }
 
+    public function test_fx_valuation_reflects_exchange_reversal_without_erasing_original_journal(): void
+    {
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user);
+        $payload = $this->payload();
+        $payload['date'] = now()->toDateString();
+        $this->post(route('exchange.customers.store'), $payload)->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $branchId = (int) $exchange->branch_id;
+        $usdId = (int) Currency::where('code', 'USD')->value('id');
+        $asOf = now()->toDateString();
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Reverse incorrect rate'])->assertRedirect()->assertSessionHasNoErrors();
+        $beforeId = \App\Services\DailyValuationService::setClosingAndValue($asOf, $branchId, [$usdId => 72.5]);
+        $afterId = \App\Services\DailyValuationService::setClosingAndValue($asOf, $branchId, [$usdId => 72.5]);
+        $after = \App\Models\FxDailyValuation::findOrFail($afterId);
+        $this->assertSame($beforeId, $afterId);
+        $this->assertEqualsWithDelta(0, (float) $after->realized_pl_afn, 0.02);
+        $this->assertEqualsWithDelta(0, (float) $after->unrealized_pl_afn, 0.02);
+        $this->assertEqualsWithDelta(0, (float) $after->temp_pnl_afn, 0.02);
+        $this->assertSame('reversed', $exchange->fresh()->status);
+        $this->assertTrue(Transaction::where('linked_id', $exchange->linked_id)->exists());
+    }
+
     public function test_branch_scoped_financial_report_ignores_requested_branch_override(): void
     {
         $branch = Branch::firstOrFail();

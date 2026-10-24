@@ -49,10 +49,9 @@ class DailyValuationService
             $realized = self::realizedFxForDate($date, $branchId);
             $unrealizedMovement = round($current['total_revaluation_afn'] - $previous['total_revaluation_afn'], 2);
 
-            $valuation = FxDailyValuation::firstOrNew([
-                'as_of' => $date,
-                'branch_id' => $branchId,
-            ]);
+            $valuation = FxDailyValuation::query()->whereDate('as_of', $date)
+                ->where('branch_id', $branchId)->first()
+                ?? new FxDailyValuation(['as_of' => $date, 'branch_id' => $branchId]);
             $valuation->realized_pl_afn = $realized;
             $valuation->unrealized_pl_afn = $unrealizedMovement;
             $valuation->temp_pnl_afn = round($realized + $unrealizedMovement, 2);
@@ -162,15 +161,16 @@ class DailyValuationService
             throw new \InvalidArgumentException('FX rates must be greater than zero.');
         }
 
-        FxRate::updateOrCreate(
-            [
-                'as_of' => $date,
-                'type' => $type,
-                'currency_id' => $currencyId,
-                'branch_id' => $branchId,
-            ],
-            ['rate_afn_per_unit' => $storedRate]
-        );
+        $existing = FxRate::query()->whereDate('as_of', $date)
+            ->where('type', $type)->where('currency_id', $currencyId)
+            ->where('branch_id', $branchId)->first();
+        if ($existing) {
+            $existing->update(['rate_afn_per_unit' => $storedRate]);
+        } else {
+            FxRate::create(['as_of' => $date, 'type' => $type,
+                'currency_id' => $currencyId, 'branch_id' => $branchId,
+                'rate_afn_per_unit' => $storedRate]);
+        }
     }
 
     /**
