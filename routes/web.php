@@ -262,6 +262,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [TransactionController::class, 'index'])->name('index');
             Route::get('/account-ledgers', [TransactionController::class, 'accountLedgers'])->name('account-ledgers');
             Route::post('/account-ledgers', [TransactionController::class, 'storeAccountLedgerEntry'])->name('account-ledgers.store');
+            Route::post('/{linked}/reverse', [\App\Http\Controllers\JournalReversalController::class, 'store'])->name('reverse');
             Route::get('/data', [TransactionController::class, 'data'])->name('data');
             Route::get('/summary', [TransactionController::class, 'summary'])->name('summary');
             Route::get('/export', [TransactionController::class, 'export'])->name('export');
