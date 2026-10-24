@@ -49,43 +49,35 @@ class RolesAndAdminSeeder extends Seeder
         $superAdmin->syncPermissions($permissions);
         $admin->syncPermissions($permissions);
 
-        // Create Admin User
-        $create_super_admin = User::firstOrCreate(
-            ['email' => 'superadmin@gmail.com'],
-            [
-                'name' => 'Super Admin',
-                'username' => 'superadmin',
-                'password' => Hash::make('admin@123'),
+        // Never create publicly documented default accounts with known passwords.
+        // Existing accounts are preserved; new bootstrap accounts require explicit
+        // credentials supplied privately through the deployment environment.
+        $bootstrap = [
+            ['role' => 'Super Admin', 'email' => env('WESARAFI_SUPERADMIN_EMAIL'), 'name' => 'Super Admin', 'password' => env('WESARAFI_SUPERADMIN_PASSWORD')],
+            ['role' => 'Admin', 'email' => env('WESARAFI_ADMIN_EMAIL'), 'name' => 'Admin', 'password' => env('WESARAFI_ADMIN_PASSWORD')],
+        ];
+
+        foreach ($bootstrap as $account) {
+            if (blank($account['email']) || blank($account['password'])) {
+                continue;
+            }
+            if (strlen($account['password']) < 16) {
+                throw new \\RuntimeException('Bootstrap administrator passwords must contain at least 16 characters.');
+            }
+            $existing = User::where('email', $account['email'])->first();
+            if ($existing) {
+                // Never reset a real user's password or silently elevate an existing account.
+                continue;
+            }
+            $created = User::create([
+                'name' => $account['name'],
+                'email' => $account['email'],
+                'username' => 'bootstrap_'.\\Illuminate\\Support\\Str::lower(\\Illuminate\\Support\\Str::random(12)),
+                'password' => Hash::make($account['password']),
                 'branch_id' => 1,
                 'status' => true,
-            ]
-        );
-
-        $create_admin = User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
-            [
-                'name' => 'Admin',
-                'username' => 'admin',
-                'password' => Hash::make('admin@123'),
-                'branch_id' => 1,
-                'status' => true,
-            ]
-        );
-
-        // Create Default Role User
-        // DB::table('role_user')->insert([
-        //     [
-        //         'role_id' => $superAdmin->id,
-        //         'user_id' => $create_super_admin->id
-        //     ],
-        //     [
-        //         'role_id' => $admin->id,
-        //         'user_id' => $create_admin->id
-        //     ]
-        // ]);
-
-        // Assign Role
-        $create_super_admin->assignRole('Super Admin');
-        $create_admin->assignRole('Admin');
+            ]);
+            $created->assignRole($account['role']);
+        }
     }
 }
