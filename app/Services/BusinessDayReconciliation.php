@@ -7,6 +7,41 @@ use Illuminate\Support\Facades\DB;
 
 class BusinessDayReconciliation
 {
+    /** Compare a finalized snapshot with today's read-only reconstruction. */
+    public static function historicalIntegrity(int $branchId, string $date): array
+    {
+        $day = \App\Models\BusinessDay::query()->where('branch_id', $branchId)
+            ->whereDate('business_date', $date)->where('status', 'closed')->first();
+        if (! $day || ! is_array($day->closing_snapshot)
+            || ! is_array($day->closing_snapshot['reconciliation'] ?? null)) {
+            return ['verifiable' => false, 'consistent' => false, 'differences' => ['Closing reconciliation snapshot is unavailable.']];
+        }
+        $stored = $day->closing_snapshot['reconciliation'];
+        $current = self::report($branchId, $date);
+        $differences = [];
+        foreach (['cash_book_by_currency', 'ledger_totals_by_currency_and_direction', 'pending_approvals', 'invalid_journal_count'] as $field) {
+            if (! array_key_exists($field, $stored)) {
+                $differences[] = $field.' was not recorded in the closing snapshot.';
+            } elseif (self::canonical($stored[$field]) !== self::canonical($current[$field])) {
+                $differences[] = $field.' differs from the finalized snapshot.';
+            }
+        }
+        return ['verifiable' => true, 'consistent' => $differences === [], 'differences' => $differences];
+    }
+
+    private static function canonical(mixed $value): string
+    {
+        if (is_array($value)) {
+            ksort($value);
+            foreach ($value as &$item) {
+                if (is_array($item)) $item = self::canonical($item);
+                elseif (is_numeric($item)) $item = round((float) $item, 6);
+            }
+            unset($item);
+        }
+        return json_encode($value, JSON_THROW_ON_ERROR);
+    }
+
     public static function report(int $branchId, string $date): array
     {
         $transactions = Transaction::query()->where('branch_id', $branchId)->whereDate('date', '<=', $date);

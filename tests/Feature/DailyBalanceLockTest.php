@@ -131,6 +131,35 @@ class DailyBalanceLockTest extends TestCase
         $this->assertSame($original, $day->fresh()->closing_snapshot);
     }
 
+    public function test_historical_reconciliation_detects_changes_without_mutating_finalized_snapshot(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $branch = (int) ($user->branch_id ?: 1);
+        $currency = Currency::firstOrFail();
+        $date = now('Asia/Kabul')->toDateString();
+        $payload = ['date' => $date, 'branch_id' => $branch, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertOk();
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertOk();
+        $day = \App\Models\BusinessDay::where('branch_id', $branch)->firstOrFail();
+        $snapshot = $day->closing_snapshot;
+        $this->assertTrue(\App\Services\BusinessDayReconciliation::historicalIntegrity($branch, $date)['consistent']);
+        // Simulate a database-level historical alteration that bypasses model guards.
+        \Illuminate\Support\Facades\DB::table('transactions')->insert([
+            'linked_id' => 'integrity-test', 'branch_id' => $branch, 'date' => $date,
+            'currency_id' => $currency->id, 'chart_of_account_id' => \App\Models\ChartOfAccount::firstOrFail()->id,
+            'amount' => 10, 'amount_afn' => 10,
+            'direction' => 'debit', 'created_by' => $user->id, 'is_safe' => true, 'is_approved' => true,
+            'approval_status' => 'approved', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $check = \App\Services\BusinessDayReconciliation::historicalIntegrity($branch, $date);
+        $this->assertTrue($check['verifiable']);
+        $this->assertFalse($check['consistent']);
+        $this->assertNotEmpty($check['differences']);
+        $this->assertSame($snapshot, $day->fresh()->closing_snapshot);
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
