@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
-        Route::post('/refresh-system', [ProfileController::class, 'refreshSystem'])->name('refresh-system');
+        Route::post('/refresh-system', [ProfileController::class, 'refreshSystem'])->middleware('role:Super Admin')->name('refresh-system');
     });
 
     // Accounts
@@ -127,13 +127,13 @@ Route::middleware('auth')->group(function () {
     //Configuration
     Route::prefix('configuration')->name('configuration.')->middleware('auth')->group(function () {
         // Settings
-        Route::prefix('settings')->name('settings.')->group(function () {
+        Route::prefix('settings')->name('settings.')->middleware('role:Super Admin')->group(function () {
             Route::get('/', [SettingController::class, 'index'])->name('index');
             Route::put('/', [SettingController::class, 'update'])->name('update');
         });
 
         //Users
-        Route::prefix('users')->name('users.')->middleware('auth')->group(function () {
+        Route::prefix('users')->name('users.')->middleware('auth')->middleware('role:Super Admin')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::get('/data', [UserController::class, 'data'])->name('data');
             Route::post('/', [UserController::class, 'store'])->name('store');
@@ -143,7 +143,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Roles
-        Route::prefix('roles')->name('roles.')->middleware(['auth'])->group(function () {
+        Route::prefix('roles')->name('roles.')->middleware(['auth'])->middleware('role:Super Admin')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->name('index');
             Route::get('/data', [RoleController::class, 'data'])->name('data');
             Route::post('/', [RoleController::class, 'store'])->name('store');
@@ -153,7 +153,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Permissions
-        Route::prefix('permissions')->name('permissions.')->middleware(['auth'])->group(function () {
+        Route::prefix('permissions')->name('permissions.')->middleware(['auth'])->middleware('role:Super Admin')->group(function () {
             Route::get('/', [PermissionController::class, 'index'])->name('index');
             Route::get('/data', [PermissionController::class, 'data'])->name('data');
             Route::post('/', [PermissionController::class, 'store'])->name('store');
@@ -224,7 +224,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Backup
-        Route::prefix('backups')->name('backups.')->group(function () { Route::get('/', [BackupController::class, 'index'])->name('index'); Route::get('/download', [BackupController::class, 'download'])->name('download'); Route::post('/restore', [BackupController::class, 'restore'])->name('restore'); });
+        Route::prefix('backups')->name('backups.')->middleware('role:Super Admin')->group(function () { Route::get('/', [BackupController::class, 'index'])->name('index'); Route::get('/download', [BackupController::class, 'download'])->name('download'); Route::post('/restore', [BackupController::class, 'restore'])->name('restore'); });
 
         //Audit Log
         Route::prefix('auditlogs')->name('auditlogs.')->middleware('auth')->group(function () {
