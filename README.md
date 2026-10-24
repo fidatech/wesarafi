@@ -149,4 +149,4 @@ Before upgrading any live sarafi installation, make a verified database + upload
 - Web-based database restoration is deliberately disabled (HTTP 503). Restore only during a planned maintenance window using a verified, separately retained snapshot and an offline administrator procedure.
 - SQLite online backups are disabled until a transactionally consistent snapshot method is implemented.
 - A database-only backup does not include uploaded documents, encryption keys, or the application environment. Back those up separately and securely.
-- This branch has not yet passed runtime or recovery tests. Do not deploy or merge without staging validation.
+- On October 24, 2026, the development checkout passed 71 automated tests (608 assertions) at commit `1f2171e`. Subsequent commits require a fresh test run. This is not staging or disaster-recovery verification; do not deploy or merge without those checks.
