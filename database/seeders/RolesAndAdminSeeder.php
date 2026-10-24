@@ -62,7 +62,7 @@ class RolesAndAdminSeeder extends Seeder
                 continue;
             }
             if (strlen($account['password']) < 16) {
-                throw new \\RuntimeException('Bootstrap administrator passwords must contain at least 16 characters.');
+                throw new \RuntimeException('Bootstrap administrator passwords must contain at least 16 characters.');
             }
             $existing = User::where('email', $account['email'])->first();
             if ($existing) {
@@ -72,7 +72,7 @@ class RolesAndAdminSeeder extends Seeder
             $created = User::create([
                 'name' => $account['name'],
                 'email' => $account['email'],
-                'username' => 'bootstrap_'.\\Illuminate\\Support\\Str::lower(\\Illuminate\\Support\\Str::random(12)),
+                'username' => 'bootstrap_'.\Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(12)),
                 'password' => Hash::make($account['password']),
                 'branch_id' => 1,
                 'status' => true,
