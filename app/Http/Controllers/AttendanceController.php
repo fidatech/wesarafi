@@ -13,6 +13,8 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless($request->user()->hasAnyRole(['Super Admin', 'Admin', 'Branch']), 403);
+        abort_if($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         $month = preg_match('/^\d{4}-\d{2}$/', (string) $request->month) ? $request->month : now()->format('Y-m');
         $start = Carbon::createFromFormat('Y-m-d', $month.'-01')->startOfMonth();
         $end = $start->copy()->endOfMonth();
@@ -28,6 +30,7 @@ class AttendanceController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless($request->user()->hasAnyRole(['Super Admin', 'Admin', 'Branch']), 403);
         $data = $request->validate([
             'month' => ['required', 'date_format:Y-m'], 'records' => ['required', 'array'],
             'records.*.*.status' => ['required', 'in:present,absent,leave,holiday,half_day'],
@@ -37,6 +40,7 @@ class AttendanceController extends Controller
 
         foreach ($data['records'] as $employeeId => $dates) {
             $employee = Employee::findOrFail($employeeId);
+            abort_if($request->user()->branch_id && (int) $employee->branch_id !== (int) $request->user()->branch_id, 403);
             foreach ($dates as $date => $row) {
                 abort_unless(str_starts_with($date, $data['month'].'-'), 422, 'Attendance date is outside the selected month.');
                 Attendance::updateOrCreate(['employee_id' => $employeeId, 'date' => $date], $row + [
