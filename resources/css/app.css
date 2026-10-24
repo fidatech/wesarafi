@@ -1475,3 +1475,50 @@ select.is-invalid + .select2-container .select2-selection {
     overflow-x: auto !important;
     overflow-y: hidden !important;
 }
+
+/* Dashboard hero artwork: original vector financial visualization; no banknote photography. */
+.wes-dashboard .dashboard-hero-modern {
+    background:linear-gradient(90deg,#e1f1ff 0%,#d0eaff 38%,#a9d9fc 74%,#d1eaff 100%) !important;
+    overflow:hidden;
+}
+.wes-dashboard .dashboard-hero-modern::before {
+    background:url('/assets/img/dashboard-finance-hero.svg') center center / cover no-repeat !important;
+    inset-inline-start:39% !important;
+    width:39% !important;
+    opacity:.95 !important;
+    pointer-events:none;
+}
+/* Keep currency and both action buttons aligned on the same filter row. */
+.wes-dashboard .dashboard-filter-panel {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    grid-auto-rows:min-content;
+    gap:8px 10px !important;
+    align-content:center;
+}
+.wes-dashboard .dashboard-filter-panel .dashboard-filter-title {grid-column:1/-1}
+.wes-dashboard .dashboard-filter-panel .dashboard-filter-actions {
+    grid-column:2 !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr);
+    align-items:end;
+    gap:6px;
+    min-width:0;
+    width:100%;
+}
+.wes-dashboard .dashboard-filter-panel .dashboard-filter-actions .btn {
+    width:100%;
+    min-width:0;
+    margin:0;
+    padding:6px 7px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    font-size:10px;
+    line-height:1.25;
+}
+@media(max-width:575.98px){
+    .wes-dashboard .dashboard-filter-panel .dashboard-filter-actions{grid-column:1/-1 !important}
+    .wes-dashboard .dashboard-hero-modern::before{opacity:.3 !important;inset-inline-start:30% !important;width:70% !important}
+}
