@@ -52,6 +52,34 @@ class Transaction extends Model
 
     protected static function booted(): void
     {
+        // Closed historical business days remain immutable after midnight.
+        static::saving(function (Transaction $transaction) {
+            $branch = (int) ($transaction->branch_id ?: $transaction->getRawOriginal('branch_id'));
+            $date = $transaction->date?->toDateString();
+            if ($branch && $date && \App\Services\DailyBalanceState::forBranch($branch, $date)['closed']) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'business_day' => 'This transaction belongs to a closed business day and cannot be changed.',
+                ]);
+            }
+            if ($transaction->exists && $transaction->isDirty(['branch_id', 'date'])) {
+                $oldBranch = (int) $transaction->getRawOriginal('branch_id');
+                $oldDate = substr((string) $transaction->getRawOriginal('date'), 0, 10);
+                if ($oldBranch && $oldDate && \App\Services\DailyBalanceState::forBranch($oldBranch, $oldDate)['closed']) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'business_day' => 'A transaction cannot be moved out of a closed business day.',
+                    ]);
+                }
+            }
+        });
+        static::deleting(function (Transaction $transaction) {
+            $branch = (int) $transaction->branch_id;
+            $date = $transaction->date?->toDateString();
+            if ($branch && $date && \App\Services\DailyBalanceState::forBranch($branch, $date)['closed']) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'business_day' => 'Transactions from a closed business day cannot be deleted.',
+                ]);
+            }
+        });
         static::updated(function (Transaction $transaction) {
             $fields = array_diff(\App\Support\TransactionAudit::FIELDS, ['id']);
             if (! $transaction->wasChanged($fields)) return;

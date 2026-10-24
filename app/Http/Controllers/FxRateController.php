@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Currency;
 use App\Models\BusinessDay;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use App\Services\DailyBalanceState;
+use App\Services\BusinessDayReconciliation;
 use App\Services\DailyValuationService;
 use App\Services\FxValuationService as FX;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +36,7 @@ class FxRateController extends Controller
 
         return response()->json([
             'day_state' => DailyBalanceState::forBranch($branchId),
+            'reconciliation' => BusinessDayReconciliation::report($branchId, $date),
             'date' => $date,
             'branch_id' => $branchId,
             'currencies' => $data,
@@ -58,9 +61,18 @@ class FxRateController extends Controller
             BusinessDay::create([
                 'branch_id' => $branchId, 'business_date' => $v['date'], 'status' => 'open',
                 'opened_by' => Auth::id(), 'opened_at' => now(),
+                'opening_snapshot' => [
+                    'previous_close' => BusinessDay::query()->where('branch_id', $branchId)
+                        ->whereDate('business_date', '<', $v['date'])->where('status', 'closed')
+                        ->orderByDesc('business_date')->first()?->closing_snapshot,
+                    'ledger' => BusinessDayReconciliation::report($branchId, $v['date'])['cash_book_by_currency'],
+                ],
             ]);
             DailyValuationService::setOpeningRates($v['date'], $branchId, $v['rates']);
         });
+        activity('business-day')->causedBy(Auth::user())->withProperties([
+            'branch_id' => (int) $v['branch_id'], 'date' => $v['date'], 'action' => 'opened',
+        ])->log('Business day opened');
         return response()->json(['success'=>true,'message'=>'Opening rates saved']);
     }
 
@@ -73,10 +85,15 @@ class FxRateController extends Controller
             'rates.*' => 'numeric|min:0.000001',
         ]);
 
+        $cashCounts = $req->validate([
+            'cash_counts' => 'sometimes|array',
+            'cash_counts.*' => 'required|numeric|min:0',
+            'closing_notes' => 'nullable|string|max:2000',
+        ]);
         $this->validateCurrentDay($v['date'], (int) $v['branch_id']);
         $state = DailyBalanceState::forBranch((int) $v['branch_id']);
         if (!$state['can_close']) return response()->json(['message' => 'Closing requires saved opening balances and cannot be repeated.'], 409);
-        $vid = DB::transaction(function () use ($v) {
+        $vid = DB::transaction(function () use ($v, $cashCounts) {
             $branchId = (int) $v['branch_id'];
             $day = BusinessDay::query()->where('branch_id', $branchId)
                 ->whereDate('business_date', $v['date'])->lockForUpdate()->first();
@@ -88,19 +105,38 @@ class FxRateController extends Controller
                 ]);
             }
             abort_unless($day->status === 'open', 409, 'Business day is already closing or closed.');
+            $reconciliation = BusinessDayReconciliation::report($branchId, $v['date']);
+            abort_if(!$reconciliation['reconciled'], 409, 'Cannot close: '.$reconciliation['pending_approvals'].' transactions await approval.');
+            $expected = $reconciliation['cash_book_by_currency'];
+            $actual = $cashCounts['cash_counts'] ?? [];
+            foreach ($expected as $currencyId => $balance) {
+                abort_unless(array_key_exists($currencyId, $actual), 422, 'Cash count is required for currency '.$currencyId.'.');
+                abort_unless(abs((float) $actual[$currencyId] - (float) $balance) < 0.01, 409,
+                    'Cash count does not match ledger for currency '.$currencyId.'. Resolve the difference before closing.');
+            }
+            foreach ($actual as $currencyId => $amount) {
+                abort_unless(array_key_exists($currencyId, $expected) || abs((float) $amount) < 0.01, 409,
+                    'Unexpected physical cash in currency '.$currencyId.'.');
+            }
             $day->update(['status' => 'closing']);
             $valuationId = DailyValuationService::setClosingAndValue($v['date'], $branchId, $v['rates']);
             $valuation = \App\Models\FxDailyValuation::find($valuationId);
             $day->update([
                 'status' => 'closed', 'closed_by' => Auth::id(), 'closed_at' => now(),
+                'cash_counts' => $actual, 'closing_notes' => $cashCounts['closing_notes'] ?? null,
                 'closing_snapshot' => [
                     'realized_pl_afn' => $valuation?->realized_pl_afn,
                     'unrealized_pl_afn' => $valuation?->unrealized_pl_afn,
                     'temp_pnl_afn' => $valuation?->temp_pnl_afn,
+                    'reconciliation' => $reconciliation,
                 ],
             ]);
             return $valuationId;
         });
+        activity('business-day')->causedBy(Auth::user())->withProperties([
+            'branch_id' => (int) $v['branch_id'], 'date' => $v['date'], 'action' => 'closed',
+            'valuation_id' => $vid,
+        ])->log('Business day closed');
         $val = \App\Models\FxDailyValuation::find($vid);
 
         return response()->json([

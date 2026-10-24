@@ -71,6 +71,13 @@
             </table>
           </div>
         </form>
+        <div class="mt-3 border rounded p-3">
+          <h6 class="mb-2"><i class="bx bx-check-shield me-1"></i> Cash reconciliation</h6>
+          <p class="text-muted small mb-2">Enter the independently counted physical cash for each currency. Differences must be resolved before closing.</p>
+          <div id="fxCashCounts" class="row g-2"></div>
+          <label for="fxClosingNotes" class="form-label mt-3">Closing notes (optional)</label>
+          <textarea id="fxClosingNotes" class="form-control" rows="2" maxlength="2000"></textarea>
+        </div>
         <small class="text-muted d-block">Closing will also create today’s valuation and Temporary FX P&L.</small>
       </div>
       <div class="modal-footer">

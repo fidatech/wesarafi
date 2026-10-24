@@ -25,7 +25,11 @@
                 <div class="layout-page">
 
                     @include('layouts.menubar')
-                @if(auth()->check() && \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1))['closed'])
+                @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
+                @if($businessDayView && $businessDayView['status'] === 'not_opened')
+                    <div class="alert alert-info mx-3 mt-3 mb-0" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day not opened.</strong> An authorized user must save opening rates before financial transactions can be posted.</div>
+                @endif
+                @if($businessDayView && $businessDayView['closed'])
                     <div class="alert alert-warning mx-3 mt-3 mb-0" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
                 @endif
 
@@ -186,6 +190,19 @@
                     const b = $('#close_branch_id').val() || 1;
                     loadMeta(d, b, res => {
                         fillTable($('#tblFxClose tbody'), res.currencies, 'close'); // default to effective close
+                        const $counts = $('#fxCashCounts').empty();
+                        const cash = res.reconciliation?.cash_book_by_currency || {};
+                        const currencyCodes = Object.fromEntries(res.currencies.map(c => [String(c.id), c.code]));
+                        Object.entries(cash).forEach(([id, amount]) => {
+                            const $cell = $('<div class="col-md-6"></div>');
+                            $('<label class="form-label"></label>').text(`${currencyCodes[id] || id} — ledger: ${Number(amount).toLocaleString()}`).appendTo($cell);
+                            $('<input type="number" step="0.01" min="0" class="form-control fx-cash-count" required>')
+                                .attr('data-cid', id).attr('placeholder', 'Physical cash counted').appendTo($cell);
+                            $counts.append($cell);
+                        });
+                        if (res.reconciliation?.pending_approvals > 0) {
+                            $counts.prepend($('<div class="col-12 text-danger small"></div>').text(`${res.reconciliation.pending_approvals} transactions require approval before closing.`));
+                        }
                         new bootstrap.Modal(document.getElementById('modalFxClose')).show();
                     });
                 });
@@ -197,6 +214,16 @@
                     $('#tblFxClose .rate-input').each(function() {
                         rates[$(this).data('cid')] = parseFloat($(this).val() || 0);
                     });
+                    const cash_counts = {};
+                    let missingCount = false;
+                    $('#fxCashCounts .fx-cash-count').each(function() {
+                        if ($(this).val() === '') missingCount = true;
+                        cash_counts[$(this).data('cid')] = $(this).val();
+                    });
+                    if (missingCount) {
+                        Swal.fire({icon:'warning', title:'Cash count required', text:'Count each currency before closing.'});
+                        return;
+                    }
                     $.ajax({
                         url: '{{ route('fx.rates.close') }}',
                         method: 'POST',
@@ -204,7 +231,9 @@
                             _token: csrftoken,
                             date,
                             branch_id,
-                            rates
+                            rates,
+                            cash_counts,
+                            closing_notes: $('#fxClosingNotes').val()
                         },
                         success: res => {
                             const v = res.valuation || {};

@@ -13,6 +13,31 @@ class DailyBalanceLockTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_financial_posts_require_open_day_when_enforcement_is_enabled(): void
+    {
+        $this->seed();
+        config()->set('business_day.require_open_for_posting', true);
+        $user = User::firstOrFail();
+        $this->actingAs($user)->postJson(route('remittances.store'), [])
+            ->assertStatus(423)->assertJsonPath('business_day_closed', true);
+    }
+
+    public function test_opening_and_closing_rate_endpoints_require_valid_day(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $branch = (int) ($user->branch_id ?: 1);
+        $currency = Currency::firstOrFail();
+        $date = now('Asia/Kabul')->toDateString();
+        $payload = ['date' => $date, 'branch_id' => $branch, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertOk();
+        $this->assertSame('open', DailyBalanceState::forBranch($branch)['status']);
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertStatus(409);
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertOk();
+        $this->assertTrue(DailyBalanceState::forBranch($branch)['closed']);
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertStatus(409);
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
