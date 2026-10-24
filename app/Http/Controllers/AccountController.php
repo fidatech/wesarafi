@@ -60,6 +60,11 @@ class AccountController extends Controller
     }
 
 
+    private function scopedAccount(int|string $id): Account
+    {
+        return Account::query()->when(auth()->user()->branch_id, fn ($q) => $q->where('branch_id', auth()->user()->branch_id))->findOrFail($id);
+    }
+
     public function countRegularCustomers()
     {
         $subcategory = AccountSubCategory::where('name_en', 'Regular Customer')->first();
@@ -67,7 +72,7 @@ class AccountController extends Controller
         $query = Account::where('type', 'customer')
             ->where('account_sub_category_id', optional($subcategory)->id);
 
-        return $query->count();
+        return $query->when(auth()->user()->branch_id, fn ($q) => $q->where('branch_id', auth()->user()->branch_id))->count();
     }
     public function regularCustomersData(Request $request, \App\Services\CustomerListingService $listing)
     {
@@ -406,7 +411,7 @@ class AccountController extends Controller
             'monthly_income' => $request->monthly_income ?? null,
             'id_card_type' => $request->id_card_type ?? null,
             'id_card_number' => $request->id_card_number ?? null,
-            'id_card_file' => $idCardPath ?? ($request->filled('id') ? Account::findOrFail($request->id)->id_card_file : null),
+            'id_card_file' => $idCardPath ?? ($request->filled('id') ? $this->scopedAccount($request->id)->id_card_file : null),
             'risk_level' => $request->risk_level ?? 'low',
             'address' => $request->address ?? null,
             'profile_picture' => $profilePath ?? null,
@@ -452,7 +457,7 @@ class AccountController extends Controller
         }
 
         if ($request->filled('id')) {
-            $account = Account::findOrFail($request->id);
+            $account = $this->scopedAccount($request->id);
             $account->update($data);
             $message = ucfirst($customer_type) . ' Customer updated successfully';
         } else {
@@ -473,7 +478,7 @@ class AccountController extends Controller
 
     public function show($id)
     {
-        $account = Account::with('branch')->findOrFail($id);
+        $account = Account::with('branch')->when(auth()->user()->branch_id, fn ($q) => $q->where('branch_id', auth()->user()->branch_id))->findOrFail($id);
 
         return response()->json([
             'full_name' => $account->full_name,
@@ -489,7 +494,7 @@ class AccountController extends Controller
 
     public function edit($id)
     {
-        $account = Account::findOrFail($id);
+        $account = $this->scopedAccount($id);
 
         if ($account->id_card_file && str_starts_with($account->id_card_file, 'exchange-customer-ids/')) {
             $account->setAttribute('id_card_url', route('exchange.customers.id-card', $account));
@@ -499,7 +504,7 @@ class AccountController extends Controller
 
     public function destroy($id)
     {
-        $account = Account::findOrFail($id);
+        $account = $this->scopedAccount($id);
 
         if ($account->profile_picture && $account->profile_picture !== 'uploads/no_image.jpg') {
             @unlink(public_path($account->profile_picture));

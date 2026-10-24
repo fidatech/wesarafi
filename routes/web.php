@@ -50,7 +50,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Accounts
-    Route::prefix('accounts')->name('accounts.')->middleware('auth')->group(function () {
+    Route::prefix('accounts')->name('accounts.')->middleware(['auth', 'role:Super Admin|Admin|Branch'])->group(function () {
         // All Customers
         Route::prefix('all-customers')->name('all_customers.')->group(function () {
             Route::get('/', [AccountController::class, 'allCustomers'])->name('index');
@@ -163,7 +163,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Branches
-        Route::prefix('branches')->name('branches.')->group(function () {
+        Route::prefix('branches')->name('branches.')->middleware('role:Super Admin|Admin')->group(function () {
             Route::get('/', [BranchController::class, 'index'])->name('index');
             Route::get('/data', [BranchController::class, 'data'])->name('data');
             Route::post('/', [BranchController::class, 'store'])->name('store');
@@ -173,7 +173,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Currency
-        Route::prefix('currencies')->name('currencies.')->middleware(['auth'])->group(function () {
+        Route::prefix('currencies')->name('currencies.')->middleware(['auth', 'role:Super Admin'])->group(function () {
             Route::get('/', [CurrencyController::class, 'index'])->name('index');
             Route::post('/', [CurrencyController::class, 'store'])->name('store');
             Route::get('/data', [CurrencyController::class, 'data'])->name('data');
@@ -184,7 +184,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Designations
-        Route::prefix('designations')->name('designations.')->middleware('auth')->group(function () {
+        Route::prefix('designations')->name('designations.')->middleware(['auth', 'role:Super Admin|Admin'])->group(function () {
             Route::get('/', [DesignationController::class, 'index'])->name('index');
             Route::get('/data', [DesignationController::class, 'data'])->name('data');
             Route::post('/', [DesignationController::class, 'store'])->name('store');
@@ -194,7 +194,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Expense Types
-        Route::prefix('expense-types')->name('expense-types.')->middleware('auth')->group(function () {
+        Route::prefix('expense-types')->name('expense-types.')->middleware(['auth', 'role:Super Admin|Admin'])->group(function () {
             Route::get('/', [ExpenseTypeController::class, 'index'])->name('index');
             Route::get('/data', [ExpenseTypeController::class, 'data'])->name('data');
             Route::post('/', [ExpenseTypeController::class, 'store'])->name('store');
@@ -204,7 +204,7 @@ Route::middleware('auth')->group(function () {
         });
 
         //Liability Types
-        Route::prefix('liability-types')->name('liability-types.')->middleware('auth')->group(function () {
+        Route::prefix('liability-types')->name('liability-types.')->middleware(['auth', 'role:Super Admin|Admin'])->group(function () {
             Route::get('/', [LiabilityTypeController::class, 'index'])->name('index');
             Route::get('/data', [LiabilityTypeController::class, 'data'])->name('data');
             Route::post('/', [LiabilityTypeController::class, 'store'])->name('store');

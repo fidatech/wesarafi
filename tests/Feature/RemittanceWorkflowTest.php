@@ -176,6 +176,7 @@ class RemittanceWorkflowTest extends TestCase
 
     public function test_offline_branch_creation_and_authoritative_receiver_details(): void
     {
+        $this->mainUser->assignRole('Admin');
         $this->postJson('/configuration/branches', ['name' => 'Offline Branch', 'type' => 'agent', 'allows_direct_remittance' => false])->assertOk();
         $branch = Branch::where('name', 'Offline Branch')->firstOrFail();
         $this->assertFalse($branch->hasRemittanceAccess());
