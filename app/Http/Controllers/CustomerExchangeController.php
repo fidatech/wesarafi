@@ -179,7 +179,9 @@ class CustomerExchangeController extends Controller
     public function destroy(CustomerExchange $exchange)
     {
         abort_if(auth()->user()->branch_id && auth()->user()->branch_id !== $exchange->branch_id, 403);
-        DB::transaction(function () use ($exchange) { Transaction::where('linked_id', $exchange->linked_id)->delete(); $exchange->delete(); });
+        abort_if(Transaction::where('linked_id', $exchange->linked_id)->exists(), 422,
+            'Posted exchanges cannot be deleted. Use an approved accounting reversal workflow.');
+        DB::transaction(fn () => $exchange->delete());
         return back()->with('success', 'Exchange deleted.');
     }
 
@@ -188,8 +190,12 @@ class CustomerExchangeController extends Controller
         $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer|exists:customer_exchanges,id']);
         $query = CustomerExchange::whereIn('id', $data['ids']);
         if (auth()->user()->branch_id) $query->where('branch_id', auth()->user()->branch_id);
-        DB::transaction(function () use ($query) {
-            $query->get()->each(function ($exchange) { Transaction::where('linked_id', $exchange->linked_id)->delete(); $exchange->delete(); });
+        DB::transaction(function () use ($query, $data) {
+            $exchanges = $query->lockForUpdate()->get();
+            abort_unless($exchanges->count() === count(array_unique($data['ids'])), 403);
+            abort_if(Transaction::whereIn('linked_id', $exchanges->pluck('linked_id'))->exists(), 422,
+                'Selection includes posted exchanges. No exchanges were deleted.');
+            $exchanges->each(fn ($exchange) => $exchange->delete());
         });
         return back()->with('success', 'Selected exchanges deleted.');
     }

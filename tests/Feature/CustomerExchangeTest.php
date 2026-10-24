@@ -34,6 +34,17 @@ class CustomerExchangeTest extends TestCase
         ];
     }
 
+    public function test_posted_exchange_cannot_be_deleted_individually_or_in_bulk(): void
+    {
+        $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $before = Transaction::where('linked_id', $exchange->linked_id)->count();
+        $this->delete(route('exchange.customers.destroy', $exchange))->assertStatus(422);
+        $this->delete(route('exchange.customers.bulk-destroy'), ['ids' => [$exchange->id]])->assertStatus(422);
+        $this->assertNotNull($exchange->fresh());
+        $this->assertSame($before, Transaction::where('linked_id', $exchange->linked_id)->count());
+    }
+
     public function test_exchange_page_renders_collapsed_editor(): void
     {
         $this->get(route('exchange.customers.index'))->assertOk()
