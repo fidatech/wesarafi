@@ -31,6 +31,7 @@ class CustomerExchangeController extends Controller
         return view('exchange.customers.index', [
             'temporaryCustomerCode' => 'TEMP-'.(Account::where('type', 'customer')->whereHas('subCategory', fn ($query) => $query->where('name_en', 'Temporary Customer'))->count() + 1),
             'exchanges' => $query->paginate(30)->withQueryString(),
+            'exchangeReversals' => DB::table('journal_reversals')->join('customer_exchanges', 'customer_exchanges.linked_id', '=', 'journal_reversals.original_linked_id')->when(auth()->user()->branch_id, fn ($q, $branch) => $q->where('customer_exchanges.branch_id', $branch))->select('journal_reversals.*', 'customer_exchanges.id as exchange_id')->orderByDesc('journal_reversals.created_at')->limit(15)->get(),
             'customers' => Account::where('type', 'customer')->where('is_active', true)->whereNull('deleted_at')->when(auth()->user()->branch_id, fn ($query, $branchId) => $query->where('branch_id', $branchId))->orderBy('full_name')->get(),
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
             'branches' => auth()->user()->branch_id ? Branch::whereKey(auth()->user()->branch_id)->get() : Branch::orderBy('name')->get(),

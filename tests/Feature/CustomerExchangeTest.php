@@ -46,6 +46,9 @@ class CustomerExchangeTest extends TestCase
         $audit = \Illuminate\Support\Facades\DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->first();
         $this->assertNotNull($audit);
         $this->assertSame('reversed', $exchange->fresh()->status);
+        $this->get(route('exchange.customers.index'))->assertOk()
+            ->assertSee('Reversal audit history')->assertSee('Correct customer quote')
+            ->assertSee($audit->reversal_linked_id)->assertSee('reversed');
         $reversal = Transaction::where('linked_id', $audit->reversal_linked_id)->get();
         $this->assertCount($original->count(), $reversal);
         foreach ($original as $line) {
