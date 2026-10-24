@@ -26,6 +26,7 @@ class DailyBalanceLockTest extends TestCase
     {
         $this->seed();
         $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
         $branch = (int) ($user->branch_id ?: 1);
         $currency = Currency::firstOrFail();
         $date = now('Asia/Kabul')->toDateString();
@@ -38,10 +39,43 @@ class DailyBalanceLockTest extends TestCase
         $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertStatus(409);
     }
 
+    public function test_unauthorized_user_cannot_open_or_close_a_business_day(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $branch = (int) ($user->branch_id ?: 1);
+        $currency = Currency::firstOrFail();
+        $payload = ['date' => now('Asia/Kabul')->toDateString(), 'branch_id' => $branch, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->getJson(route('fx.rates.meta'))->assertForbidden();
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertForbidden();
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertForbidden();
+        $this->assertTrue(DailyBalanceState::forBranch($branch)['can_open']);
+    }
+
+    public function test_business_day_opening_and_closing_records_actor_and_snapshot(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $branch = (int) ($user->branch_id ?: 1);
+        $currency = Currency::firstOrFail();
+        $payload = ['date' => now('Asia/Kabul')->toDateString(), 'branch_id' => $branch, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertOk();
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertOk();
+        $day = \App\Models\BusinessDay::where('branch_id', $branch)->firstOrFail();
+        $this->assertSame($user->id, (int) $day->opened_by);
+        $this->assertSame($user->id, (int) $day->closed_by);
+        $this->assertSame('closed', $day->status);
+        $this->assertNotNull($day->closing_snapshot);
+        $this->assertNotNull($day->closed_at);
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
         $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
         $branch = (int) ($user->branch_id ?: 1);
         $currency = Currency::firstOrFail();
         $date = now('Asia/Kabul')->toDateString();

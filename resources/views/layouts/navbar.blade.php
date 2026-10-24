@@ -22,11 +22,12 @@
             </li>
 
             @php($dailyBalanceState = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
+            @php($canManageBusinessDay = $user?->hasRole('Super Admin') || $user?->can('manage business day'))
             <li class="nav-item d-none d-md-flex align-items-center gap-1 me-2 navbar-balance-actions" aria-label="Opening and closing balances">
-                <button class="navbar-balance-icon" id="btnFxOpen" type="button" @if(!$dailyBalanceState['can_open']) disabled hidden @endif aria-label="Opening balances and rates" title="Opening balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <button class="navbar-balance-icon" id="btnFxOpen" type="button" @if(!$canManageBusinessDay || !$dailyBalanceState['can_open']) disabled hidden @endif aria-label="Opening balances and rates" title="Opening balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
                     <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-open" aria-hidden="true"><i class="bx bx-plus"></i></span>
                 </button>
-                <button class="navbar-balance-icon" id="btnFxClose" type="button" @if(!$dailyBalanceState['can_close']) disabled hidden @endif aria-label="Closing balances and rates" title="Closing balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                <button class="navbar-balance-icon" id="btnFxClose" type="button" @if(!$canManageBusinessDay || !$dailyBalanceState['can_close']) disabled hidden @endif aria-label="Closing balances and rates" title="Closing balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
                     <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-close" aria-hidden="true"><i class="bx bx-minus"></i></span>
                 </button>
                 @if($dailyBalanceState['closed'])

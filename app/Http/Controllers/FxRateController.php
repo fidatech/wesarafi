@@ -20,6 +20,7 @@ class FxRateController extends Controller
     {
         $date = now('Asia/Kabul')->toDateString();
         $branchId = (int) (Auth::user()?->branch_id ?: 1);
+        abort_unless($req->user()->hasRole('Super Admin') || $req->user()->can('manage business day'), 403);
 
         $currs = Currency::orderBy('code')->get(['id','code']);
         $data = $currs->map(function($c) use ($date,$branchId){
@@ -45,6 +46,7 @@ class FxRateController extends Controller
 
     public function setOpen(Request $req)
     {
+        abort_unless($req->user()->hasRole('Super Admin') || $req->user()->can('manage business day'), 403);
         $v = $req->validate([
             'date' => 'required|date',
             'branch_id' => 'required|integer|exists:branches,id',
@@ -78,6 +80,7 @@ class FxRateController extends Controller
 
     public function setClose(Request $req)
     {
+        abort_unless($req->user()->hasRole('Super Admin') || $req->user()->can('manage business day'), 403);
         $v = $req->validate([
             'date' => 'required|date',
             'branch_id' => 'required|integer|exists:branches,id',

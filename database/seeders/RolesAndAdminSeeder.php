@@ -46,6 +46,8 @@ class RolesAndAdminSeeder extends Seeder
             }
         }
 
+        $businessDayPermission = Permission::firstOrCreate(['name' => 'manage business day']);
+        $permissions[] = $businessDayPermission;
         $superAdmin->syncPermissions($permissions);
         $admin->syncPermissions($permissions);
 
