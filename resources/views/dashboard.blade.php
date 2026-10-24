@@ -15,10 +15,11 @@
             <h2>{{ auth()->user()->name ?? 'Administrator' }}</h2>
             <p>Here is the operational overview for <strong>{{ $scopeLabel }}</strong> as of {{ $date }}.</p>
             <div class="dashboard-quick-actions">
-                <a href="{{ route('exchange.customers.index') }}"><i class="bx bx-transfer-alt"></i><span>New exchange</span></a>
-                <a href="{{ route('remittances.index') }}"><i class="bx bx-send"></i><span>Send remittance</span></a>
-                <a href="{{ route('journal.transactions.index') }}"><i class="bx bx-book-open"></i><span>Open journal</span></a>
-                <div class="dropdown d-inline-block"><button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">More actions</button><ul class="dropdown-menu"><li><a class="dropdown-item" href="{{ route('accounting.expenses.index') }}">Expenses</a></li><li><a class="dropdown-item" href="{{ route('hr.employees.index') }}">Employees</a></li></ul></div>
+                <a class="hero-action hero-action-exchange" href="{{ route('exchange.customers.index') }}"><i class="bx bx-transfer-alt"></i><span>New exchange</span></a>
+                <a class="hero-action hero-action-remittance" href="{{ route('remittances.index') }}"><i class="bx bx-send"></i><span>Send remittance</span></a>
+                <a class="hero-action hero-action-journal" href="{{ route('journal.transactions.index') }}"><i class="bx bx-book-open"></i><span>Open journal</span></a>
+                <a class="hero-action hero-action-expenses" href="{{ route('accounting.expenses.index') }}"><i class="bx bx-receipt"></i><span>Expenses</span></a>
+                <a class="hero-action hero-action-employees" href="{{ route('hr.employees.index') }}"><i class="bx bx-group"></i><span>Employees</span></a>
             </div>
         </div>
         <form method="GET" action="{{ route('dashboard') }}" class="dashboard-filter dashboard-filter-panel" id="dashboardFilters">
@@ -39,7 +40,7 @@
             <div><label for="dashboardCurrency">Currency</label><select id="dashboardCurrency" name="currency_id" class="form-select"><option value="">All currencies</option>@foreach($currencies as $currency)<option value="{{ $currency->id }}" @selected($currencyId == $currency->id)>{{ $currency->code }}</option>@endforeach</select></div>
             <div class="dashboard-filter-actions">
                 <button type="submit" class="btn btn-primary"><i class="bx bx-filter-alt me-1"></i> Apply filters</button>
-                <a class="btn btn-outline-secondary" href="{{ route('dashboard') }}" title="Reset dashboard filters"><i class="bx bx-reset me-1"></i> Reset</a>
+                <a class="btn btn-outline-secondary" href="{{ route('dashboard') }}" title="Reset dashboard filters"><i class="bx bx-refresh"></i><span>Reset</span></a>
             </div>
         </form>
     </section>
