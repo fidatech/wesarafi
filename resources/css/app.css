@@ -1323,3 +1323,68 @@ select.is-invalid + .select2-container .select2-selection {
 .content-wrapper > .container-fluid:has(> .wes-dashboard) {
     padding-top: 0 !important;
 }
+
+/* Dashboard screenshot parity: account for fixed navbar AND fixed horizontal menu. */
+@media (min-width: 1200px) {
+    .content-wrapper:has(.wes-dashboard) {
+        padding-top: var(--wes-fixed-chrome-height) !important;
+    }
+}
+.content-wrapper > .container-fluid:has(> .wes-dashboard) {
+    padding-top: 12px !important;
+}
+.wes-dashboard .dashboard-hero-modern { margin-top:0 !important; }
+/* Reference uses a 184px blue financial hero with light controls. */
+.wes-dashboard .dashboard-hero-modern {
+    background:linear-gradient(90deg,rgba(218,237,255,.97) 0%,rgba(204,232,255,.80) 43%,rgba(152,211,255,.48) 73%,rgba(180,225,255,.70) 100%),url('/assets/img/background.webp') center/cover;
+}
+.wes-dashboard .dashboard-kpi-card{position:relative}
+.wes-dashboard .dashboard-kpi-mark{width:115px;height:39px;bottom:8px;right:10px;top:auto;background:none;opacity:1;border-radius:0}
+.wes-dashboard .dashboard-kpi-mark i{display:none}
+.wes-dashboard .dashboard-kpi-mark::before{content:'';display:block;width:115px;height:38px;background-repeat:no-repeat;background-position:center;background-size:contain;opacity:.92}
+.wes-dashboard .is-cash .dashboard-kpi-mark::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 115 38'%3E%3Cpath d='M0 36 Q9 32 16 33 T32 24 T49 26 T65 21 T83 18 T100 9 T115 15 V38 H0Z' fill='%2311b874' fill-opacity='.15'/%3E%3Cpath d='M0 36 Q9 32 16 33 T32 24 T49 26 T65 21 T83 18 T100 9 T115 15' fill='none' stroke='%2305b66d' stroke-width='1.3'/%3E%3C/svg%3E")}
+.wes-dashboard .is-expense .dashboard-kpi-mark::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 115 38'%3E%3Cpath d='M0 36 Q12 33 20 25 T41 22 T64 24 T84 16 T101 11 T115 15 V38 H0Z' fill='%23ff4662' fill-opacity='.09'/%3E%3Cpath d='M0 36 Q12 33 20 25 T41 22 T64 24 T84 16 T101 11 T115 15' fill='none' stroke='%23ff4662' stroke-width='1.3'/%3E%3C/svg%3E")}
+.wes-dashboard .is-bank .dashboard-kpi-mark::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 115 38'%3E%3Cpath d='M0 32 Q13 38 24 27 T44 25 T64 20 T83 18 T103 8 T115 15 V38 H0Z' fill='%238e4aff' fill-opacity='.10'/%3E%3Cpath d='M0 32 Q13 38 24 27 T44 25 T64 20 T83 18 T103 8 T115 15' fill='none' stroke='%238e4aff' stroke-width='1.3'/%3E%3C/svg%3E")}
+.wes-dashboard .is-transactions .dashboard-kpi-mark::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 115 38'%3E%3Cpath d='M0 34 Q14 27 25 32 T48 26 T69 23 T91 20 T115 18 V38 H0Z' fill='%23ff921e' fill-opacity='.10'/%3E%3Cpath d='M0 34 Q14 27 25 32 T48 26 T69 23 T91 20 T115 18' fill='none' stroke='%23ff921e' stroke-width='1.3'/%3E%3C/svg%3E")}
+.wes-dashboard .dashboard-cash-table-head,.wes-dashboard .cash-balance-row{display:grid;grid-template-columns:1.05fr 1.15fr 1fr;align-items:center;gap:5px}
+.wes-dashboard .dashboard-cash-table-head{background:#f2f5f9;color:#223a5b;font-size:10px;font-weight:700;padding:7px 10px}
+.wes-dashboard .dashboard-cash-table-head span:nth-child(2),.wes-dashboard .dashboard-cash-table-head span:nth-child(3){text-align:right}
+.wes-dashboard .cash-balance-row{padding:9px 11px;border-bottom:1px solid #edf0f5;min-height:38px}
+.wes-dashboard .currency-pill{background:transparent;border-radius:0;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#10254b;padding:0}
+.wes-dashboard .dashboard-currency-flag{font-size:16px}
+.wes-dashboard .dashboard-cash-amount,.wes-dashboard .dashboard-cash-equivalent{text-align:right;font-size:11px;font-weight:600;color:#162e54}
+.wes-dashboard .dashboard-cash-equivalent{font-weight:500}
+.wes-dashboard .cash-total-footer{background:#f5f7fb;margin:8px 10px;padding:8px 10px;border:0;border-radius:6px;font-size:11px}
+.wes-dashboard .dashboard-card .card-header{border-bottom:0}
+.wes-dashboard .dashboard-exchange-chart .card-header{padding-bottom:3px}
+.wes-dashboard .dashboard-exchange-chart .card-body{padding-top:0}
+.wes-dashboard .dashboard-empty-state{display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:center}
+.wes-dashboard .dashboard-empty-state>i{font-size:32px;color:#8ba0c1}
+.wes-dashboard .dashboard-empty-state strong{color:#5e7597;font-size:12px}
+.wes-dashboard .dashboard-empty-state small{font-size:10px}
+.wes-dashboard .dashboard-filter-panel .select2-container{max-width:100%}
+.wes-dashboard .dashboard-filter-panel .select2-selection--single{min-height:32px !important;background:#fff!important;border:1px solid #dfe7f0!important}
+.wes-dashboard .dashboard-filter-panel .select2-selection__rendered{font-size:11px!important;line-height:30px!important}
+.wes-dashboard .dashboard-filter-panel .select2-selection__arrow{height:30px!important}
+
+/* Exact currency artwork extracted from the supplied dashboard reference. */
+.wes-dashboard .dashboard-hero-modern {
+    background:linear-gradient(105deg,#e0f0ff 0%,#b9e2ff 49%,#a6d7fb 76%,#c3e5ff 100%) !important;
+}
+.wes-dashboard .dashboard-hero-modern::before {
+    content:'';
+    display:block;
+    position:absolute;
+    inset-block:0;
+    inset-inline-start:45%;
+    width:29%;
+    height:100%;
+    background:url('/assets/img/dashboard-currency-hero.jpg') center/cover no-repeat;
+    opacity:.92;
+    z-index:-1;
+    border:0;
+    border-radius:0;
+}
+.wes-dashboard .dashboard-hero-modern::after { display:none; }
+.wes-dashboard .dashboard-hero-copy,.wes-dashboard .dashboard-filter-panel { position:relative;z-index:1; }
+@media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern::before{inset-inline-start:42%;width:58%;opacity:.45}}

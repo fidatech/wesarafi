@@ -13,7 +13,7 @@
         <div class="dashboard-hero-copy">
             <span class="dashboard-greeting">Good day,</span>
             <h2>{{ auth()->user()->name ?? 'Administrator' }}</h2>
-            <p>Here is the operational position for <strong>{{ $scopeLabel }}</strong> as of {{ $date }}.</p>
+            <p>Here is the operational overview for <strong>{{ $scopeLabel }}</strong> as of {{ $date }}.</p>
             <div class="dashboard-quick-actions">
                 <a href="{{ route('exchange.customers.index') }}"><i class="bx bx-transfer-alt"></i><span>New exchange</span></a>
                 <a href="{{ route('remittances.index') }}"><i class="bx bx-send"></i><span>Send remittance</span></a>
@@ -46,28 +46,24 @@
             <div class="dashboard-finance-card dashboard-kpi-card is-cash">
                 <div class="dashboard-finance-icon"><i class="bx bx-wallet"></i></div>
                 <div class="dashboard-kpi-copy"><span>Available cash</span><strong>{{ $currentCashAfn === null ? '—' : $money($currentCashAfn) }} <small>AFN</small></strong><small>{{ $cashBalances->firstWhere('code', 'USD') ? number_format((float) $cashBalances->firstWhere('code', 'USD')['balance'], 2).' USD' : 'All currencies' }}</small><small>{{ $scopeLabel }} · as of {{ $date }}</small></div>
-                <span class="dashboard-kpi-mark"><i class="bx bx-trending-up"></i></span>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
             <a class="dashboard-finance-card dashboard-kpi-card is-expense" href="{{ route('accounting.expenses.index') }}">
                 <div class="dashboard-finance-icon"><i class="bx bx-receipt"></i></div>
                 <div class="dashboard-kpi-copy"><span>Monthly expenses</span><strong>{{ $money($monthExpenses) }} <small>AFN</small></strong><small>{{ $monthStart }} — {{ $date }}</small></div>
-                <span class="dashboard-kpi-mark"><i class="bx bx-line-chart-down"></i></span>
             </a>
         </div>
         <div class="col-xl-3 col-md-6">
             <a class="dashboard-finance-card dashboard-kpi-card is-bank" href="{{ route('accounts.banks.index') }}">
-                <div class="dashboard-finance-icon"><i class="bx bx-building-house"></i></div>
-                <div class="dashboard-kpi-copy"><span>Bank activity</span><strong>{{ $money($bankTransactionVolume) }} <small>AFN</small></strong><small>Transaction volume this month</small></div>
-                <span class="dashboard-kpi-mark"><i class="bx bx-bar-chart-alt-2"></i></span>
+                <div class="dashboard-finance-icon"><i class="bx bxs-bank"></i></div>
+                <div class="dashboard-kpi-copy"><span>Bank activity</span><strong>{{ $money($bankTransactionVolume) }} <small>AFN</small></strong><small>This month</small></div>
             </a>
         </div>
         <div class="col-xl-3 col-md-6">
             <a class="dashboard-finance-card dashboard-kpi-card is-transactions" href="{{ route('journal.transactions.index', ['date_range' => $date . ' - ' . $date]) }}">
                 <div class="dashboard-finance-icon"><i class="bx bx-transfer-alt"></i></div>
-                <div class="dashboard-kpi-copy"><span>Today's transactions</span><strong>{{ $integer($summary['today_transactions']) }}</strong><small>Approved treasury movements</small><small>{{ $date }}</small></div>
-                <span class="dashboard-kpi-mark"><i class="bx bx-trending-up"></i></span>
+                <div class="dashboard-kpi-copy"><span>Today's transactions</span><strong>{{ $integer($summary['today_transactions']) }}</strong><small>All types</small><small>{{ $date }}</small></div>
             </a>
         </div>
     </div>
@@ -85,13 +81,13 @@
         </div>
         <div class="col-xxl-3 col-xl-3 col-md-4 col-sm-6">
             <a class="dashboard-count-card metric-cyan" href="{{ route('configuration.branches.index') }}">
-                <span class="dashboard-count-icon"><i class="bx bx-git-branch"></i></span>
+                <span class="dashboard-count-icon"><i class="bx bx-buildings"></i></span>
                 <span class="dashboard-count-copy"><small>Branches</small><strong>{{ $integer($summary['branches']) }}</strong><em>Network coverage</em></span><i class="bx bx-chevron-right metric-arrow rtl-flip"></i>
             </a>
         </div>
         <div class="col-xxl-3 col-xl-3 col-md-4 col-sm-6">
             <a class="dashboard-count-card metric-green" href="{{ route('accounts.all_customers.index') }}">
-                <span class="dashboard-count-icon"><i class="bx bx-group"></i></span>
+                <span class="dashboard-count-icon"><i class="bx bx-user"></i></span>
                 <span class="dashboard-count-copy"><small>All customers</small><strong>{{ $integer($summary['customers']) }}</strong><em>Customer accounts</em></span><i class="bx bx-chevron-right metric-arrow rtl-flip"></i>
             </a>
         </div>
@@ -103,13 +99,13 @@
         </div>
         <div class="col-xxl-3 col-xl-3 col-md-4 col-sm-6">
             <a class="dashboard-count-card metric-violet" href="{{ route('hr.employees.index') }}">
-                <span class="dashboard-count-icon"><i class="bx bx-id-card"></i></span>
+                <span class="dashboard-count-icon"><i class="bx bx-user-pin"></i></span>
                 <span class="dashboard-count-copy"><small>Active employees</small><strong>{{ $integer($summary['employees']) }}</strong><em>Workforce</em></span><i class="bx bx-chevron-right metric-arrow rtl-flip"></i>
             </a>
         </div>
         <div class="col-xxl-3 col-xl-3 col-md-4 col-sm-6">
             <a class="dashboard-count-card metric-indigo" href="{{ route('accounts.banks.index') }}">
-                <span class="dashboard-count-icon"><i class="bx bx-building"></i></span>
+                <span class="dashboard-count-icon"><i class="bx bx-calculator"></i></span>
                 <span class="dashboard-count-copy"><small>Bank accounts</small><strong>{{ $integer($summary['bank_accounts']) }}</strong><em>Connected accounts</em></span><i class="bx bx-chevron-right metric-arrow rtl-flip"></i>
             </a>
         </div>
@@ -132,17 +128,16 @@
             <section class="card dashboard-card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div><h5 class="mb-1">Current Cash by Currency</h5><small>{{ $scopeLabel }} · as of {{ $date }}</small></div>
-                    <i class="bx bx-money-withdraw fs-3 text-primary"></i>
+                    <i class="bx bxs-bank fs-3 text-primary"></i>
                 </div>
                 <div class="card-body p-0">
+                    <div class="dashboard-cash-table-head"><span>Currency</span><span>Balance</span><span>AFN Equivalent</span></div>
                     <div class="cash-balance-list">
                         @forelse($cashBalances as $cash)
                             <div class="cash-balance-row">
-                                <span class="currency-pill">{{ $cash['code'] }}</span>
-                                <span class="cash-balance-values">
-                                    <strong>{{ number_format((float) $cash['balance'], 4) }}</strong>
-                                    <small>{{ $cash['afn_equivalent'] === null ? 'Closing rate required' : $money($cash['afn_equivalent']).' AFN' }}</small>
-                                </span>
+                                <span class="currency-pill"><span class="dashboard-currency-flag">{{ $cash['code'] === 'AFN' ? '🇦🇫' : ($cash['code'] === 'USD' ? '🇺🇸' : '💱') }}</span>{{ $cash['code'] }}</span>
+                                <strong class="dashboard-cash-amount">{{ number_format((float) $cash['balance'], 4) }} {{ $cash['code'] }}</strong>
+                                <span class="dashboard-cash-equivalent">{{ $cash['afn_equivalent'] === null ? '—' : $money($cash['afn_equivalent']).' AFN' }}</span>
                             </div>
                         @empty
                             <div class="dashboard-empty-state"><i class="bx bx-wallet-alt"></i><span>No cash balance found for this branch.</span></div>
@@ -193,7 +188,7 @@
 
     <section class="card dashboard-card organization-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div><h5 class="mb-1">Organizational Tree</h5><small>Shareholders first, followed by designation hierarchy through <code>line_manager</code>.</small></div>
+            <div><h5 class="mb-1"><i class="bx bx-group text-primary me-2"></i>Organizational Tree</h5></div>
             <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.employees.index') }}">Manage employees</a>
         </div>
         <div class="card-body organization-scroll">
