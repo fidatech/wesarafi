@@ -158,7 +158,7 @@ class BackupController extends Controller
         // Stream structured, redacted recovery events to the wizard. No raw SQL or credentials.
         return response()->stream(function () use ($archive, $pending, $lock) {
             $send = function (string $type, string $message): void {
-                echo json_encode(['type' => $type, 'message' => $message], JSON_UNESCAPED_SLASHES).'\n';
+                echo json_encode(['type' => $type, 'message' => $message], JSON_UNESCAPED_SLASHES)."\n";
                 if (ob_get_level()) @ob_flush();
                 flush();
             };
