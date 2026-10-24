@@ -118,7 +118,7 @@ class BackupController extends Controller
         }
         chmod($destination, 0600);
         session(['backup_restore_pending' => ['id' => $id, 'sha256' => hash_file('sha256', $destination), 'time' => time()]]);
-        return back()->with('backup_validation', 'Archive staged for isolated restoration. Enter an existing EMPTY test database name below and confirm. The active database cannot be selected.');
+        return back()->with('backup_validation', 'Backup ZIP validated and staged. To restore the currently configured database, use the protected maintenance command displayed below.');
     }
 
     public function applyRestore(Request $request)

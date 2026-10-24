@@ -26,20 +26,10 @@
                 <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
                 <button type="submit" class="btn btn-primary">Validate backup</button>
             </form>
-            @if(session('backup_restore_pending'))
             <hr>
-            <h5>Restore into a separate empty database</h5>
-            <p>This step imports the staged backup into a separate database only. It cannot overwrite the current database.</p>
-            <form method="post" action="{{ route('configuration.backups.restore.apply') }}">
-                @csrf
-                <label for="database" class="form-label">Existing empty MySQL database</label>
-                <input id="database" name="database" class="form-control mb-3" required placeholder="wesarafi_restore_test3">
-                <label for="restore_confirmation" class="form-label">Type RESTORE TO TEST DATABASE</label>
-                <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required>
-                <button type="submit" class="btn btn-danger">Restore to empty test database</button>
-            </form>
-            @endif
-            <div class="alert alert-warning mt-3 mb-0">To restore into a separate, empty MySQL database, use the server terminal: <code>php artisan backup:restore /absolute/path/to/backup.zip --database=empty_restore_database</code>. The target database must exist and must not be the active database. The page can import into an empty, separate database after confirmation; it never overwrites the active database. Large imports may exceed web request limits.</div>
+            <h5>Restore the current WeSarafi database</h5>
+            <p>The currently connected database is <strong>{{ config('database.connections.mysql.database') }}</strong>. You do not need to create another database.</p>
+            <div class="alert alert-warning">Live restoration is available through the protected maintenance command, not through an HTTP request. First run <code>php artisan down</code>, then <code>php artisan backup:restore-current /absolute/path/to/backup.zip</code>. After verifying the result, run <code>php artisan up</code>. The command saves a safety SQL backup and attempts rollback on import failure. Do not close the terminal during recovery.</div>
         </div></div>
     </div>
 </div>
