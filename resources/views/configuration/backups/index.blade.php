@@ -26,10 +26,20 @@
                 <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
                 <button type="submit" class="btn btn-primary">Validate backup</button>
             </form>
+            @if(session('backup_restore_pending'))
             <hr>
-            <h5>Restore the current WeSarafi database</h5>
-            <p>The currently connected database is <strong>{{ config('database.connections.mysql.database') }}</strong>. You do not need to create another database.</p>
-            <div class="alert alert-warning">Live restoration is available through the protected maintenance command, not through an HTTP request. First run <code>php artisan down</code>, then <code>php artisan backup:restore-current /absolute/path/to/backup.zip</code>. After verifying the result, run <code>php artisan up</code>. The command saves a safety SQL backup and attempts rollback on import failure. Do not close the terminal during recovery.</div>
+            <h5>Restore current database</h5>
+            <div class="alert alert-danger">This replaces all data in the currently connected <strong>{{ config('database.connections.mysql.database') }}</strong> database. An automatic safety backup is created first. The application enters maintenance mode and rollback is attempted if the import fails.</div>
+            <form method="post" action="{{ route('configuration.backups.restore.apply') }}" onsubmit="return confirm('Replace the CURRENT WeSarafi database with the uploaded backup?');">
+                @csrf
+                <label for="restore_confirmation" class="form-label">Type RESTORE CURRENT DATABASE</label>
+                <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off">
+                <label for="restore_password" class="form-label">Confirm your password</label>
+                <input id="restore_password" name="password" type="password" class="form-control mb-3" required autocomplete="current-password">
+                <button class="btn btn-danger" type="submit">Restore current database</button>
+            </form>
+            @endif
+            <p class="text-muted mt-3">Large restores may exceed web-server time limits. Use the maintenance CLI for large backups.</p>
         </div></div>
     </div>
 </div>

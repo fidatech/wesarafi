@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
@@ -118,46 +117,62 @@ class BackupController extends Controller
         }
         chmod($destination, 0600);
         session(['backup_restore_pending' => ['id' => $id, 'sha256' => hash_file('sha256', $destination), 'time' => time()]]);
-        return back()->with('backup_validation', 'Backup ZIP validated and staged. To restore the currently configured database, use the protected maintenance command displayed below.');
+        return back()->with('backup_validation', 'Backup ZIP staged. Confirm below to restore into the current database.');
     }
 
     public function applyRestore(Request $request)
     {
         abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
         $request->validate([
-            'database' => ['required', 'regex:/^[A-Za-z0-9_]+$/D'],
-            'confirmation' => ['required', 'in:RESTORE TO TEST DATABASE'],
+            'confirmation' => ['required', 'in:RESTORE CURRENT DATABASE'],
+            'password' => ['required', 'current_password'],
         ]);
         $pending = session('backup_restore_pending');
         if (!is_array($pending) || !isset($pending['id'], $pending['sha256'], $pending['time']) || time() - $pending['time'] > 1800) {
-            return back()->withErrors(['backup' => 'Staged backup expired. Upload it again.']);
-        }
-        $database = $request->input('database');
-        if (config('database.default') !== 'mysql' || strcasecmp($database, (string) config('database.connections.mysql.database')) === 0) {
-            return back()->withErrors(['database' => 'The active database cannot be restored from the web interface.']);
+            return back()->withErrors(['backup' => 'Backup expired. Upload again.']);
         }
         $archive = storage_path('app/backups/pending/'.$pending['id'].'.zip');
         if (!is_file($archive) || !hash_equals($pending['sha256'], hash_file('sha256', $archive))) {
-            return back()->withErrors(['backup' => 'Staged backup is missing or has changed.']);
+            return back()->withErrors(['backup' => 'Backup missing or changed.']);
         }
-        $exists = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?', [$database]);
-        $tables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$database]);
-        if ((int) $exists->n !== 1 || (int) $tables->n !== 0) {
-            return back()->withErrors(['database' => 'Destination must exist and contain zero tables.']);
+        if (config('database.default') !== 'mysql' || app()->isDownForMaintenance()) {
+            return back()->withErrors(['backup' => 'Recovery unavailable in the current environment.']);
         }
-        // Use the same guarded command as CLI. The web request may time out for
-        // large backups; production cutover is intentionally unsupported.
+        $lockPath = storage_path('app/backups/restore.lock');
+        File::ensureDirectoryExists(dirname($lockPath));
+        $lock = fopen($lockPath, 'c');
+        if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+            return back()->withErrors(['backup' => 'Another recovery is running.']);
+        }
+        $authorization = null;
         try {
-            $process = new Process([PHP_BINARY, base_path('artisan'), 'backup:restore', $archive, '--database='.$database, '--yes'], base_path(), null, null, 600);
+            $dir = storage_path('app/backups/authorizations');
+            File::ensureDirectoryExists($dir);
+            $authorization = $dir.'/'.Str::uuid().'.json';
+            file_put_contents($authorization, json_encode([
+                'database' => config('database.connections.mysql.database'),
+                'archive_hash' => hash_file('sha256', $archive),
+                'created_at' => time(),
+            ]));
+            chmod($authorization, 0600);
+            Artisan::call('down');
+            $process = new Process([PHP_BINARY, base_path('artisan'), 'backup:restore-current', $archive, '--authorization='.$authorization], base_path(), null, null, 1200);
             $process->run();
             if (!$process->isSuccessful()) {
-                return back()->withErrors(['backup' => 'Isolated restore failed. Destination may be partially imported. Check the recovery logs and use a new empty database.']);
+                report(new \RuntimeException('Restore failed: '.$process->getErrorOutput().' '.$process->getOutput()));
+                return response('Restore failed. Maintenance mode remains active. Contact administrator to inspect recovery logs and safety backup.', 503);
             }
-            return back()->with('backup_validation', 'Backup imported into isolated database '.$database.'. Verify tables and records before any cutover.');
+            Artisan::call('up');
+            return redirect()->route('login')->with('status', 'Database restored. Sign in again.');
+        } catch (\Throwable $e) {
+            report($e);
+            return response('Restore interrupted. Check maintenance mode and recovery logs.', 503);
         } finally {
+            if ($authorization) File::delete($authorization);
             session()->forget('backup_restore_pending');
             File::delete($archive);
+            flock($lock, LOCK_UN);
+            fclose($lock);
         }
     }
-
 }

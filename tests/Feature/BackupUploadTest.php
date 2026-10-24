@@ -59,8 +59,8 @@ class BackupUploadTest extends TestCase
     public function test_apply_requires_staged_backup(): void
     {
         $this->post(route('configuration.backups.restore.apply'), [
-            'database' => 'wesarafi_restore_test3',
-            'confirmation' => 'RESTORE TO TEST DATABASE',
+            'confirmation' => 'RESTORE CURRENT DATABASE',
+            'password' => 'password',
         ])->assertRedirect()->assertSessionHasErrors('backup');
     }
 
@@ -70,6 +70,22 @@ class BackupUploadTest extends TestCase
             'database' => 'wesarafi_restore_test3',
             'confirmation' => 'RESTORE',
         ])->assertSessionHasErrors('confirmation');
+    }
+
+    public function test_current_restore_rejects_wrong_password_before_any_database_changes(): void
+    {
+        $this->post(route('configuration.backups.restore.apply'), [
+            'confirmation' => 'RESTORE CURRENT DATABASE',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors('password');
+    }
+
+    public function test_restore_page_explains_current_database_replacement(): void
+    {
+        \Illuminate\Support\Facades\View::share('errors', new \Illuminate\Support\ViewErrorBag());
+        $this->withSession(['backup_restore_pending' => ['id' => 'test']])->get(route('configuration.backups.index'))
+            ->assertOk()
+            ->assertSee('Restore current database');
     }
 
 }
