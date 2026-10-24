@@ -1388,3 +1388,7 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-dashboard .dashboard-hero-modern::after { display:none; }
 .wes-dashboard .dashboard-hero-copy,.wes-dashboard .dashboard-filter-panel { position:relative;z-index:1; }
 @media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern::before{inset-inline-start:42%;width:58%;opacity:.45}}
+
+.layout-page {
+    padding-top: 5px !important;
+}
