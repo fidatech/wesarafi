@@ -103,6 +103,34 @@ class DailyBalanceLockTest extends TestCase
         $this->assertSame('closed', DailyBalanceState::forBranch($other->id)['status']);
     }
 
+    public function test_finalized_closing_snapshot_cannot_be_edited_or_deleted(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $branch = (int) ($user->branch_id ?: 1);
+        $currency = Currency::firstOrFail();
+        $payload = ['date' => now('Asia/Kabul')->toDateString(), 'branch_id' => $branch, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertOk();
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertOk();
+        $day = \App\Models\BusinessDay::where('branch_id', $branch)->firstOrFail();
+        $original = $day->closing_snapshot;
+        try {
+            $day->update(['closing_snapshot' => ['tampered' => true]]);
+            $this->fail('Finalized snapshot was editable.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('business_day', $e->errors());
+        }
+        try {
+            $day->delete();
+            $this->fail('Finalized snapshot was deletable.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('business_day', $e->errors());
+        }
+        $this->assertSame('closed', $day->fresh()->status);
+        $this->assertSame($original, $day->fresh()->closing_snapshot);
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
