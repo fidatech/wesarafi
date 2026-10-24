@@ -126,6 +126,28 @@ class CustomerExchangeTest extends TestCase
         $this->assertEquals($pending['cash_book_by_currency'], $rejected['cash_book_by_currency']);
     }
 
+    public function test_business_day_reconciliation_detects_partial_and_unbalanced_approved_journals(): void
+    {
+        $payload = $this->payload();
+        $payload['date'] = now('Asia/Kabul')->toDateString();
+        $this->post(route('exchange.customers.store'), $payload)->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $branch = (int) $exchange->branch_id;
+        $date = now('Asia/Kabul')->toDateString();
+        $original = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $this->assertSame(0, $original['invalid_journal_count']);
+        $line = Transaction::where('linked_id', $exchange->linked_id)->firstOrFail();
+        $line->update(['is_approved' => false, 'approval_status' => 'pending']);
+        $partial = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $this->assertFalse($partial['reconciled']);
+        $this->assertContains($exchange->linked_id, $partial['invalid_journal_references']);
+        $line->update(['is_approved' => true, 'approval_status' => 'approved', 'amount_afn' => (float) $line->amount_afn + 100]);
+        $unbalanced = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $this->assertSame(0, $unbalanced['pending_approvals']);
+        $this->assertFalse($unbalanced['reconciled']);
+        $this->assertContains($exchange->linked_id, $unbalanced['invalid_journal_references']);
+    }
+
     public function test_historical_exchange_reversal_posts_on_current_day_without_rewriting_original_date(): void
     {
         $user = User::firstOrFail();

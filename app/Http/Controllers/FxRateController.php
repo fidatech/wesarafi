@@ -110,7 +110,9 @@ class FxRateController extends Controller
             }
             abort_unless($day->status === 'open', 409, 'Business day is already closing or closed.');
             $reconciliation = BusinessDayReconciliation::report($branchId, $v['date']);
-            abort_if(!$reconciliation['reconciled'], 409, 'Cannot close: '.$reconciliation['pending_approvals'].' transactions await approval.');
+            abort_if(!$reconciliation['reconciled'], 409,
+                'Cannot close: '.$reconciliation['pending_approvals'].' transactions await approval; '
+                .$reconciliation['invalid_journal_count'].' journal groups are incomplete or unbalanced.');
             $expected = $reconciliation['cash_book_by_currency'];
             $actual = $cashCounts['cash_counts'] ?? [];
             foreach ($expected as $currencyId => $balance) {

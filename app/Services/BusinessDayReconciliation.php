@@ -39,11 +39,25 @@ class BusinessDayReconciliation
                 return $totals;
             })->toArray();
 
+        $invalidJournals = [];
+        $journals = (clone $transactions)->get(['linked_id', 'is_approved', 'approval_status', 'direction', 'amount_afn'])->groupBy('linked_id');
+        foreach ($journals as $reference => $lines) {
+            $approvedLines = $lines->filter(fn ($line) => $line->is_approved && $line->approval_status === 'approved');
+            if ($approvedLines->isEmpty()) continue;
+            $debit = (float) $approvedLines->where('direction', 'debit')->sum('amount_afn');
+            $credit = (float) $approvedLines->where('direction', 'credit')->sum('amount_afn');
+            if (! $reference || $approvedLines->count() !== $lines->count() || $approvedLines->count() < 2 || abs($debit - $credit) > 0.02) {
+                $invalidJournals[] = $reference ?: '(missing reference)';
+            }
+        }
+
         return [
+            'invalid_journal_count' => count($invalidJournals),
+            'invalid_journal_references' => $invalidJournals,
             'pending_approvals' => $pending,
             'cash_book_by_currency' => $cash,
             'ledger_totals_by_currency_and_direction' => $balances,
-            'reconciled' => $pending === 0,
+            'reconciled' => $pending === 0 && $invalidJournals === [],
             'note' => 'Ledger totals are informational; physical cash count has not been independently verified.',
         ];
     }
