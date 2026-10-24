@@ -475,7 +475,7 @@ body { background: var(--wes-background); color: var(--wes-ink); }
 .table thead th { color: #4f6073; font-size: .78rem; text-transform: uppercase; letter-spacing: .035em; }
 
 #layout-navbar { min-height: 66px; padding: 0; border-bottom: 1px solid var(--wes-border); }
-.navbar-shell { min-height: 66px; position: relative; }
+.navbar-shell { min-height: 66px; position: relative; padding-inline: 16px !important; }
 .navbar-brand-link { display: inline-flex; align-items: center; min-width: 145px; }
 .navbar-brand-link .app-brand-logo img { height: 43px !important; width: auto; margin: 0 !important; }
 .company-name { position: absolute; left: 50%; transform: translateX(-50%); line-height: 1.1; }
