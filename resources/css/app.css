@@ -1313,3 +1313,13 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-dashboard .organization-card .card-body{padding:12px}
 @media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern{flex-direction:column;align-items:stretch}.wes-dashboard .dashboard-filter-panel{max-width:none;width:100%}}
 @media(max-width:575.98px){.wes-dashboard{padding:10px}.wes-dashboard .dashboard-hero-modern{padding:18px}.wes-dashboard .dashboard-filter-panel{min-width:0}.wes-dashboard .dashboard-hero-modern h2{font-size:27px}}
+
+/* Dashboard: remove inherited desktop content offset below horizontal menu. */
+@media (min-width: 1200px) {
+    .content-wrapper:has(.wes-dashboard) {
+        padding-top: 0 !important;
+    }
+}
+.content-wrapper > .container-fluid:has(> .wes-dashboard) {
+    padding-top: 0 !important;
+}
