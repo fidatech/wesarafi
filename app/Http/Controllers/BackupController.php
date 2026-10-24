@@ -68,9 +68,47 @@ class BackupController extends Controller
     public function restore(Request $request)
     {
         abort_unless(auth()->user()?->hasRole('Super Admin'), 403);
-        // Restoring a database is a destructive administrative operation. It must
-        // run through a separate, maintenance-mode CLI workflow with a verified
-        // rollback snapshot, not from an HTTP upload.
-        abort(503, 'Web-based database restoration is disabled. Use the controlled maintenance restore procedure.');
+
+        $request->validate([
+            'backup' => ['required', 'file', 'max:102400'],
+            'confirmation' => ['required', 'in:VALIDATE'],
+        ]);
+
+        $file = $request->file('backup');
+        if (strtolower($file->getClientOriginalExtension()) !== 'zip') {
+            return back()->withErrors(['backup' => 'Please upload a WeSarafi ZIP backup.']);
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($file->getRealPath(), ZipArchive::RDONLY) !== true) {
+            return back()->withErrors(['backup' => 'The ZIP archive cannot be opened.']);
+        }
+
+        try {
+            if ($zip->numFiles !== 1 || $zip->getNameIndex(0) !== 'database.sql') {
+                return back()->withErrors(['backup' => 'The backup must contain only database.sql.']);
+            }
+
+            $stat = $zip->statIndex(0);
+            if (!$stat || $stat['size'] < 1 || $stat['size'] > 512 * 1024 * 1024) {
+                return back()->withErrors(['backup' => 'The database SQL file has an invalid size.']);
+            }
+
+            $stream = $zip->getStream('database.sql');
+            if (!$stream) {
+                return back()->withErrors(['backup' => 'Cannot read database.sql.']);
+            }
+            $prefix = fread($stream, 8192);
+            fclose($stream);
+            if ($prefix === false || !str_contains($prefix, 'MySQL dump')) {
+                return back()->withErrors(['backup' => 'The archive does not look like a supported MySQL dump.']);
+            }
+        } finally {
+            $zip->close();
+        }
+
+        // Deliberately no SQL execution here. A verified backup must be restored
+        // by an isolated maintenance process with a tested rollback procedure.
+        return back()->with('backup_validation', 'Backup ZIP passed preliminary format checks. Its SQL has not been executed or fully verified. No database was modified.');
     }
 }

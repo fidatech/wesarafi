@@ -1,1 +1,33 @@
-@extends('layouts.layoutMaster') @section('title','Backups') @section('content')<div class="row g-3"><div class="col-lg-2">@include('layouts.menu.configuration-sidebar')</div><div class="col-lg-10"><div class="card mb-3"><div class="card-body"><h4>Download Backup</h4><p>Creates a timestamped ZIP containing the active database.</p><a href="{{route('configuration.backups.download')}}" class="btn btn-primary">Download backup</a></div></div><div class="card border-danger"><div class="card-body"><h4 class="text-danger">Restore Backup</h4><p>This replaces the current database. Create a new backup first.</p><form method="post" enctype="multipart/form-data" action="{{route('configuration.backups.restore')}}">@csrf<input type="file" name="backup" class="form-control mb-2" required><input name="confirmation" class="form-control mb-2" placeholder="Type RESTORE" required><button class="btn btn-danger">Restore database</button></form></div></div></div></div>@endsection
+@extends('layouts.layoutMaster')
+@section('title', 'Backups')
+@section('content')
+<div class="row g-3">
+    <div class="col-lg-2">@include('layouts.menu.configuration-sidebar')</div>
+    <div class="col-lg-10">
+        <div class="card mb-3"><div class="card-body">
+            <h4>Download Backup</h4>
+            <p>Download a ZIP containing a snapshot of the current database.</p>
+            <a href="{{ route('configuration.backups.download') }}" class="btn btn-primary">Download backup</a>
+        </div></div>
+        <div class="card"><div class="card-body">
+            <h4>Validate Backup for Restore</h4>
+            <p>Upload a backup to check its ZIP structure and SQL format. This does not change your database.</p>
+            @if(session('backup_validation'))
+                <div class="alert alert-success" role="status">{{ session('backup_validation') }}</div>
+            @endif
+            @if($errors->any())
+                <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>
+            @endif
+            <form method="post" enctype="multipart/form-data" action="{{ route('configuration.backups.restore') }}">
+                @csrf
+                <label for="backup" class="form-label">Backup ZIP</label>
+                <input id="backup" type="file" name="backup" accept=".zip" class="form-control mb-3" required>
+                <label for="confirmation" class="form-label">Type VALIDATE to confirm</label>
+                <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
+                <button type="submit" class="btn btn-primary">Validate backup</button>
+            </form>
+            <div class="alert alert-warning mt-3 mb-0">Database restoration is currently available only through the controlled maintenance procedure. Uploading a backup here will not overwrite any data.</div>
+        </div></div>
+    </div>
+</div>
+@endsection
