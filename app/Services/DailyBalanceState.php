@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BusinessDay;
 use App\Models\FxRate;
 
 class DailyBalanceState
@@ -9,17 +10,21 @@ class DailyBalanceState
     public static function forBranch(int $branchId, ?string $date = null): array
     {
         $date ??= now('Asia/Kabul')->toDateString();
-        $query = FxRate::query()->whereDate('as_of', $date)->where('branch_id', $branchId);
-        $opened = (clone $query)->where('type', 'open')->exists();
-        $closed = (clone $query)->where('type', 'close')->exists();
+        $day = BusinessDay::query()->where('branch_id', $branchId)->whereDate('business_date', $date)->first();
+        // Preserve legacy rate entries without silently reopening previously closed days.
+        $legacy = FxRate::query()->where('branch_id', $branchId)->whereDate('as_of', $date);
+        $legacyOpen = (clone $legacy)->where('type', 'open')->exists();
+        $legacyClose = (clone $legacy)->where('type', 'close')->exists();
+        $status = $day?->status ?? ($legacyClose ? 'closed' : ($legacyOpen ? 'open' : 'not_opened'));
 
         return [
             'date' => $date,
             'branch_id' => $branchId,
-            'opened' => $opened,
-            'closed' => $closed,
-            'can_open' => !$opened && !$closed,
-            'can_close' => $opened && !$closed,
+            'status' => $status,
+            'opened' => in_array($status, ['open', 'closing', 'closed'], true),
+            'closed' => $status === 'closed',
+            'can_open' => $status === 'not_opened',
+            'can_close' => $status === 'open',
         ];
     }
 }

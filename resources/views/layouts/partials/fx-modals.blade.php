@@ -17,7 +17,9 @@
             </div>
             <div class="col-md-4">
               <label class="form-label">Branch</label>
-              <input type="number" class="form-control" id="open_branch_id" name="branch_id" value="{{ auth()->user()->branch_id ?? 1 }}">
+              <select class="form-select" id="open_branch_id" name="branch_id" disabled>
+                <option value="{{ auth()->user()->branch_id }}" selected>{{ auth()->user()->branch?->name ?? 'Unassigned branch' }}</option>
+              </select>
             </div>
           </div>
           <div class="table-responsive">
@@ -55,7 +57,9 @@
             </div>
             <div class="col-md-4">
               <label class="form-label">Branch</label>
-              <input type="number" class="form-control" id="close_branch_id" name="branch_id" value="{{ auth()->user()->branch_id ?? 1 }}">
+              <select class="form-select" id="close_branch_id" name="branch_id" disabled>
+                <option value="{{ auth()->user()->branch_id }}" selected>{{ auth()->user()->branch?->name ?? 'Unassigned branch' }}</option>
+              </select>
             </div>
           </div>
           <div class="table-responsive">

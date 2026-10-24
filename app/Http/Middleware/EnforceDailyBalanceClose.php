@@ -24,7 +24,7 @@ class EnforceDailyBalanceClose
         $state = DailyBalanceState::forBranch($branchId);
         if (!$state['closed']) return $next($request);
 
-        $message = 'The '.$state['date'].' business day has been closed for your branch. Data entry and changes are locked until the next business day.';
+        $message = 'The '.$state['date'].' business day is closed. Data changes are locked until the next business day.';
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['message' => $message, 'business_day_closed' => true], 423);
         }
