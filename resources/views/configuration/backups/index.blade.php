@@ -133,8 +133,18 @@
                         if (event.type === 'success') {
                             completed = true;
                             appendLine(event.message);
-                            await Swal.fire({icon:'success',title:'Restore completed',text:event.message,confirmButtonText:'Sign in'});
-                            window.location.assign(@json(route('login')));
+                            await Swal.fire({icon:'success',title:'Restore completed',text:event.message,confirmButtonText:'OK',allowOutsideClick:false,allowEscapeKey:false});
+                            // Logout is a POST: invalidate the authenticated session before redirecting.
+                            const logout = document.createElement('form');
+                            logout.method = 'POST';
+                            logout.action = @json(route('logout'));
+                            const csrf = document.createElement('input');
+                            csrf.type = 'hidden';
+                            csrf.name = '_token';
+                            csrf.value = @json(csrf_token());
+                            logout.appendChild(csrf);
+                            document.body.appendChild(logout);
+                            logout.submit();
                         } else if (event.type === 'error') {
                             completed = true;
                             appendLine(event.message);
