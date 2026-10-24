@@ -23,10 +23,16 @@ class JournalApprovalController extends Controller
     private function authorizeGroup(Request $request, string $linked): void
     {
         abort_unless($request->user()->can('edit journal') || $request->user()->hasRole('Super Admin'), 403);
-        $group = Transaction::where('linked_id', $linked)->get();
+        $group = Transaction::where('linked_id', $linked)->lockForUpdate()->get();
         abort_if($group->isEmpty(), 404);
         abort_unless($group->every(fn ($entry) => !$request->user()->branch_id || (int) $entry->branch_id === (int) $request->user()->branch_id), 403);
         abort_unless($group->every(fn ($entry) => $entry->approval_status === 'pending'), 422, 'Only pending journal groups can be reviewed.');
+        if ($request->routeIs('journal.approvals.approve')) {
+            abort_unless($group->count() >= 2, 422, 'Journal group requires at least two entries.');
+            $debits = $group->where('direction', 'debit')->sum('amount_afn');
+            $credits = $group->where('direction', 'credit')->sum('amount_afn');
+            abort_unless($group->every(fn ($entry) => in_array($entry->direction, ['debit', 'credit'], true)) && abs($debits - $credits) <= 0.02, 422, 'Unbalanced journal group cannot be approved.');
+        }
     }
 
     public function approve(Request $request, string $linked)

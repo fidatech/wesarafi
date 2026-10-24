@@ -55,6 +55,27 @@ class FinancialBranchAuthorizationTest extends TestCase
         }
     }
 
+    public function test_unbalanced_pending_journal_cannot_be_approved_but_can_be_rejected(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $second = $entry->replicate();
+        $second->direction = 'credit';
+        $second->amount = 50;
+        $second->amount_afn = 50;
+        $second->save();
+
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertStatus(422);
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+        $this->assertSame('pending', $second->fresh()->approval_status);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'Unbalanced entries'])->assertRedirect();
+        $this->assertSame('rejected', $entry->fresh()->approval_status);
+        $this->assertSame('rejected', $second->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
