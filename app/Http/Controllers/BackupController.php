@@ -155,35 +155,62 @@ class BackupController extends Controller
         if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
             return back()->withErrors(['backup' => 'Another recovery is running.']);
         }
-        $authorization = null;
-        try {
-            $dir = storage_path('app/backups/authorizations');
-            File::ensureDirectoryExists($dir);
-            $authorization = $dir.'/'.Str::uuid().'.json';
-            file_put_contents($authorization, json_encode([
-                'database' => config('database.connections.mysql.database'),
-                'archive_hash' => hash_file('sha256', $archive),
-                'created_at' => time(),
-            ]));
-            chmod($authorization, 0600);
-            Artisan::call('down');
-            $process = new Process([PHP_BINARY, base_path('artisan'), 'backup:restore-current', $archive, '--authorization='.$authorization], base_path(), null, null, 1200);
-            $process->run();
-            if (!$process->isSuccessful()) {
-                report(new \RuntimeException('Restore failed: '.$process->getErrorOutput().' '.$process->getOutput()));
-                return response('Restore failed. Maintenance mode remains active. Contact administrator to inspect recovery logs and safety backup.', 503);
+        // Stream structured, redacted recovery events to the wizard. No raw SQL or credentials.
+        return response()->stream(function () use ($archive, $pending, $lock) {
+            $send = function (string $type, string $message): void {
+                echo json_encode(['type' => $type, 'message' => $message], JSON_UNESCAPED_SLASHES).'\n';
+                if (ob_get_level()) @ob_flush();
+                flush();
+            };
+            $authorization = null;
+            try {
+                $dir = storage_path('app/backups/authorizations');
+                File::ensureDirectoryExists($dir, 0700, true);
+                $authorization = $dir.'/'.Str::uuid().'.json';
+                file_put_contents($authorization, json_encode([
+                    'database' => config('database.connections.mysql.database'),
+                    'archive_hash' => hash_file('sha256', $archive),
+                    'created_at' => time(),
+                ]));
+                chmod($authorization, 0600);
+                $send('stage', 'Entering maintenance mode');
+                Artisan::call('down');
+                $process = new Process([PHP_BINARY, base_path('artisan'), 'backup:restore-current', $archive, '--authorization='.$authorization], base_path(), null, null, 1200);
+                $buffer = '';
+                $process->run(function (string $type, string $chunk) use (&$buffer, $send) {
+                    if ($type !== Process::OUT) return;
+                    $buffer .= $chunk;
+                    while (($pos = strpos($buffer, "\n")) !== false) {
+                        $line = trim(substr($buffer, 0, $pos));
+                        $buffer = substr($buffer, $pos + 1);
+                        if (preg_match('/^([A-Za-z0-9_]{1,64})\s+importing$/', $line, $m)) {
+                            $send('table', $m[1].' — importing');
+                        } elseif (preg_match('/^(Preflight:|Preflight verified|Restored [0-9]+ tables|Safety backup retained:|Target:)/', $line)) {
+                            $send('stage', preg_replace('/Safety backup retained:.*/', 'Safety backup created', $line));
+                        }
+                    }
+                    if (strlen($buffer) > 8192) $buffer = substr($buffer, -512);
+                });
+                if (!$process->isSuccessful()) {
+                    report(new \RuntimeException('Recovery command failed: '.$process->getErrorOutput()));
+                    $send('error', 'Restore failed or rolled back. Maintenance mode remains active; administrator review is required.');
+                    return;
+                }
+                Artisan::call('up');
+                $send('success', 'Database restoration completed and verified. Sign in again.');
+            } catch (\Throwable $e) {
+                report($e);
+                $send('error', 'Recovery interrupted. Check recovery logs and maintenance mode before retrying.');
+            } finally {
+                if ($authorization) File::delete($authorization);
+                File::delete($archive);
+                flock($lock, LOCK_UN);
+                fclose($lock);
             }
-            Artisan::call('up');
-            return redirect()->route('login')->with('status', 'Database restored. Sign in again.');
-        } catch (\Throwable $e) {
-            report($e);
-            return response('Restore interrupted. Check maintenance mode and recovery logs.', 503);
-        } finally {
-            if ($authorization) File::delete($authorization);
-            session()->forget('backup_restore_pending');
-            File::delete($archive);
-            flock($lock, LOCK_UN);
-            fclose($lock);
-        }
+        }, 200, [
+            'Content-Type' => 'application/x-ndjson; charset=utf-8',
+            'Cache-Control' => 'no-cache, no-transform',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 }

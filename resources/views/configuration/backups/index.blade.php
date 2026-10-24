@@ -51,12 +51,12 @@
             <div id="restore-step-confirm" hidden>
                 <h5>Step 3 — Confirm restoration</h5>
                 <p class="text-muted">For your security, confirm the exact operation and enter your current account password.</p>
-                <form id="restore-apply-form" method="post" action="{{ route('configuration.backups.restore.apply') }}">
+                <form id="restore-apply-form" autocomplete="off" method="post" action="{{ route('configuration.backups.restore.apply') }}">
                     @csrf
                     <label for="restore_confirmation" class="form-label">Type <strong>RESTORE CURRENT DATABASE</strong></label>
-                    <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off" spellcheck="false" placeholder="RESTORE CURRENT DATABASE">
+                    <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="RESTORE CURRENT DATABASE">
                     <label for="restore_password" class="form-label">Account password</label>
-                    <input id="restore_password" type="password" name="password" class="form-control mb-3" required autocomplete="current-password">
+                    <input id="restore_password" type="password" name="password" class="form-control mb-3" required autocomplete="off">
                     <div class="form-check mb-3"><input id="restore_ack" type="checkbox" class="form-check-input" required><label for="restore_ack" class="form-check-label">I understand the current database will be replaced and the application may be temporarily unavailable.</label></div>
                     <div class="d-flex gap-2"><button type="button" class="btn btn-outline-secondary" onclick="wsRestoreStep(2)">Back</button><button type="submit" class="btn btn-danger">Start database restore</button></div>
                 </form>
@@ -64,7 +64,7 @@
             <div id="restore-step-progress" hidden role="status" aria-live="polite">
                 <h5>Step 4 — Restoring database</h5>
                 <div class="d-flex align-items-center gap-3 my-4"><div class="spinner-border text-primary" role="status"></div><div><strong>Recovery is running</strong><p class="text-muted mb-0">The server is performing a safety backup, isolated preflight, live import, and verification. Keep this tab open.</p></div></div>
-                <div class="alert alert-info">Waiting for the server to return a verified outcome. No estimated percentage is shown because database imports are not reliably measurable by the browser.</div>
+                <div class="rounded p-3" style="background:#101a2a;color:#d7f9e4;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;max-height:360px;overflow:auto" id="ws-restore-terminal" role="log" aria-label="Live database restore log"><div>&gt; Waiting for server...</div></div>
                 <p class="small text-muted mt-3">This is not a measured progress percentage. A restore can continue after an HTTP timeout. Do not submit another restore until the administrator checks the restore history and database state.</p>
             </div>
             <script>
@@ -107,11 +107,59 @@
                     text:'This will replace the connected WeSarafi database. A safety backup and preflight check run first.',
                     showCancelButton:true, confirmButtonText:'Yes, restore database', cancelButtonText:'Cancel',
                     confirmButtonColor:'#d33', reverseButtons:true, focusCancel:true
-                }).then(result => {
+                }).then(async result => {
                     if (!result.isConfirmed) return;
                     wsRestoreStep(4);
-                    this.querySelector('[type="submit"]').disabled = true;
-                    HTMLFormElement.prototype.submit.call(this);
+                    const submit = this.querySelector('[type="submit"]');
+                    submit.disabled = true;
+                    const terminal = document.getElementById('ws-restore-terminal');
+                    terminal.replaceChildren();
+                    const appendLine = (message) => {
+                        const row = document.createElement('div');
+                        row.textContent = '> ' + message;
+                        terminal.appendChild(row);
+                        terminal.scrollTop = terminal.scrollHeight;
+                    };
+                    let completed = false;
+                    const handle = async (event) => {
+                        if (event.type === 'success') {
+                            completed = true;
+                            appendLine(event.message);
+                            await Swal.fire({icon:'success',title:'Restore completed',text:event.message,confirmButtonText:'Sign in'});
+                            window.location.assign(@json(route('login')));
+                        } else if (event.type === 'error') {
+                            completed = true;
+                            appendLine(event.message);
+                            await Swal.fire({icon:'error',title:'Restore failed',text:event.message});
+                        } else if (event.type === 'table' || event.type === 'stage') {
+                            appendLine(event.message);
+                        }
+                    };
+                    try {
+                        const response = await fetch(this.action, {
+                            method:'POST',body:new FormData(this),
+                            headers:{'Accept':'application/x-ndjson','X-Requested-With':'XMLHttpRequest'},
+                            credentials:'same-origin'
+                        });
+                        if (!response.ok || !response.body) throw new Error('Server did not start the restore. Check validation and logs.');
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+                        while (true) {
+                            const {value,done} = await reader.read();
+                            buffer += decoder.decode(value || new Uint8Array(),{stream:!done});
+                            let newline;
+                            while ((newline=buffer.indexOf('\n')) >= 0) {
+                                const line=buffer.slice(0,newline);buffer=buffer.slice(newline+1);
+                                if (line.trim()) await handle(JSON.parse(line));
+                            }
+                            if (done) break;
+                        }
+                        if (!completed) throw new Error('Connection ended without a verified recovery result.');
+                    } catch (error) {
+                        appendLine('Connection lost or restore status unknown. Do not retry before checking server logs.');
+                        await Swal.fire({icon:'error',title:'Restore status unknown',text:'The browser could not verify completion. Do not retry until the administrator checks recovery history and database status.'});
+                    }
                 });
             });
             </script>
