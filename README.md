@@ -60,12 +60,7 @@ php artisan serve
 
 Open: `http://127.0.0.1:8000`
 
-Development users created by the existing seeder:
-
-- `superadmin` / `admin@123`
-- `admin` / `admin@123`
-
-Change these passwords immediately outside development.
+Administrator bootstrap accounts are only created when `WESARAFI_SUPERADMIN_EMAIL` and `WESARAFI_SUPERADMIN_PASSWORD` (or the corresponding `WESARAFI_ADMIN_*` values) are explicitly provided in the private deployment environment. Passwords must be at least 16 characters. Do not commit credentials to Git. Existing accounts are not reset by the seeder. Rotate any previously used default passwords immediately.
 
 ## Upgrade an existing WeSarafi installation
 
@@ -147,3 +142,11 @@ For branches on weak Internet connections:
 ## Important safety rule
 
 Before upgrading any live sarafi installation, make a verified database + uploaded-files backup. Accounting migrations should use `php artisan migrate --force`; never use `migrate:fresh` on live data.
+
+## Backup and restore security
+
+- Backup download is restricted to Super Admin and currently supports MySQL via `mysqldump` with a password environment variable, not a password command-line argument. Verify that the binary exists on the host and test recovery before relying on backups.
+- Web-based database restoration is deliberately disabled (HTTP 503). Restore only during a planned maintenance window using a verified, separately retained snapshot and an offline administrator procedure.
+- SQLite online backups are disabled until a transactionally consistent snapshot method is implemented.
+- A database-only backup does not include uploaded documents, encryption keys, or the application environment. Back those up separately and securely.
+- This branch has not yet passed runtime or recovery tests. Do not deploy or merge without staging validation.
