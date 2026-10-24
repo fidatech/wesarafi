@@ -103,6 +103,9 @@ class MonitoringReportsTest extends TestCase
 
     public function test_rapid_kyc_exceptions_and_report_pages(): void
     {
+        // The report is evaluated as of September 14, so the test account
+        // must already exist on that date (regardless of when tests run).
+        $this->customer->forceFill(['created_at' => '2026-09-01 00:00:00'])->save();
         $this->entry('credit', 500000, '2026-09-13');
         $this->entry('debit', 400000, '2026-09-14');
         $service = app(MonitoringReportService::class);
