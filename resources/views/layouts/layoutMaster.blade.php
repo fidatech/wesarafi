@@ -335,6 +335,9 @@
             }, { once: true });
         </script>
 
+        {{-- Page-specific scripts (dashboard chart and organizational controls). --}}
+        @stack('scripts')
+
         <button id="scrollToTopBtn" type="button" title="Back to Top" aria-label="Back to top">
             <i class="bx bx-up-arrow-alt"></i>
         </button>
