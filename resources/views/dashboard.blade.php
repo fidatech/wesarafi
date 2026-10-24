@@ -188,21 +188,26 @@
 
     <section class="card dashboard-card organization-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div><h5 class="mb-1"><i class="bx bx-group text-primary me-2"></i>Organizational Tree</h5></div>
-            <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.employees.index') }}">Manage employees</a>
+            <div class="org-panel-heading"><span class="org-panel-icon"><i class="bx bx-sitemap"></i></span><span><h5 class="mb-0">Organizational Chart</h5><small>Company structure &amp; reporting lines</small></span></div>
+            <div class="org-panel-tools">
+                <label class="org-search-wrap" for="orgChartSearch"><i class="bx bx-search"></i><input id="orgChartSearch" type="search" placeholder="Find a position or person…" aria-label="Search organizational chart"></label>
+                <button class="org-tool-btn" id="orgChartExpand" type="button" title="Expand all positions"><i class="bx bx-expand-alt"></i><span>Expand</span></button>
+                <button class="org-tool-btn" id="orgChartCollapse" type="button" title="Collapse all positions"><i class="bx bx-collapse-alt"></i><span>Collapse</span></button>
+                <a class="btn btn-sm btn-outline-primary" href="{{ route('hr.employees.index') }}"><i class="bx bx-user-plus me-1"></i> Manage employees</a>
+            </div>
         </div>
-        <div class="card-body organization-scroll">
-            <div class="org-chart">
+        <div class="org-chart-toolbar"><span><i class="bx bx-git-branch"></i> {{ $organizationTree->count() }} top-level positions</span><span><i class="bx bx-group"></i> {{ $shareholders->count() }} active shareholders</span><span class="org-chart-tip"><i class="bx bx-mouse"></i> Scroll horizontally to explore the hierarchy</span></div>
+        <div class="card-body organization-scroll" id="orgChartViewport" tabindex="0" aria-label="Scrollable organizational chart">
+            <div class="org-chart" id="orgChart">
                 <ul class="org-root-list">
                     <li>
                         <article class="org-node-card org-shareholder-card">
-                            <div class="org-node-title">Shareholders</div>
-                            <div class="org-node-subtitle">سهم داران</div>
+                            <div class="org-shareholder-heading"><span class="org-shareholder-icon"><i class="bx bxs-crown"></i></span><span><strong>Shareholders</strong><small>Ownership &amp; governance</small></span><span class="org-owner-count">{{ $shareholders->count() }} active</span></div>
                             <div class="org-shareholder-grid">
                                 @forelse($shareholders as $shareholder)
                                     <div class="org-person shareholder-person">
-                                        <span class="org-avatar">{{ strtoupper(substr($shareholder->name, 0, 1)) }}</span>
-                                        <span><strong>{{ $shareholder->name }}</strong><small>{{ number_format((float) $shareholder->share_percentage, 2) }}% share</small></span>
+                                        <span class="org-avatar">{{ mb_strtoupper(mb_substr($shareholder->name, 0, 1)) }}</span>
+                                        <span><strong>{{ $shareholder->name }}</strong><small>{{ number_format((float) $shareholder->share_percentage, 2) }}% ownership</small></span>
                                     </div>
                                 @empty
                                     <div class="org-vacant">No active shareholders added.</div>
@@ -226,6 +231,40 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  const orgChart = document.getElementById('orgChart');
+  if (orgChart) {
+    const branches = Array.from(orgChart.querySelectorAll('.org-branch'));
+    const setExpanded = (li, expanded) => {
+      const childList = li.querySelector(':scope > .org-children');
+      const toggle = li.querySelector(':scope > .org-node-card .org-toggle');
+      if (!childList || !toggle) return;
+      childList.hidden = !expanded;
+      li.classList.toggle('org-collapsed', !expanded);
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.setAttribute('aria-label', (expanded ? 'Collapse' : 'Expand') + ' team');
+      toggle.querySelector('i').className = 'bx ' + (expanded ? 'bx-chevron-up' : 'bx-chevron-down');
+    };
+    branches.forEach(li => li.querySelector(':scope > .org-node-card .org-toggle')?.addEventListener('click', () => {
+      setExpanded(li, li.classList.contains('org-collapsed'));
+    }));
+    document.getElementById('orgChartExpand')?.addEventListener('click', () => branches.forEach(li => setExpanded(li, true)));
+    document.getElementById('orgChartCollapse')?.addEventListener('click', () => branches.forEach(li => setExpanded(li, false)));
+    const search = document.getElementById('orgChartSearch');
+    search?.addEventListener('input', () => {
+      const term = search.value.trim().toLocaleLowerCase();
+      branches.forEach(li => {
+        const ownText = li.querySelector(':scope > .org-node-card')?.textContent?.toLocaleLowerCase() || '';
+        li.classList.toggle('org-search-match', !!term && ownText.includes(term));
+        li.classList.toggle('org-search-dim', !!term && !ownText.includes(term));
+      });
+      if (term) branches.forEach(li => {
+        if (li.classList.contains('org-search-match')) {
+          let parent = li.parentElement?.closest('.org-branch');
+          while (parent) {setExpanded(parent, true);parent = parent.parentElement?.closest('.org-branch');}
+        }
+      });
+    });
+  }
   const host = document.getElementById('dashboardExchangeChart');
   if (!host) return;
   const data = @json($exchangeChart);

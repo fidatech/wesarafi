@@ -1382,3 +1382,61 @@ select.is-invalid + .select2-container .select2-selection {
 .layout-page.dashboard-layout-page {
     padding-top: 5px !important;
 }
+
+/* Premium organizational chart: clear ownership, roles, and reporting lines. */
+.wes-dashboard .organization-card{overflow:hidden;border:1px solid #e1eaf5;background:#fff}
+.wes-dashboard .organization-card>.card-header{padding:15px 18px;border-bottom:1px solid #e9eef6;gap:14px}
+.org-panel-heading{display:flex;align-items:center;gap:11px}
+.org-panel-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:11px;background:#e8f1ff;color:#1268ef;font-size:23px}
+.wes-dashboard .org-panel-heading h5{font-size:15px;font-weight:800;color:#11264b;letter-spacing:-.025em}
+.org-panel-heading small{display:block;color:#8090aa;font-size:11px;margin-top:3px}
+.org-panel-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.org-search-wrap{height:34px;min-width:215px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid #dce5f2;border-radius:8px;background:#f9fbfe;color:#7b90ac;margin:0}
+.org-search-wrap:focus-within{border-color:#3987f5;box-shadow:0 0 0 3px #1e73f014}
+.org-search-wrap input{border:0;outline:0;min-width:0;width:100%;background:transparent;color:#152a4e;font-size:11px}
+.org-tool-btn{display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;border:1px solid #dce5f2;border-radius:8px;background:#fff;color:#506686;font-size:11px;font-weight:650;cursor:pointer}
+.org-tool-btn:hover{border-color:#88b6f8;background:#f0f6ff;color:#0e67e7}
+.org-chart-toolbar{display:flex;align-items:center;gap:18px;padding:10px 20px;background:#f8fbff;border-bottom:1px solid #e9eef6;color:#657b9a;font-size:11px}
+.org-chart-toolbar i{color:#317de9;font-size:14px;margin-right:5px}
+.org-chart-tip{margin-inline-start:auto}
+.wes-dashboard .organization-scroll{overflow:auto;max-height:650px;padding:24px 16px 40px;background:radial-gradient(#dfe8f5 .8px,transparent .8px) 0 0/19px 19px,#fbfdff;scrollbar-color:#bfcee4 transparent;scrollbar-width:thin}
+.wes-dashboard .org-chart{min-width:max-content;display:block;width:max-content;margin:auto;padding:0 20px}
+.wes-dashboard .org-chart ul{padding-top:27px}
+.wes-dashboard .org-chart li{min-width:238px;padding:27px 10px 0}
+.wes-dashboard .org-chart li::before,.wes-dashboard .org-chart li::after{height:27px;border-color:#b5c9e5}
+.wes-dashboard .org-chart ul ul::before{height:27px;border-color:#b5c9e5}
+.wes-dashboard .org-chart .org-root-list{padding-top:0}
+.wes-dashboard .org-chart .org-root-list>li{padding-top:0}
+.wes-dashboard .org-node-card{width:238px;min-height:76px;padding:10px 12px;border:1px solid #d7e5f7;border-top:3px solid #267cf0;border-radius:11px;background:#fff;box-shadow:0 5px 16px #193e6b0c;transition:border-color .18s,box-shadow .18s,transform .18s}
+.wes-dashboard .org-node-card:hover{border-color:#6da9f7;box-shadow:0 10px 26px #1756a21b;transform:translateY(-2px)}
+.org-node-heading{display:flex;align-items:center;gap:9px;min-width:0}
+.org-role-icon{display:grid;place-items:center;flex:0 0 33px;width:33px;height:33px;border-radius:9px;background:#eaf3ff;color:#1174ed;font-size:18px}
+.org-node-heading-text{min-width:0;flex:1;text-align:left}
+.wes-dashboard .org-node-title{display:block;font-size:11px;font-weight:800;line-height:1.35;white-space:normal;color:#152c54}
+.wes-dashboard .org-node-subtitle{display:block;margin-top:2px;font-size:10px;color:#7c90ae}
+.org-toggle{flex:0 0 23px;width:23px;height:23px;border:1px solid #e4ebf5;border-radius:6px;background:#f7faff;color:#5776a0;display:grid;place-items:center;cursor:pointer}
+.org-toggle:hover{background:#e6f0ff;color:#1268ef}
+.wes-dashboard .org-people{margin-top:7px}
+.wes-dashboard .org-person{border:0;background:#f4f8fe;border-radius:7px;padding:6px 8px;gap:7px;margin-top:5px}
+.wes-dashboard .org-person strong{font-size:10px;color:#1d385d}
+.wes-dashboard .org-person small{font-size:9px;color:#7b90ad}
+.wes-dashboard .org-avatar{flex:0 0 25px;width:25px;height:25px;border-radius:8px;background:#d9eaff;color:#1968d6;font-size:11px;display:grid;place-items:center;font-weight:800}
+.wes-dashboard .org-vacant{display:flex;align-items:center;justify-content:center;gap:6px;margin:7px 0 0;padding:6px 8px;border:1px dashed #dce6f3;background:#f9fbff;border-radius:6px;color:#8a9bb3;font-size:10px}
+.wes-dashboard .org-unfilled{border-top-color:#91b9f0}
+.wes-dashboard .org-unfilled .org-role-icon{background:#f1f6ff;color:#6797d8}
+.wes-dashboard .org-shareholder-card{width:min(530px,80vw);min-height:0;padding:12px 16px 14px;border:1px solid #d8cbfa;border-top:3px solid #8c56e9;background:linear-gradient(130deg,#fff,#f7f2ff);box-shadow:0 8px 22px #7149b014}
+.org-shareholder-heading{display:flex;align-items:center;justify-content:center;gap:10px}
+.org-shareholder-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#ede2ff;color:#8142db;font-size:19px}
+.org-shareholder-heading>span:nth-child(2){text-align:left}
+.org-shareholder-heading strong{display:block;font-size:12px;color:#392061}
+.org-shareholder-heading small{display:block;font-size:10px;color:#957eae}
+.org-owner-count{margin-left:auto;border-radius:30px;padding:5px 9px;background:#eee4ff;color:#7140c6;font-size:10px;font-weight:750}
+.wes-dashboard .org-shareholder-grid{gap:7px;margin-top:9px}
+.wes-dashboard .shareholder-person{background:#fff;border:1px solid #ebe3f8;padding:6px 10px}
+.wes-dashboard .shareholder-person .org-avatar{background:#efe4ff;color:#7d45d1}
+.wes-dashboard .org-children[hidden]{display:none!important}
+.wes-dashboard .org-collapsed>.org-node-card{border-bottom-color:#95bdf3}
+.wes-dashboard .org-collapsed>.org-node-card .org-toggle{background:#e8f1ff}
+.wes-dashboard .org-search-match>.org-node-card{border-color:#ecaa34!important;box-shadow:0 0 0 3px #ffcc641e}
+.wes-dashboard .org-search-dim>.org-node-card{opacity:.43}
+@media(max-width:767.98px){.org-panel-tools{width:100%}.org-search-wrap{flex:1;min-width:170px}.org-chart-tip{display:none}.org-chart-toolbar{gap:12px;flex-wrap:wrap}.wes-dashboard .organization-scroll{max-height:500px}}
