@@ -54,9 +54,9 @@
                 <form id="restore-apply-form" autocomplete="off" method="post" action="{{ route('configuration.backups.restore.apply') }}">
                     @csrf
                     <label for="restore_confirmation" class="form-label">Type <strong>RESTORE CURRENT DATABASE</strong></label>
-                    <input id="restore_confirmation" name="confirmation" class="form-control mb-3" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="RESTORE CURRENT DATABASE">
+                    <input id="restore_confirmation" name="restore_phrase_input" class="form-control mb-3" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="RESTORE CURRENT DATABASE">
                     <label for="restore_password" class="form-label">Account password</label>
-                    <input id="restore_password" type="password" name="password" class="form-control mb-3" required autocomplete="off">
+                    <input id="restore_password" type="password" name="restore_password_input" class="form-control mb-3" required autocomplete="off">
                     <div class="form-check mb-3"><input id="restore_ack" type="checkbox" class="form-check-input" required><label for="restore_ack" class="form-check-label">I understand the current database will be replaced and the application may be temporarily unavailable.</label></div>
                     <div class="d-flex gap-2"><button type="button" class="btn btn-outline-secondary" onclick="wsRestoreStep(2)">Back</button><button type="submit" class="btn btn-danger">Start database restore</button></div>
                 </form>
@@ -95,6 +95,14 @@
                 });
             }
             wsRestoreStep({{ $staged ? 2 : 1 }});
+            // Browser autofill may ignore autocomplete=off for recognizable credentials.
+            // Keep visible controls readonly until intentional focus and use non-login names.
+            for (const id of ['restore_confirmation','restore_password']) {
+                const input = document.getElementById(id);
+                if (!input) continue;
+                input.readOnly = true;
+                input.addEventListener('focus', () => { input.readOnly = false; }, {once:true});
+            }
             document.getElementById('restore-apply-form')?.addEventListener('submit', function(e) {
                 if (!this.reportValidity()) return;
                 e.preventDefault();
@@ -136,8 +144,11 @@
                         }
                     };
                     try {
-                        const response = await fetch(this.action, {
-                            method:'POST',body:new FormData(this),
+                        const payload = new FormData(this);
+                    payload.set('confirmation', document.getElementById('restore_confirmation').value);
+                    payload.set('password', document.getElementById('restore_password').value);
+                    const response = await fetch(this.action, {
+                            method:'POST',body:payload,
                             headers:{'Accept':'application/x-ndjson','X-Requested-With':'XMLHttpRequest'},
                             credentials:'same-origin'
                         });
