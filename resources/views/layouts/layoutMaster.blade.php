@@ -22,7 +22,7 @@
 
                 @include('layouts.navbar')
 
-                <div class="layout-page">
+                <div class="layout-page{{ request()->routeIs('dashboard') ? ' dashboard-layout-page' : '' }}">
 
                     @include('layouts.menubar')
                 @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)

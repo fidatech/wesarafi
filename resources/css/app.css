@@ -1314,24 +1314,14 @@ select.is-invalid + .select2-container .select2-selection {
 @media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern{flex-direction:column;align-items:stretch}.wes-dashboard .dashboard-filter-panel{max-width:none;width:100%}}
 @media(max-width:575.98px){.wes-dashboard{padding:10px}.wes-dashboard .dashboard-hero-modern{padding:18px}.wes-dashboard .dashboard-filter-panel{min-width:0}.wes-dashboard .dashboard-hero-modern h2{font-size:27px}}
 
-/* Dashboard: remove inherited desktop content offset below horizontal menu. */
-@media (min-width: 1200px) {
-    .content-wrapper:has(.wes-dashboard) {
-        padding-top: 0 !important;
-    }
-}
-.content-wrapper > .container-fluid:has(> .wes-dashboard) {
-    padding-top: 0 !important;
-}
-
-/* Dashboard screenshot parity: account for fixed navbar AND fixed horizontal menu. */
+/* Dashboard: reserve space for the fixed navigation separately from page padding. */
 @media (min-width: 1200px) {
     .content-wrapper:has(.wes-dashboard) {
         padding-top: var(--wes-fixed-chrome-height) !important;
     }
 }
-.content-wrapper > .container-fluid:has(> .wes-dashboard) {
-    padding-top: 12px !important;
+.dashboard-layout-page .content-wrapper > .container-fluid:has(> .wes-dashboard) {
+    padding-top: 0 !important;
 }
 .wes-dashboard .dashboard-hero-modern { margin-top:0 !important; }
 /* Reference uses a 184px blue financial hero with light controls. */
@@ -1389,6 +1379,6 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-dashboard .dashboard-hero-copy,.wes-dashboard .dashboard-filter-panel { position:relative;z-index:1; }
 @media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern::before{inset-inline-start:42%;width:58%;opacity:.45}}
 
-.layout-page {
+.layout-page.dashboard-layout-page {
     padding-top: 5px !important;
 }
