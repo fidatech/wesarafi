@@ -33,6 +33,7 @@ class TransactionPostingTest extends TestCase
         ]);
 
         $this->user = User::factory()->create(['branch_id' => $this->branch->id]);
+        $this->user->assignRole(\Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Branch', 'guard_name' => 'web']));
         $this->actingAs($this->user);
 
         $this->afn = Currency::create([

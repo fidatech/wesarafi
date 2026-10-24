@@ -104,6 +104,7 @@ class TransactionController extends Controller
 
     public function storeAccountLedgerEntry(Request $request)
     {
+        abort_unless($request->user()->hasAnyRole(['Super Admin', 'Admin', 'Branch']), 403);
         $data = $request->validate([
             'account_id' => ['required', 'exists:accounts,id'],
             'branch_id' => ['nullable', 'exists:branches,id'],
@@ -119,6 +120,7 @@ class TransactionController extends Controller
         $branchId = auth()->user()->branch_id ?: ($data['branch_id'] ?? $account->branch_id);
         abort_unless($branchId, 422, 'A branch is required.');
         abort_if(auth()->user()->branch_id && (int) auth()->user()->branch_id !== (int) $account->branch_id, 403);
+        abort_if((int) $branchId !== (int) $account->branch_id, 422, 'Journal branch must match the selected account branch.');
 
         $safeCoaId = ChartOfAccount::where('code', '1000')->value('id');
         $accountCoaId = ChartOfAccount::where('code', $account->type === 'bank' ? '1001' : '1002')->value('id');
@@ -136,16 +138,16 @@ class TransactionController extends Controller
             'is_approved' => true, 'approval_status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now(),
         ];
 
-        DB::transaction(function () use ($common, $data, $account, $accountCoaId, $safeCoaId, $safeDirection) {
-            Transaction::create($common + [
+        \App\Services\TransactionService::postMany([
+            $common + [
                 'chart_of_account_id' => $accountCoaId, 'direction' => $data['direction'],
                 'account_id' => $account->id, 'accountable_type' => Account::class, 'accountable_id' => $account->id,
-            ]);
-            Transaction::create($common + [
+            ],
+            $common + [
                 'chart_of_account_id' => $safeCoaId, 'direction' => $safeDirection, 'is_safe' => true,
                 'account_id' => null, 'accountable_type' => null, 'accountable_id' => null,
-            ]);
-        });
+            ],
+        ], $linkedId);
 
         return redirect()->route('journal.transactions.account-ledgers', [
             'from' => $data['date'], 'to' => $data['date'], 'account_id' => $account->id,
