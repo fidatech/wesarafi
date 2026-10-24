@@ -59,12 +59,14 @@ class RestoreCurrentBackup extends Command
             }
             chmod($safety, 0600);
             $this->warn('Safety backup retained: '.$safety);
+            $expectedTables = preg_match_all('/^CREATE TABLE `[^`]+`/m', $sql);
+            if ($expectedTables < 1) { $this->error('No CREATE TABLE statements found. No changes made.'); return self::FAILURE; }
             // Drop existing tables, views and routines before importing; the original snapshot is preserved.
             try {
                 $this->clearSchema($db);
                 $this->importSql($mysql, $common, $env, $db, $source);
                 $tables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$db]);
-                if ((int)$tables->n === 0) throw new \RuntimeException('No tables imported.');
+                if ((int)$tables->n !== $expectedTables) throw new \RuntimeException('Restored table count mismatch: expected '.$expectedTables.', got '.$tables->n);
                 $this->info('Restored '.$tables->n.' tables into '.$db.'. Safety backup: '.$safety);
                 return self::SUCCESS;
             } catch (\Throwable $e) {
@@ -87,7 +89,8 @@ class RestoreCurrentBackup extends Command
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         try {
-            foreach (DB::select('SELECT TABLE_NAME, TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$database]) as $item) {
+            $objects = DB::select('SELECT TABLE_NAME, TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? ORDER BY CASE WHEN TABLE_TYPE = \'VIEW\' THEN 0 ELSE 1 END', [$database]);
+            foreach ($objects as $item) {
                 $name = '`'.str_replace('`', '``', $item->TABLE_NAME).'`';
                 DB::statement(($item->TABLE_TYPE === 'VIEW' ? 'DROP VIEW IF EXISTS ' : 'DROP TABLE IF EXISTS ').$name);
             }
