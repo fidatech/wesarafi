@@ -26,7 +26,7 @@
                 <input id="confirmation" name="confirmation" class="form-control mb-3" placeholder="VALIDATE" required>
                 <button type="submit" class="btn btn-primary">Validate backup</button>
             </form>
-            <div class="alert alert-warning mt-3 mb-0">Database restoration is currently available only through the controlled maintenance procedure. Uploading a backup here will not overwrite any data.</div>
+            <div class="alert alert-warning mt-3 mb-0">To restore into a separate, empty MySQL database, use the server terminal: <code>php artisan backup:restore /absolute/path/to/backup.zip --database=empty_restore_database</code>. The target database must exist and must not be the active database. This page only validates uploads; it never overwrites financial records.</div>
         </div></div>
     </div>
 </div>
