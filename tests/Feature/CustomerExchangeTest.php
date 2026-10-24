@@ -34,6 +34,30 @@ class CustomerExchangeTest extends TestCase
         ];
     }
 
+    public function test_exchange_reversal_preserves_original_and_offsets_all_postings(): void
+    {
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user);
+        $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $original = Transaction::where('linked_id', $exchange->linked_id)->get();
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Correct customer quote'])->assertRedirect();
+        $audit = \Illuminate\Support\Facades\DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->first();
+        $this->assertNotNull($audit);
+        $this->assertSame('reversed', $exchange->fresh()->status);
+        $reversal = Transaction::where('linked_id', $audit->reversal_linked_id)->get();
+        $this->assertCount($original->count(), $reversal);
+        foreach ($original as $line) {
+            $opposite = $reversal->first(fn ($entry) => $entry->currency_id === $line->currency_id
+                && $entry->chart_of_account_id === $line->chart_of_account_id && $entry->direction !== $line->direction);
+            $this->assertNotNull($opposite);
+            $this->assertEqualsWithDelta($line->amount_afn, $opposite->amount_afn, 0.001);
+        }
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Second reversal attempt'])->assertStatus(422);
+        $this->assertSame($original->count(), Transaction::where('linked_id', $exchange->linked_id)->count());
+    }
+
     public function test_posted_exchange_cannot_be_deleted_individually_or_in_bulk(): void
     {
         $this->post(route('exchange.customers.store'), $this->payload())->assertRedirect();

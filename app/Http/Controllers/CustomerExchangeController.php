@@ -176,6 +176,40 @@ class CustomerExchangeController extends Controller
         return response()->download($path, basename($path), ['Cache-Control' => 'private, no-store']);
     }
 
+    public function reverse(Request $request, CustomerExchange $exchange)
+    {
+        abort_unless($request->user()->hasRole('Super Admin') || $request->user()->can('edit journal'), 403);
+        abort_if($request->user()->branch_id && (int) $request->user()->branch_id !== (int) $exchange->branch_id, 403);
+        $data = $request->validate(['reason' => 'required|string|min:5|max:1000']);
+        $reference = DB::transaction(function () use ($request, $exchange, $data) {
+            $exchange = CustomerExchange::lockForUpdate()->findOrFail($exchange->id);
+            abort_if(DB::table('journal_reversals')->where('original_linked_id', $exchange->linked_id)->exists(), 422, 'Exchange already reversed.');
+            $original = Transaction::where('linked_id', $exchange->linked_id)->lockForUpdate()->get();
+            abort_unless($original->count() >= 2 && $original->every(fn ($line) => $line->module_name === 'customer_exchange'
+                && (int) $line->module_id === (int) $exchange->id && (int) $line->branch_id === (int) $exchange->branch_id
+                && $line->is_approved && $line->approval_status === 'approved'), 422, 'Invalid exchange journal.');
+            abort_unless(abs($original->where('direction', 'debit')->sum('amount_afn') - $original->where('direction', 'credit')->sum('amount_afn')) <= 0.02, 422, 'Unbalanced exchange journal.');
+            $reference = (string) Str::uuid();
+            DB::table('journal_reversals')->insert(['original_linked_id' => $exchange->linked_id, 'reversal_linked_id' => $reference,
+                'reason' => $data['reason'], 'created_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
+            $entries = $original->map(fn ($line) => [
+                'branch_id' => $line->branch_id, 'date' => now()->toDateString(), 'currency_id' => $line->currency_id,
+                'chart_of_account_id' => $line->chart_of_account_id, 'account_id' => $line->account_id,
+                'accountable_type' => $line->accountable_type, 'accountable_id' => $line->accountable_id,
+                'is_safe' => $line->is_safe, 'amount' => $line->amount, 'amount_afn' => $line->amount_afn,
+                'exchange_rate_afn' => $line->exchange_rate_afn,
+                'direction' => $line->direction === 'debit' ? 'credit' : 'debit',
+                'module_name' => 'customer_exchange_reversal', 'module_id' => $exchange->id,
+                'created_by' => $request->user()->id, 'description' => 'Exchange reversal '.$exchange->linked_id.': '.$data['reason'],
+            ])->all();
+            \App\Services\TransactionService::postMany($entries, $reference);
+            $exchange->status = 'reversed';
+            $exchange->save();
+            return $reference;
+        });
+        return redirect()->route('exchange.customers.index')->with('success', 'Exchange reversed: '.$reference);
+    }
+
     public function destroy(CustomerExchange $exchange)
     {
         abort_if(auth()->user()->branch_id && auth()->user()->branch_id !== $exchange->branch_id, 403);

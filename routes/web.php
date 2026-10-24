@@ -410,6 +410,7 @@ Route::middleware('auth')->group(function () {
     Route::get('exchange/customers/quote', [CustomerExchangeController::class, 'quote'])->name('exchange.customers.quote');
     Route::post('exchange/customers', [CustomerExchangeController::class, 'store'])->name('exchange.customers.store');
     Route::delete('exchange/customers/bulk', [CustomerExchangeController::class, 'bulkDestroy'])->name('exchange.customers.bulk-destroy');
+    Route::post('exchange/customers/{exchange}/reverse', [CustomerExchangeController::class, 'reverse'])->name('exchange.customers.reverse');
     Route::delete('exchange/customers/{exchange}', [CustomerExchangeController::class, 'destroy'])->name('exchange.customers.destroy');
     Route::get('exchange/rates', [ExchangeRateController::class, 'index'])->name('exchange.rates.index');
     Route::post('exchange/rates', [ExchangeRateController::class, 'store'])->name('exchange.rates.store');
