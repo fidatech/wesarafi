@@ -31,6 +31,11 @@ class RemittanceWorkflowService
     {
         $common = ['currency_id' => $r->currency_id, 'date' => $date, 'exchange_rate_afn' => $rate ?? (float) $r->exchange_rate_afn,
             'module_name' => $module, 'module_id' => $id, 'description' => $r->reference.' '.$module, 'created_by' => auth()->id()];
+        if (\App\Models\Transaction::withTrashed()->where('module_name', $module)->where('module_id', $id)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'posting' => 'A journal already exists for this remittance operation; duplicate posting prevented.',
+            ]);
+        }
         TransactionService::postMany(array_map(fn ($line) => $line + $common, $this->lines));
         $this->lines = [];
     }

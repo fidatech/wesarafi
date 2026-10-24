@@ -61,6 +61,17 @@ class RemittanceWorkflowTest extends TestCase
         return $q->where('direction', 'debit')->sum('amount') - $q->where('direction', 'credit')->sum('amount');
     }
 
+    public function test_repeated_remittance_approval_preserves_existing_journal_and_state(): void
+    {
+        $remittance = $this->store();
+        $this->post('/remittances/'.$remittance->id.'/approve')->assertRedirect();
+        $originalCount = Transaction::where('module_name', 'remittance')->where('module_id', $remittance->id)->count();
+        $this->postJson('/remittances/'.$remittance->id.'/approve')->assertStatus(422);
+        $this->assertSame('approved', $remittance->fresh()->status);
+        $this->assertSame($originalCount, Transaction::where('module_name', 'remittance')->where('module_id', $remittance->id)->count());
+        $this->assertCount(2, $remittance->legs);
+    }
+
     public function test_bridge_debts_commission_settlement_and_receiver_payment(): void
     {
         $r = $this->store();
