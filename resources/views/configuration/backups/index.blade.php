@@ -13,8 +13,6 @@
             <a href="{{ route('configuration.backups.download') }}" class="btn btn-outline-primary">Download safety backup</a>
         </div></div>
         <div class="card"><div class="card-body p-4">
-            @if(session('backup_validation'))<div class="alert alert-success" role="status">{{ session('backup_validation') }}</div>@endif
-            @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
             <style>
                 .ws-stepper{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
                 .ws-step{display:flex;align-items:center;gap:.5rem;color:#8592a3;font-size:.875rem}
@@ -47,7 +45,7 @@
                     <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Destination database</div><strong>{{ config('database.connections.mysql.database') }}</strong><div class="small text-muted mt-1">Currently connected MySQL database</div></div></div>
                     <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Uploaded archive</div><strong>ZIP validated</strong><div class="small text-muted mt-1">Staged for up to 30 minutes</div></div></div>
                 </div>
-                <div class="alert alert-warning">The system first creates a safety backup and tests the uploaded SQL in an isolated temporary database. Only after that test passes does it replace the connected database. If the live import fails, rollback is attempted.</div>
+                <p class="text-muted small">The system creates a safety backup and checks the SQL in an isolated database before replacing the current database. Failed imports trigger a rollback attempt.</p>
                 <div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-secondary" onclick="wsRestoreStep(1)">Choose a different file</button><button type="button" class="btn btn-primary" onclick="wsRestoreStep(3)">Continue to confirmation</button></div>
             </div>
             <div id="restore-step-confirm" hidden>
@@ -70,6 +68,18 @@
                 <p class="small text-muted mt-3">This is not a measured progress percentage. A restore can continue after an HTTP timeout. Do not submit another restore until the administrator checks the restore history and database state.</p>
             </div>
             <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const notices = [];
+                @if(session('backup_validation'))
+                notices.push({icon:'success',title:'Backup validated',text:@json(session('backup_validation'))});
+                @endif
+                @if($errors->any())
+                notices.push({icon:'error',title:'Action could not be completed',text:@json($errors->first())});
+                @endif
+                if (notices.length && typeof Swal !== 'undefined') {
+                    Swal.fire({confirmButtonText:'OK',...notices[0]});
+                }
+            });
             function wsRestoreStep(step) {
                 const names = ['upload','review','confirm','progress'];
                 names.forEach((name,index) => {
@@ -87,10 +97,22 @@
             wsRestoreStep({{ $staged ? 2 : 1 }});
             document.getElementById('restore-apply-form')?.addEventListener('submit', function(e) {
                 if (!this.reportValidity()) return;
-                if (document.getElementById('restore_confirmation').value !== 'RESTORE CURRENT DATABASE') { e.preventDefault(); alert('Type RESTORE CURRENT DATABASE exactly.'); return; }
-                if (!window.confirm('Replace the currently connected WeSarafi database?')) { e.preventDefault(); return; }
-                wsRestoreStep(4);
-                this.querySelector('[type="submit"]').disabled = true;
+                e.preventDefault();
+                if (document.getElementById('restore_confirmation').value !== 'RESTORE CURRENT DATABASE') {
+                    Swal.fire({icon:'error',title:'Confirmation does not match',text:'Type RESTORE CURRENT DATABASE exactly.'});
+                    return;
+                }
+                Swal.fire({
+                    icon:'warning', title:'Restore current database?',
+                    text:'This will replace the connected WeSarafi database. A safety backup and preflight check run first.',
+                    showCancelButton:true, confirmButtonText:'Yes, restore database', cancelButtonText:'Cancel',
+                    confirmButtonColor:'#d33', reverseButtons:true, focusCancel:true
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+                    wsRestoreStep(4);
+                    this.querySelector('[type="submit"]').disabled = true;
+                    HTMLFormElement.prototype.submit.call(this);
+                });
             });
             </script>
             @else
