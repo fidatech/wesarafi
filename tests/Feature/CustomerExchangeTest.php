@@ -103,6 +103,29 @@ class CustomerExchangeTest extends TestCase
         $this->assertTrue(Transaction::where('linked_id', $exchange->linked_id)->exists());
     }
 
+    public function test_business_day_reconciliation_excludes_unapproved_cash_and_ledger_entries(): void
+    {
+        $payload = $this->payload();
+        $payload['date'] = now('Asia/Kabul')->toDateString();
+        $this->post(route('exchange.customers.store'), $payload)->assertRedirect();
+        $exchange = CustomerExchange::firstOrFail();
+        $branch = (int) $exchange->branch_id;
+        $date = now('Asia/Kabul')->toDateString();
+        $approved = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $cashLine = Transaction::where('linked_id', $exchange->linked_id)->where('is_safe', true)->firstOrFail();
+        $currency = $cashLine->currency_id;
+        $cashLine->update(['is_approved' => false, 'approval_status' => 'pending']);
+        $pending = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $this->assertSame(1, $pending['pending_approvals']);
+        $this->assertFalse($pending['reconciled']);
+        $this->assertNotEquals($approved['cash_book_by_currency'][$currency] ?? 0, $pending['cash_book_by_currency'][$currency] ?? 0);
+        $this->assertNotEquals($approved['ledger_totals_by_currency_and_direction'][$currency] ?? [], $pending['ledger_totals_by_currency_and_direction'][$currency] ?? []);
+        $cashLine->update(['approval_status' => 'rejected']);
+        $rejected = \App\Services\BusinessDayReconciliation::report($branch, $date);
+        $this->assertSame(0, $rejected['pending_approvals']);
+        $this->assertEquals($pending['cash_book_by_currency'], $rejected['cash_book_by_currency']);
+    }
+
     public function test_historical_exchange_reversal_posts_on_current_day_without_rewriting_original_date(): void
     {
         $user = User::firstOrFail();

@@ -13,9 +13,16 @@ class BusinessDayReconciliation
         $pending = (clone $transactions)->whereDate('date', $date)
             ->where(function ($q) {
                 $q->where('approval_status', 'pending')
-                  ->orWhere('is_approved', false)->whereNull('approval_status');
+                  ->orWhere(function ($q) {
+                      $q->where('is_approved', false)
+                        ->where(function ($q) {
+                            $q->whereNull('approval_status')->orWhere('approval_status', '!=', 'rejected');
+                        });
+                  });
             })->count();
-        $cash = (clone $transactions)->where('is_safe', true)
+        // Only approved postings affect physical cash and the finalized ledger.
+        $approved = (clone $transactions)->where('is_approved', true)->where('approval_status', 'approved');
+        $cash = (clone $approved)->where('is_safe', true)
             ->select('currency_id', 'direction', DB::raw('SUM(amount) AS total'))
             ->groupBy('currency_id', 'direction')->get()->groupBy('currency_id')
             ->map(function ($rows) {
@@ -23,7 +30,7 @@ class BusinessDayReconciliation
                 $credit = (float) $rows->where('direction', 'credit')->sum('total');
                 return round($debit - $credit, 2);
             })->toArray();
-        $balances = (clone $transactions)
+        $balances = (clone $approved)
             ->select('currency_id', 'direction', DB::raw('SUM(amount) AS total'))
             ->groupBy('currency_id', 'direction')->get()
             ->groupBy('currency_id')->map(function ($lines) {
