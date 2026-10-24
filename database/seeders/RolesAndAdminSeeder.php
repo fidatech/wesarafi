@@ -15,7 +15,7 @@ class RolesAndAdminSeeder extends Seeder
     public function run(): void
     {
         // Create Default Branch
-        $branch = Branch::firstOrCreate([
+        $mainBranch = Branch::firstOrCreate([
             'name' => 'Main Branch',
             'is_main' => true,
             'province_id' => 1,
@@ -27,9 +27,9 @@ class RolesAndAdminSeeder extends Seeder
         // Create Roles
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
         $admin = Role::firstOrCreate(['name' => 'Admin']);
-        $branch = Role::firstOrCreate(['name' => 'Branch']);
-        $user = Role::firstOrCreate(['name' => 'User']);
-        $compliance = Role::firstOrCreate(['name' => 'Compliance']);
+        Role::firstOrCreate(['name' => 'Branch']);
+        Role::firstOrCreate(['name' => 'User']);
+        Role::firstOrCreate(['name' => 'Compliance']);
 
         // Create Default Permissions (Optional)
         $permissions = [];
@@ -74,7 +74,7 @@ class RolesAndAdminSeeder extends Seeder
                 'email' => $account['email'],
                 'username' => 'bootstrap_'.\Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(12)),
                 'password' => Hash::make($account['password']),
-                'branch_id' => 1,
+                'branch_id' => $mainBranch->id,
                 'status' => true,
             ]);
             $created->assignRole($account['role']);
