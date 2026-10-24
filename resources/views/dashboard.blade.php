@@ -21,15 +21,15 @@
                 <div class="dropdown d-inline-block"><button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">More actions</button><ul class="dropdown-menu"><li><a class="dropdown-item" href="{{ route('accounting.expenses.index') }}">Expenses</a></li><li><a class="dropdown-item" href="{{ route('hr.employees.index') }}">Employees</a></li></ul></div>
             </div>
         </div>
-        <form method="GET" class="dashboard-filter dashboard-filter-panel">
+        <form method="GET" action="{{ route('dashboard') }}" class="dashboard-filter dashboard-filter-panel" id="dashboardFilters">
             <div class="dashboard-filter-title"><i class="bx bx-bar-chart-alt-2"></i><span>Dashboard scope</span></div>
             <div>
-                <label>Date</label>
-                <input type="date" name="date" value="{{ $date }}" class="form-control">
+                <label for="dashboardDate">Date</label>
+                <input id="dashboardDate" type="date" name="date" max="{{ now('Asia/Kabul')->toDateString() }}" value="{{ $date }}" class="form-control">
             </div>
             <div>
-                <label>Branch</label>
-                <select name="branch_id" class="form-select">
+                <label for="dashboardBranch">Branch</label>
+                <select id="dashboardBranch" name="branch_id" class="form-select">
                     @if(!auth()->user()->branch_id)<option value="0" @selected(!$branchId)>All branches</option>@endif
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" @selected((int) $branchId === (int) $branch->id)>{{ $branch->name }}</option>
@@ -37,7 +37,10 @@
                 </select>
             </div>
             <div><label for="dashboardCurrency">Currency</label><select id="dashboardCurrency" name="currency_id" class="form-select"><option value="">All currencies</option>@foreach($currencies as $currency)<option value="{{ $currency->id }}" @selected($currencyId == $currency->id)>{{ $currency->code }}</option>@endforeach</select></div>
-            <button class="btn btn-primary"><i class="bx bx-filter-alt me-1"></i> Apply filters</button>
+            <div class="dashboard-filter-actions">
+                <button type="submit" class="btn btn-primary"><i class="bx bx-filter-alt me-1"></i> Apply filters</button>
+                <a class="btn btn-outline-secondary" href="{{ route('dashboard') }}" title="Reset dashboard filters"><i class="bx bx-reset me-1"></i> Reset</a>
+            </div>
         </form>
     </section>
 
@@ -226,6 +229,36 @@
                 </ul>
             </div>
         </div>
+    </section>
+
+    <section class="card dashboard-card dashboard-recent-transactions mt-3">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2"><span class="dashboard-recent-icon"><i class="bx bx-receipt"></i></span><div><h5 class="mb-1">Recent Transactions</h5><small>Latest approved journal entries through {{ $date }} · {{ $scopeLabel }}{{ $currencyId ? ' · '.$currencies->firstWhere('id', $currencyId)?->code : ' · All currencies' }}</small></div></div>
+            <a class="btn btn-sm btn-outline-primary" href="{{ route('journal.transactions.index', ['branch_id' => $branchId, 'date_range' => $monthStart.' - '.$date]) }}"><i class="bx bx-list-ul me-1"></i> View all transactions</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table dashboard-table dashboard-recent-table align-middle mb-0">
+                <thead><tr><th>Reference</th><th>Date</th><th>Transaction type</th><th>Account</th><th>Branch</th><th>Currency</th><th>Direction</th><th class="text-end">Amount</th><th class="text-end">AFN value</th></tr></thead>
+                <tbody>
+                    @forelse($recentAllTransactions as $transaction)
+                        <tr>
+                            <td><span class="dashboard-code">#{{ $transaction->id }}</span></td>
+                            <td class="text-nowrap">{{ $transaction->date?->format('d M Y') }}</td>
+                            <td><span class="dashboard-transaction-type">{{ str_replace('_', ' ', $transaction->module_name ?: ($transaction->chartOfAccount?->account_name ?: 'Journal')) }}</span></td>
+                            <td><strong>{{ $transaction->account?->full_name ?? $transaction->chartOfAccount?->account_name ?? '—' }}</strong><small class="d-block text-muted">{{ $transaction->description ? \Illuminate\Support\Str::limit($transaction->description, 55) : ($transaction->chartOfAccount?->code ?? '') }}</small></td>
+                            <td>{{ $transaction->branch?->name ?? '—' }}</td>
+                            <td><span class="dashboard-currency-chip">{{ $transaction->currency?->code ?? '—' }}</span></td>
+                            <td><span class="dashboard-direction {{ $transaction->direction === 'debit' ? 'is-in' : 'is-out' }}"><i class="bx {{ $transaction->direction === 'debit' ? 'bx-down-arrow-alt' : 'bx-up-arrow-alt' }}"></i>{{ $transaction->direction === 'debit' ? 'Debit' : 'Credit' }}</span></td>
+                            <td class="text-end fw-semibold text-nowrap">{{ $money($transaction->amount) }}</td>
+                            <td class="text-end text-nowrap">{{ $transaction->amount_afn === null ? '—' : $money($transaction->amount_afn) }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="9" class="text-center py-5"><div class="dashboard-empty-state"><i class="bx bx-receipt"></i><strong>No transactions for these filters</strong><small>Try a different date, branch or currency.</small></div></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer dashboard-recent-footer"><span>Showing {{ $recentAllTransactions->count() }} most recent approved entries</span><span>Data as of {{ $date }}</span></div>
     </section>
 </div>
 @push('scripts')

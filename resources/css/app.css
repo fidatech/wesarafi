@@ -1440,3 +1440,29 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-dashboard .org-search-match>.org-node-card{border-color:#ecaa34!important;box-shadow:0 0 0 3px #ffcc641e}
 .wes-dashboard .org-search-dim>.org-node-card{opacity:.43}
 @media(max-width:767.98px){.org-panel-tools{width:100%}.org-search-wrap{flex:1;min-width:170px}.org-chart-tip{display:none}.org-chart-toolbar{gap:12px;flex-wrap:wrap}.wes-dashboard .organization-scroll{max-height:500px}}
+
+/* Dashboard filter form: consistent labels, real form submission and reset. */
+.wes-dashboard .dashboard-filter-panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-content:start}
+.wes-dashboard .dashboard-filter-panel>div:not(.dashboard-filter-title):not(.dashboard-filter-actions){min-width:0}
+.wes-dashboard .dashboard-filter-panel label{display:block;font-weight:700;margin-bottom:5px}
+.wes-dashboard .dashboard-filter-panel input[type=date]{width:100%;min-width:0;color:#183354}
+.wes-dashboard .dashboard-filter-panel select{width:100%;min-width:0;text-overflow:ellipsis}
+.wes-dashboard .dashboard-filter-actions{display:flex;gap:8px;align-items:center;justify-content:stretch}
+.wes-dashboard .dashboard-filter-actions .btn{flex:1;white-space:nowrap;font-weight:700;font-size:11px;min-height:34px}
+.wes-dashboard .dashboard-filter-actions .btn-outline-secondary{color:#526883;border-color:#dce5f1;background:#fff}
+.wes-dashboard .dashboard-filter-actions .btn-outline-secondary:hover{color:#1766d7;background:#edf5ff}
+.wes-dashboard .dashboard-recent-transactions{border:1px solid #e3ebf5;overflow:hidden}
+.wes-dashboard .dashboard-recent-transactions>.card-header{padding:14px 16px;border-bottom:1px solid #e9eef5}
+.wes-dashboard .dashboard-recent-transactions .card-header h5{font-size:14px;font-weight:800}
+.dashboard-recent-icon{display:grid;place-items:center;width:37px;height:37px;border-radius:10px;background:#e9f2ff;color:#1268ee;font-size:21px}
+.wes-dashboard .dashboard-recent-table thead th{background:#f5f8fc;color:#49617e;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.035em;padding:12px 13px;white-space:nowrap}
+.wes-dashboard .dashboard-recent-table tbody td{padding:12px 13px;color:#314865;font-size:11px;border-color:#eef2f7}
+.wes-dashboard .dashboard-recent-table tbody tr:hover{background:#f7fbff}
+.wes-dashboard .dashboard-recent-table tbody td strong{color:#183253;font-size:11px}
+.dashboard-transaction-type{text-transform:capitalize;font-weight:650;color:#2a4164}
+.dashboard-currency-chip{display:inline-flex;align-items:center;padding:4px 8px;border-radius:6px;background:#edf4ff;color:#2264c1;font-weight:750;font-size:10px}
+.dashboard-direction{display:inline-flex;align-items:center;gap:3px;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:750}
+.dashboard-direction.is-in{background:#e8f9f1;color:#078f60}
+.dashboard-direction.is-out{background:#fff0ed;color:#dc5c45}
+.dashboard-recent-footer{display:flex;justify-content:space-between;gap:10px;padding:10px 16px;background:#fbfdff;color:#7186a2;font-size:10px;border-top:1px solid #e9eef5}
+@media(max-width:575.98px){.wes-dashboard .dashboard-filter-panel{display:grid;grid-template-columns:1fr 1fr}.wes-dashboard .dashboard-filter-actions{grid-column:1/-1}.dashboard-recent-footer{flex-wrap:wrap}}

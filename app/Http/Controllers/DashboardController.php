@@ -20,10 +20,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $request->validate(['date' => ['nullable', 'date'], 'branch_id' => ['nullable', 'integer'], 'currency_id' => ['nullable', 'integer', 'exists:currencies,id']]);
-        $date = $request->date('date')?->toDateString() ?? now()->toDateString();
+        $request->validate(['date' => ['nullable', 'date'], 'branch_id' => ['nullable', 'integer', 'min:0', 'exists:branches,id'], 'currency_id' => ['nullable', 'integer', 'exists:currencies,id']]);
+        $date = $request->date('date')?->toDateString() ?? now('Asia/Kabul')->toDateString();
         $userBranchId = Auth::user()->branch_id;
-        $branchId = $userBranchId ?: ($request->integer('branch_id') ?: null);
+        $requestedBranch = $request->integer('branch_id') ?: null;
+        $branchId = $userBranchId ?: $requestedBranch;
         $currencyId = $request->integer('currency_id') ?: null;
         $branches = Branch::query()->when($userBranchId, fn ($q) => $q->whereKey($userBranchId))->orderBy('name')->get();
         $currencies = \App\Models\Currency::where('is_active', true)->orderByDesc('is_default')->orderBy('code')->get();
@@ -121,6 +122,12 @@ class DashboardController extends Controller
             ->limit(12)
             ->get();
 
+        // Separate full-width recent activity: all approved journal entries in the selected scope.
+        $recentAllTransactions = (clone $approvedTransactions)
+            ->with(['chartOfAccount:id,code,account_name', 'currency:id,code',
+                'branch:id,name', 'account:id,full_name'])
+            ->orderByDesc('date')->orderByDesc('id')->limit(20)->get();
+
         // Chart values come from approved journal entries, not illustrative sample series.
         $chartStart = Carbon::parse($date)->subDays(6)->toDateString();
         $exchangeRows = (clone $approvedTransactions)
@@ -159,6 +166,7 @@ class DashboardController extends Controller
             'monthExpenses' => round($monthExpenses, 2),
             'bankTransactionVolume' => round($bankTransactionVolume, 2),
             'recentTransactions' => $recentTransactions,
+            'recentAllTransactions' => $recentAllTransactions,
             'shareholders' => $shareholders,
             'organizationTree' => $organizationTree,
             'exchangeChart' => $exchangeChart,
