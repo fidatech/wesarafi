@@ -21,12 +21,12 @@
                 </button>
             </li>
 
-            <li class="nav-item d-none d-md-flex gap-2 me-1">
-                <button class="btn btn-outline-secondary btn-sm navbar-action" id="btnFxOpen" type="button">
-                    <i class="bx bx-door-open"></i><span>Opening Rates</span>
+            <li class="nav-item d-none d-md-flex align-items-center gap-1 me-2 navbar-balance-actions" aria-label="Opening and closing balances">
+                <button class="navbar-balance-icon" id="btnFxOpen" type="button" aria-label="Opening balances and rates" title="Opening balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                    <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-open" aria-hidden="true"><i class="bx bx-plus"></i></span>
                 </button>
-                <button class="btn btn-primary btn-sm navbar-action" id="btnFxClose" type="button">
-                    <i class="bx bx-exit"></i><span>Closing Rates</span>
+                <button class="navbar-balance-icon" id="btnFxClose" type="button" aria-label="Closing balances and rates" title="Closing balances and rates" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                    <i class="bx bx-wallet" aria-hidden="true"></i><span class="balance-indicator balance-indicator-close" aria-hidden="true"><i class="bx bx-minus"></i></span>
                 </button>
             </li>
 

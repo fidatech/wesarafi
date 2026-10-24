@@ -483,6 +483,15 @@ body { background: var(--wes-background); color: var(--wes-ink); }
 .navbar-product-name span { color: #758397; font-weight: 600; }
 .navbar-branch { color: #8390a0; font-size: .73rem; margin-top: 4px; }
 .navbar-action { display: inline-flex; align-items: center; gap: 6px; }
+/* Compact balance actions: distinct icons, accessible names and hover tooltips. */
+.navbar-balance-icon { position: relative; display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid transparent; border-radius: 10px; background: transparent; color: #536477; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.navbar-balance-icon > .bx { font-size: 1.35rem; }
+.navbar-balance-icon:hover, .navbar-balance-icon:focus-visible { background: var(--wes-primary-soft); color: var(--wes-primary); border-color: #d8e5f3; }
+.navbar-balance-icon:focus-visible { outline: 2px solid var(--wes-primary); outline-offset: 2px; }
+.balance-indicator { position: absolute; bottom: 3px; right: 2px; display: grid; place-items: center; width: 15px; height: 15px; border: 2px solid #fff; border-radius: 50%; color: #fff; font-size: 10px; line-height: 1; }
+.balance-indicator-open { background: #21866d; }
+.balance-indicator-close { background: #b77926; }
+.balance-indicator i { font-size: 10px; }
 .navbar-icon-link { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #536477; }
 .navbar-icon-link:hover { background: var(--wes-primary-soft); color: var(--wes-primary); }
 .navbar-icon-link i { font-size: 1.25rem; }
