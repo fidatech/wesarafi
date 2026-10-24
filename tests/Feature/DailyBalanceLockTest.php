@@ -71,6 +71,38 @@ class DailyBalanceLockTest extends TestCase
         $this->assertNotNull($day->closed_at);
     }
 
+    public function test_branch_manager_cannot_read_or_change_other_branch_business_day(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $user->givePermissionTo('manage business day');
+        $home = (int) ($user->branch_id ?: 1);
+        $other = \App\Models\Branch::create(['name' => 'Secondary Branch', 'province_id' => 1, 'phone' => 0, 'type' => 'independent']);
+        $currency = Currency::firstOrFail();
+        $payload = ['date' => now('Asia/Kabul')->toDateString(), 'branch_id' => $other->id, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->getJson(route('fx.rates.meta', ['branch_id' => $other->id]))->assertForbidden();
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertForbidden();
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertForbidden();
+        $this->assertTrue(DailyBalanceState::forBranch($other->id)['can_open']);
+        $this->actingAs($user)->getJson(route('fx.rates.meta', ['branch_id' => $home]))->assertOk()->assertJsonPath('branch_id', $home);
+    }
+
+    public function test_super_admin_can_select_a_different_branch_for_business_day(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->assignRole('Super Admin');
+        $other = \App\Models\Branch::create(['name' => 'Secondary Branch', 'province_id' => 1, 'phone' => 0, 'type' => 'independent']);
+        $currency = Currency::firstOrFail();
+        $payload = ['date' => now('Asia/Kabul')->toDateString(), 'branch_id' => $other->id, 'rates' => [$currency->id => 1]];
+        $this->actingAs($user)->getJson(route('fx.rates.meta', ['branch_id' => $other->id]))->assertOk()->assertJsonPath('branch_id', $other->id);
+        $this->actingAs($user)->postJson(route('fx.rates.open'), $payload)->assertOk();
+        $this->assertSame('open', DailyBalanceState::forBranch($other->id)['status']);
+        $this->actingAs($user)->postJson(route('fx.rates.close'), $payload)->assertOk();
+        $this->assertSame('closed', DailyBalanceState::forBranch($other->id)['status']);
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();

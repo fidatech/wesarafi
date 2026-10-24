@@ -19,8 +19,9 @@ class FxRateController extends Controller
     public function meta(Request $req)
     {
         $date = now('Asia/Kabul')->toDateString();
-        $branchId = (int) (Auth::user()?->branch_id ?: 1);
         abort_unless($req->user()->hasRole('Super Admin') || $req->user()->can('manage business day'), 403);
+        $branchId = $req->filled('branch_id') ? $req->integer('branch_id') : (int) ($req->user()->branch_id ?: 1);
+        $this->authorizeBranch($branchId);
 
         $currs = Currency::orderBy('code')->get(['id','code']);
         $data = $currs->map(function($c) use ($date,$branchId){
@@ -155,7 +156,13 @@ class FxRateController extends Controller
     private function validateCurrentDay(string $date, int $branchId): void
     {
         abort_unless($date === now('Asia/Kabul')->toDateString(), 422, 'Only today’s business day may be opened or closed.');
-        abort_unless((int) (Auth::user()?->branch_id ?: 1) === $branchId || Auth::user()?->hasRole('Super Admin'), 403);
+        $this->authorizeBranch($branchId);
+    }
+
+    private function authorizeBranch(int $branchId): void
+    {
+        abort_unless(\App\Models\Branch::whereKey($branchId)->exists(), 404);
+        abort_unless(Auth::user()?->hasRole('Super Admin') || (int) (Auth::user()?->branch_id ?: 1) === $branchId, 403);
     }
 
 }
