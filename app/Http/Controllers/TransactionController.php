@@ -47,6 +47,7 @@ class TransactionController extends Controller
 
     public function accountLedgers(Request $request)
     {
+        abort_unless($request->user()->hasAnyRole(['Super Admin', 'Admin', 'Branch']) || $request->user()->can('view journal'), 403);
         $from = $request->date('from')?->toDateString() ?? now()->startOfMonth()->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
         if ($from > $to) [$from, $to] = [$to, $from];
@@ -99,6 +100,18 @@ class TransactionController extends Controller
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
             'chartOfAccounts' => ChartOfAccount::where('is_active', true)->orderBy('code')->get(),
             'defaultCoaIds' => ChartOfAccount::whereIn('code', ['1000', '1001', '1002'])->pluck('id', 'code'),
+            'reversalHistory' => DB::table('journal_reversals')
+                ->join('transactions as original', 'original.linked_id', '=', 'journal_reversals.original_linked_id')
+                ->select('journal_reversals.*', 'original.branch_id')
+                ->distinct()
+                ->when($userBranchId, fn ($q) => $q->where('original.branch_id', $userBranchId))
+                ->orderByDesc('journal_reversals.created_at')->limit(15)->get(),
+            'reversibleJournals' => Transaction::query()->where('module_name', 'account_ledger')
+                ->where('approval_status', 'approved')->where('is_approved', true)
+                ->when($userBranchId, fn ($q) => $q->where('branch_id', $userBranchId))
+                ->whereNotIn('linked_id', DB::table('journal_reversals')->select('original_linked_id'))
+                ->select('linked_id', DB::raw('MAX(date) as date'))
+                ->groupBy('linked_id')->orderByDesc('date')->limit(30)->get(),
         ]);
     }
 
