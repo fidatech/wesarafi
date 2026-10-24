@@ -15,13 +15,22 @@
         <div class="card"><div class="card-body p-4">
             @if(session('backup_validation'))<div class="alert alert-success" role="status">{{ session('backup_validation') }}</div>@endif
             @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
-            <div class="d-flex align-items-center gap-2 mb-4 flex-wrap" aria-label="Restore wizard steps">
-                <span class="badge rounded-pill bg-primary">1. Upload</span><span class="text-muted">→</span>
-                <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">2. Review</span><span class="text-muted">→</span>
-                <span class="badge rounded-pill {{ $staged ? 'bg-primary' : 'bg-label-secondary' }}">3. Confirm</span><span class="text-muted">→</span>
-                <span class="badge rounded-pill bg-label-secondary">4. Verify &amp; recover</span>
+            <style>
+                .ws-stepper{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
+                .ws-step{display:flex;align-items:center;gap:.5rem;color:#8592a3;font-size:.875rem}
+                .ws-step .ws-number{display:inline-grid;place-items:center;width:28px;height:28px;border:1px solid #d9dee3;border-radius:50%;font-weight:700}
+                .ws-step.is-active{color:#245db3;font-weight:700}.ws-step.is-active .ws-number{color:#fff;background:#245db3;border-color:#245db3}
+                .ws-step.is-done{color:#21866d}.ws-step.is-done .ws-number{border-color:#21866d;background:#e5f7f1}
+                .ws-step-divider{width:28px;height:1px;background:#d9dee3}
+                [hidden]{display:none!important}
+            </style>
+            <div class="ws-stepper" aria-label="Restore wizard progress">
+                @foreach(['Upload','Review','Confirm','Restore'] as $i => $label)
+                    @if($i > 0)<span class="ws-step-divider" aria-hidden="true"></span>@endif
+                    <div class="ws-step" data-ws-step="{{ $i + 1 }}" @if($i===0) aria-current="step" @endif><span class="ws-number">{{ $i + 1 }}</span><span>{{ $label }}</span></div>
+                @endforeach
             </div>
-            <div id="restore-step-upload" @if($staged) style="display:none" @endif>
+            <div id="restore-step-upload" @if($staged) hidden @endif>
                 <h5>Step 1 — Upload backup</h5>
                 <p class="text-muted">Select a WeSarafi ZIP backup. We validate its structure before offering the next step. Uploading does not change the database.</p>
                 <form method="post" enctype="multipart/form-data" action="{{ route('configuration.backups.restore') }}">
@@ -39,7 +48,7 @@
                     <div class="col-md-6"><div class="border rounded p-3 h-100"><div class="text-muted small mb-1">Uploaded archive</div><strong>ZIP validated</strong><div class="small text-muted mt-1">Staged for up to 30 minutes</div></div></div>
                 </div>
                 <div class="alert alert-warning">The system first creates a safety backup and tests the uploaded SQL in an isolated temporary database. Only after that test passes does it replace the connected database. If the live import fails, rollback is attempted.</div>
-                <div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-upload').style.display='block';">Choose a different file</button><button type="button" class="btn btn-primary" onclick="document.getElementById('restore-step-review').hidden=true;document.getElementById('restore-step-confirm').hidden=false;">Continue to confirmation</button></div>
+                <div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-secondary" onclick="wsRestoreStep(1)">Choose a different file</button><button type="button" class="btn btn-primary" onclick="wsRestoreStep(3)">Continue to confirmation</button></div>
             </div>
             <div id="restore-step-confirm" hidden>
                 <h5>Step 3 — Confirm restoration</h5>
@@ -51,7 +60,7 @@
                     <label for="restore_password" class="form-label">Account password</label>
                     <input id="restore_password" type="password" name="password" class="form-control mb-3" required autocomplete="current-password">
                     <div class="form-check mb-3"><input id="restore_ack" type="checkbox" class="form-check-input" required><label for="restore_ack" class="form-check-label">I understand the current database will be replaced and the application may be temporarily unavailable.</label></div>
-                    <div class="d-flex gap-2"><button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('restore-step-confirm').hidden=true;document.getElementById('restore-step-review').hidden=false;">Back</button><button type="submit" class="btn btn-danger">Start database restore</button></div>
+                    <div class="d-flex gap-2"><button type="button" class="btn btn-outline-secondary" onclick="wsRestoreStep(2)">Back</button><button type="submit" class="btn btn-danger">Start database restore</button></div>
                 </form>
             </div>
             <div id="restore-step-progress" hidden role="status" aria-live="polite">
@@ -61,15 +70,31 @@
                 <p class="small text-muted mt-3">This is not a measured progress percentage. A restore can continue after an HTTP timeout. Do not submit another restore until the administrator checks the restore history and database state.</p>
             </div>
             <script>
+            function wsRestoreStep(step) {
+                const names = ['upload','review','confirm','progress'];
+                names.forEach((name,index) => {
+                    const panel = document.getElementById('restore-step-'+name);
+                    if (panel) panel.hidden = index + 1 !== step;
+                });
+                document.querySelectorAll('[data-ws-step]').forEach((node,index) => {
+                    const number = index + 1;
+                    node.classList.toggle('is-active', number === step);
+                    node.classList.toggle('is-done', number < step);
+                    if (number === step) node.setAttribute('aria-current','step');
+                    else node.removeAttribute('aria-current');
+                });
+            }
+            wsRestoreStep({{ $staged ? 2 : 1 }});
             document.getElementById('restore-apply-form')?.addEventListener('submit', function(e) {
                 if (!this.reportValidity()) return;
                 if (document.getElementById('restore_confirmation').value !== 'RESTORE CURRENT DATABASE') { e.preventDefault(); alert('Type RESTORE CURRENT DATABASE exactly.'); return; }
                 if (!window.confirm('Replace the currently connected WeSarafi database?')) { e.preventDefault(); return; }
-                document.getElementById('restore-step-confirm').hidden = true;
-                document.getElementById('restore-step-progress').hidden = false;
+                wsRestoreStep(4);
                 this.querySelector('[type="submit"]').disabled = true;
             });
             </script>
+            @else
+            <script>document.querySelector('[data-ws-step="1"]')?.classList.add('is-active');</script>
             @endif
             @if(!empty($restoreHistory))
             <hr class="my-4"><h5>Recent recovery events</h5>

@@ -97,7 +97,7 @@ class RestoreCurrentBackup extends Command
             // Drop existing tables, views and routines before importing; the original snapshot is preserved.
             try {
                 $this->clearSchema($db);
-                $this->importSql($mysql, $common, $env, $db, $source);
+                $this->importSql($mysql, $common, $env, $db, $source, true);
                 $tables = DB::selectOne('SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$db]);
                 if ((int)$tables->n !== $expectedTables) throw new \RuntimeException('Restored table count mismatch: expected '.$expectedTables.', got '.$tables->n);
                 $this->record('restore', 'completed', ['tables' => (int) $tables->n]);
@@ -152,13 +152,37 @@ class RestoreCurrentBackup extends Command
         }
     }
 
-    private function importSql(string $binary, array $common, array $env, string $db, string $path): void
+    private function importSql(string $binary, array $common, array $env, string $db, string $path, bool $reportTables = false): void
     {
         $handle = fopen($path, 'rb');
         if (!$handle) throw new \RuntimeException('Cannot open SQL file.');
         try {
-            $process = new Process(array_merge([$binary], $common, ['--binary-mode', '--skip-reconnect', '--database='.$db]), null, $env, $handle, 600);
-            $process->run();
+            $args = array_merge([$binary], $common, ['--binary-mode', '--skip-reconnect', '--database='.$db]);
+            if ($reportTables) $args[] = '--verbose';
+            $process = new Process($args, null, $env, $handle, 600);
+            if ($reportTables) {
+                $this->line('  TABLE                          STATUS');
+                $this->line('  -----------------------------  ----------------');
+                $seen = [];
+                $tail = '';
+                $process->run(function (string $type, string $chunk) use (&$seen, &$tail) {
+                    if ($type !== Process::OUT) return;
+                    // MySQL --verbose echoes SQL, including financial records. Never print or store that SQL.
+                    // Only extract table names from CREATE TABLE statements; a line is "processing", not proof of completion.
+                    $scan = $tail.$chunk;
+                    if (preg_match_all('/CREATE TABLE `([A-Za-z0-9_]+)`/', $scan, $matches)) {
+                        foreach ($matches[1] as $table) {
+                            if (isset($seen[$table])) continue;
+                            $seen[$table] = true;
+                            $this->line('  '.str_pad($table, 29).'  importing');
+                            $this->record('table_import', 'started', ['table' => $table]);
+                        }
+                    }
+                    $tail = substr($scan, -64);
+                });
+            } else {
+                $process->run();
+            }
             if (!$process->isSuccessful()) throw new \RuntimeException(substr($process->getErrorOutput(), 0, 1200));
         } finally { fclose($handle); }
     }
