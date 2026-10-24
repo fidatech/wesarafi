@@ -6,6 +6,18 @@ class MonitoringController extends Controller {
  public function approvals(Request $r){$rows=$this->base($r)->where('approval_status','pending')->paginate(30);return view('monitoring.index',$this->data($rows,'Approve Transactions','approvals'));}
  public function lctr(Request $r){$rows=$this->base($r)->whereRaw('COALESCE(amount_afn, amount * COALESCE(exchange_rate_afn,1)) >= 500000')->paginate(30);return view('monitoring.index',$this->data($rows,'LCTR Transactions (≥ 500,000 AFN)','lctr'));}
  public function suspicious(Request $r){$q=$this->base($r)->where(function($x){$x->where('is_suspicious',1)->orWhereHas('account',fn($a)=>$a->where('risk_level','high'))->orWhereRaw('COALESCE(amount_afn, amount * COALESCE(exchange_rate_afn,1)) >= 5000000');});return view('monitoring.index',$this->data($q->paginate(30),'Suspicious Transactions','suspicious'));}
- public function flag(Request $r,Transaction $transaction){$d=$r->validate(['reason'=>'required|string|max:1000']);Transaction::where('linked_id',$transaction->linked_id)->update(['is_suspicious'=>1,'suspicious_reason'=>$d['reason']]);return back()->with('success','Transaction flagged.');}
+ public function flag(Request $r, Transaction $transaction)
+ {
+    abort_unless($r->user()->hasAnyRole(['Super Admin', 'Compliance']) || $r->user()->can('edit transactions'), 403);
+    abort_if($r->user()->branch_id && (int) $transaction->branch_id !== (int) $r->user()->branch_id, 403);
+    $data = $r->validate(['reason' => 'required|string|max:1000']);
+    \Illuminate\Support\Facades\DB::transaction(function () use ($r, $transaction, $data) {
+        $entries = Transaction::where('linked_id', $transaction->linked_id)->get();
+        abort_unless($entries->isNotEmpty(), 404);
+        abort_unless($entries->every(fn ($entry) => !$r->user()->branch_id || (int) $entry->branch_id === (int) $r->user()->branch_id), 403);
+        $entries->each(fn ($entry) => $entry->update(['is_suspicious' => true, 'suspicious_reason' => $data['reason']]));
+    });
+    return back()->with('success', 'Transaction flagged.');
+ }
  private function data($rows,$title,$type){return compact('rows','title','type')+['branches'=>Branch::all(),'currencies'=>Currency::where('is_active',1)->get()];}
 }

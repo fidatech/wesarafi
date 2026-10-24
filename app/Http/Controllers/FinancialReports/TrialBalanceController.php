@@ -12,6 +12,7 @@ class TrialBalanceController extends Controller
     public function index(Request $request, FinancialReportService $reports)
     {
         $date = $request->date('date')?->toDateString() ?? now()->toDateString();
+        abort_if($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         $branchId = $request->filled('branch_id')
             ? ($request->integer('branch_id') ?: null)
             : (auth()->user()->branch_id ?? null);

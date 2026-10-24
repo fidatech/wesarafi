@@ -42,6 +42,7 @@ class BalanceSheetController extends Controller
 
     private function branchId(Request $request): ?int
     {
+        if ($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id) { abort(403); }
         if ($request->filled('branch_id')) {
             return $request->integer('branch_id') ?: null;
         }

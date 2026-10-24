@@ -17,6 +17,7 @@ class ProfitLossController extends Controller
     {
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
         $from = $request->date('from')?->toDateString() ?? now()->startOfQuarter()->toDateString();
+        abort_if($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         $branchId = $request->filled('branch_id')
             ? ($request->integer('branch_id') ?: null)
             : (auth()->user()->branch_id ?? null);
