@@ -1260,3 +1260,56 @@ select.is-invalid + .select2-container .select2-selection {
     .wes-compact .select2-container .select2-selection--single .select2-selection__arrow { height: 36px; }
     .wes-compact .btn { min-height: 36px; }
 }
+
+/* WeSarafi reference dashboard — light institutional layout */
+.wes-dashboard{width:100%;max-width:none;padding:12px 28px 26px;background:#f6faff}
+.wes-dashboard .dashboard-hero-modern{min-height:184px;margin:0 0 12px;padding:12px 12px 12px 29px;border-radius:9px;box-shadow:none;color:#091a3e;background:linear-gradient(90deg,rgba(222,239,255,.94),rgba(200,231,255,.75)),url('/assets/img/background.webp') center/cover}
+.wes-dashboard .dashboard-hero-modern::before,.wes-dashboard .dashboard-hero-modern::after{display:none}
+.wes-dashboard .dashboard-hero-copy{max-width:700px}
+.wes-dashboard .dashboard-greeting{display:block;color:#0a1b40;font-size:15px;font-weight:750;margin-bottom:4px}
+.wes-dashboard .dashboard-hero-modern h2{color:#071439;font-size:32px;line-height:1.16;letter-spacing:-.045em}
+.wes-dashboard .dashboard-hero-modern p,.wes-dashboard .dashboard-hero-modern p strong{color:#48627f;font-size:12px;margin-top:8px}
+.wes-dashboard .dashboard-hero-modern p strong{color:#0c2344}
+.wes-dashboard .dashboard-quick-actions{margin-top:21px;gap:11px;align-items:center}
+.wes-dashboard .dashboard-quick-actions>a{background:#f6fbff;color:#08224a;border:1px solid #e4edf7;border-radius:6px;padding:10px 14px;font-size:11px}
+.wes-dashboard .dashboard-quick-actions>a:first-child{background:#0968f4;color:#fff;border-color:#0968f4}
+.wes-dashboard .dashboard-quick-actions>a:hover{color:#0968f4;background:#fff}
+.wes-dashboard .dashboard-filter-panel{align-self:stretch;min-width:370px;max-width:383px;padding:12px;gap:8px 12px;background:#fff;border:1px solid #e7edf4;border-radius:9px;box-shadow:0 3px 12px #122b4812;backdrop-filter:none}
+.wes-dashboard .dashboard-filter-title{color:#0c1d42;border-bottom:1px solid #e9edf5;padding-bottom:8px;font-size:12px}
+.wes-dashboard .dashboard-filter-title i{color:#1268f3}
+.wes-dashboard .dashboard-filter label{color:#172b4c;font-size:10px;margin-bottom:4px}
+.wes-dashboard .dashboard-filter .form-control,.wes-dashboard .dashboard-filter .form-select{border:1px solid #dfe7f0;background:#fff;font-size:11px;min-height:32px;padding:5px 9px}
+.wes-dashboard .dashboard-filter-panel button{grid-column:auto;font-size:11px;min-height:32px}
+.wes-dashboard .dashboard-finance-card{border-radius:10px;background:#fff;box-shadow:0 4px 20px #17355709}
+.wes-dashboard .dashboard-kpi-card{min-height:112px;padding:13px 14px;gap:13px}
+.wes-dashboard .dashboard-kpi-card::after{display:none}
+.wes-dashboard .dashboard-finance-icon{width:44px;height:44px;flex-basis:44px;border-radius:11px;font-size:23px}
+.wes-dashboard .dashboard-kpi-copy>span{font-size:11px;font-weight:700;color:#425674}
+.wes-dashboard .dashboard-kpi-copy>strong{font-size:22px;color:#08153b;margin:3px 0}
+.wes-dashboard .dashboard-kpi-copy>small{font-size:10px;color:#7387a5}
+.wes-dashboard .dashboard-kpi-mark{top:auto;bottom:11px;opacity:.18}
+.wes-dashboard .is-transactions .dashboard-finance-icon{color:#f58a12;background:#fff2df}
+.wes-dashboard .dashboard-section-heading{background:#fff;border:1px solid #e5edf5;border-bottom:0;border-radius:10px 10px 0 0;margin:0;padding:10px 13px;justify-content:flex-start;align-items:center;gap:12px}
+.wes-dashboard .dashboard-section-heading h4{font-size:15px;margin:0}
+.wes-dashboard .dashboard-section-heading h4 i{color:#0866ed;margin-right:8px}
+.wes-dashboard .dashboard-section-heading>small{font-size:10px}
+.wes-dashboard .dashboard-metric-grid{background:#fff;border:1px solid #e5edf5;border-top:0;border-radius:0 0 10px 10px;margin:0 0 10px!important;padding:0 10px 10px;--bs-gutter-x:10px;--bs-gutter-y:10px}
+.wes-dashboard .dashboard-metric-grid .dashboard-count-card{min-height:66px;padding:10px 12px;border-radius:7px;box-shadow:none}
+.wes-dashboard .dashboard-metric-grid .dashboard-count-icon{width:44px;height:44px;flex-basis:44px}
+.wes-dashboard .dashboard-count-copy small{font-size:10px}
+.wes-dashboard .dashboard-count-copy strong{font-size:15px}
+.wes-dashboard .dashboard-count-copy em{font-size:10px}
+.wes-dashboard .dashboard-card{border-radius:9px;box-shadow:none}
+.wes-dashboard .dashboard-card .card-header{padding:10px 12px}
+.wes-dashboard .dashboard-card .card-header h5{font-size:12px;color:#071b42}
+.wes-dashboard .dashboard-card .card-header small{font-size:10px}
+.wes-dashboard .dashboard-table th,.wes-dashboard .dashboard-table td{padding:9px 8px;font-size:10px}
+.wes-dashboard .dashboard-data-row{align-items:stretch}
+.wes-dashboard .dashboard-exchange-chart .card-body{display:flex;align-items:center;min-height:170px;padding:9px}
+#dashboardExchangeChart{width:100%}
+.dashboard-chart-legend{display:flex;justify-content:center;gap:14px;font-size:10px;margin-bottom:3px}
+.wes-dashboard .organization-card{margin-top:10px}
+.wes-dashboard .organization-card .card-header{padding:10px 14px}
+.wes-dashboard .organization-card .card-body{padding:12px}
+@media(max-width:1199.98px){.wes-dashboard .dashboard-hero-modern{flex-direction:column;align-items:stretch}.wes-dashboard .dashboard-filter-panel{max-width:none;width:100%}}
+@media(max-width:575.98px){.wes-dashboard{padding:10px}.wes-dashboard .dashboard-hero-modern{padding:18px}.wes-dashboard .dashboard-filter-panel{min-width:0}.wes-dashboard .dashboard-hero-modern h2{font-size:27px}}

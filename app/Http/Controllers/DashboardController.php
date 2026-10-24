@@ -121,6 +121,28 @@ class DashboardController extends Controller
             ->limit(12)
             ->get();
 
+        // Chart values come from approved journal entries, not illustrative sample series.
+        $chartStart = Carbon::parse($date)->subDays(6)->toDateString();
+        $exchangeRows = (clone $approvedTransactions)
+            ->whereDate('date', '>=', $chartStart)
+            ->whereDate('date', '<=', $date)
+            ->where(function (Builder $q) {
+                $q->where('module_name', 'like', '%exchange%')
+                  ->orWhere('module_name', 'like', '%remittance%');
+            })
+            ->selectRaw('date, module_name, direction, SUM(ABS(COALESCE(amount_afn, amount * COALESCE(exchange_rate_afn, 1)))) AS volume')
+            ->groupBy('date', 'module_name', 'direction')->get();
+        $exchangeChart = collect(range(6, 0))->map(function ($offset) use ($date, $exchangeRows) {
+            $day = Carbon::parse($date)->subDays($offset)->toDateString();
+            $rows = $exchangeRows->filter(fn ($row) => substr((string) $row->date, 0, 10) === $day);
+            return [
+                'date' => Carbon::parse($day)->format('M d'),
+                'buy' => round((float) $rows->filter(fn ($r) => !str_contains(strtolower((string) $r->module_name), 'remittance') && $r->direction === 'debit')->sum('volume'), 2),
+                'sell' => round((float) $rows->filter(fn ($r) => !str_contains(strtolower((string) $r->module_name), 'remittance') && $r->direction === 'credit')->sum('volume'), 2),
+                'remittance' => round((float) $rows->filter(fn ($r) => str_contains(strtolower((string) $r->module_name), 'remittance'))->sum('volume'), 2),
+            ];
+        })->values();
+
         [$shareholders, $organizationTree] = $this->organizationTree($branchId);
 
         return view('dashboard', [
@@ -139,6 +161,7 @@ class DashboardController extends Controller
             'recentTransactions' => $recentTransactions,
             'shareholders' => $shareholders,
             'organizationTree' => $organizationTree,
+            'exchangeChart' => $exchangeChart,
         ]);
     }
 

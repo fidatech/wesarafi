@@ -11,17 +11,18 @@
 <div class="wes-dashboard">
     <section class="dashboard-hero dashboard-hero-modern mb-4">
         <div class="dashboard-hero-copy">
-            <span class="dashboard-live-pill"><i class="bx bx-pulse"></i> Live financial overview</span>
-            <h2>Good day, {{ auth()->user()->name ?? 'Administrator' }}</h2>
+            <span class="dashboard-greeting">Good day,</span>
+            <h2>{{ auth()->user()->name ?? 'Administrator' }}</h2>
             <p>Here is the operational position for <strong>{{ $scopeLabel }}</strong> as of {{ $date }}.</p>
             <div class="dashboard-quick-actions">
                 <a href="{{ route('exchange.customers.index') }}"><i class="bx bx-transfer-alt"></i><span>New exchange</span></a>
                 <a href="{{ route('remittances.index') }}"><i class="bx bx-send"></i><span>Send remittance</span></a>
                 <a href="{{ route('journal.transactions.index') }}"><i class="bx bx-book-open"></i><span>Open journal</span></a>
+                <div class="dropdown d-inline-block"><button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">More actions</button><ul class="dropdown-menu"><li><a class="dropdown-item" href="{{ route('accounting.expenses.index') }}">Expenses</a></li><li><a class="dropdown-item" href="{{ route('hr.employees.index') }}">Employees</a></li></ul></div>
             </div>
         </div>
         <form method="GET" class="dashboard-filter dashboard-filter-panel">
-            <div class="dashboard-filter-title"><i class="bx bx-slider-alt"></i><span>Dashboard scope</span></div>
+            <div class="dashboard-filter-title"><i class="bx bx-bar-chart-alt-2"></i><span>Dashboard scope</span></div>
             <div>
                 <label>Date</label>
                 <input type="date" name="date" value="{{ $date }}" class="form-control">
@@ -36,36 +37,43 @@
                 </select>
             </div>
             <div><label for="dashboardCurrency">Currency</label><select id="dashboardCurrency" name="currency_id" class="form-select"><option value="">All currencies</option>@foreach($currencies as $currency)<option value="{{ $currency->id }}" @selected($currencyId == $currency->id)>{{ $currency->code }}</option>@endforeach</select></div>
-            <button class="btn btn-light"><i class="bx bx-check me-1"></i> Apply filters</button>
+            <button class="btn btn-primary"><i class="bx bx-filter-alt me-1"></i> Apply filters</button>
         </form>
     </section>
 
-    <div class="row g-3 mb-4">
-        <div class="col-xl-4 col-md-6">
+    <div class="row g-3 mb-3 dashboard-kpi-grid">
+        <div class="col-xl-3 col-md-6">
             <div class="dashboard-finance-card dashboard-kpi-card is-cash">
                 <div class="dashboard-finance-icon"><i class="bx bx-wallet"></i></div>
-                <div class="dashboard-kpi-copy"><span>Available cash</span>@foreach($cashBalances as $cash)<strong>{{ $money($cash['balance']) }} <small>{{ $cash['code'] }}</small></strong>@endforeach<small>{{ $scopeLabel }} · as of {{ $date }}</small></div>
+                <div class="dashboard-kpi-copy"><span>Available cash</span><strong>{{ $currentCashAfn === null ? '—' : $money($currentCashAfn) }} <small>AFN</small></strong><small>{{ $cashBalances->firstWhere('code', 'USD') ? number_format((float) $cashBalances->firstWhere('code', 'USD')['balance'], 2).' USD' : 'All currencies' }}</small><small>{{ $scopeLabel }} · as of {{ $date }}</small></div>
                 <span class="dashboard-kpi-mark"><i class="bx bx-trending-up"></i></span>
             </div>
         </div>
-        <div class="col-xl-4 col-md-6">
+        <div class="col-xl-3 col-md-6">
             <a class="dashboard-finance-card dashboard-kpi-card is-expense" href="{{ route('accounting.expenses.index') }}">
                 <div class="dashboard-finance-icon"><i class="bx bx-receipt"></i></div>
                 <div class="dashboard-kpi-copy"><span>Monthly expenses</span><strong>{{ $money($monthExpenses) }} <small>AFN</small></strong><small>{{ $monthStart }} — {{ $date }}</small></div>
                 <span class="dashboard-kpi-mark"><i class="bx bx-line-chart-down"></i></span>
             </a>
         </div>
-        <div class="col-xl-4 col-md-6">
+        <div class="col-xl-3 col-md-6">
             <a class="dashboard-finance-card dashboard-kpi-card is-bank" href="{{ route('accounts.banks.index') }}">
                 <div class="dashboard-finance-icon"><i class="bx bx-building-house"></i></div>
                 <div class="dashboard-kpi-copy"><span>Bank activity</span><strong>{{ $money($bankTransactionVolume) }} <small>AFN</small></strong><small>Transaction volume this month</small></div>
                 <span class="dashboard-kpi-mark"><i class="bx bx-bar-chart-alt-2"></i></span>
             </a>
         </div>
+        <div class="col-xl-3 col-md-6">
+            <a class="dashboard-finance-card dashboard-kpi-card is-transactions" href="{{ route('journal.transactions.index', ['date_range' => $date . ' - ' . $date]) }}">
+                <div class="dashboard-finance-icon"><i class="bx bx-transfer-alt"></i></div>
+                <div class="dashboard-kpi-copy"><span>Today's transactions</span><strong>{{ $integer($summary['today_transactions']) }}</strong><small>Approved treasury movements</small><small>{{ $date }}</small></div>
+                <span class="dashboard-kpi-mark"><i class="bx bx-trending-up"></i></span>
+            </a>
+        </div>
     </div>
 
     <div class="dashboard-section-heading">
-        <div><span>Operations</span><h4>Business at a glance</h4></div>
+        <div><h4><i class="bx bx-bar-chart-alt-2"></i> Business at a glance</h4></div>
         <small>Live record counts for the selected scope</small>
     </div>
     <div class="row g-3 mb-4 dashboard-count-grid dashboard-metric-grid">
@@ -119,8 +127,8 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-xl-4">
+    <div class="row g-3 mb-3 dashboard-data-row">
+        <div class="col-xl-4 col-xxl-3">
             <section class="card dashboard-card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div><h5 class="mb-1">Current Cash by Currency</h5><small>{{ $scopeLabel }} · as of {{ $date }}</small></div>
@@ -147,7 +155,7 @@
             </section>
         </div>
 
-        <div class="col-xl-8">
+        <div class="col-xl-5 col-xxl-6">
             <section class="card dashboard-card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div><h5 class="mb-1">Recent Treasury Movements</h5><small>Approved treasury movements up to {{ $date }}</small></div>
@@ -168,11 +176,17 @@
                                     <td>{{ $transaction->direction === 'debit' ? 'Money in' : 'Money out' }}</td><td class="text-end fw-semibold">{{ $money($transaction->amount) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center text-muted py-5">No approved transactions found.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-5"><div class="dashboard-empty-state"><i class="bx bx-file"></i><strong>No approved transactions found.</strong><small>Transactions will appear here once recorded and approved.</small></div></td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+            </section>
+        </div>
+        <div class="col-xl-3 col-xxl-3">
+            <section class="card dashboard-card h-100 dashboard-exchange-chart">
+                <div class="card-header"><div><h5 class="mb-1"><i class="bx bx-bar-chart-alt-2 text-primary"></i> Exchange Volume <small>(Last 7 Days)</small></h5><small>Approved journal volume · AFN equivalent</small></div></div>
+                <div class="card-body"><div id="dashboardExchangeChart" role="img" aria-label="Actual exchange volume by day"></div></div>
             </section>
         </div>
     </div>
@@ -214,4 +228,23 @@
         </div>
     </section>
 </div>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const host = document.getElementById('dashboardExchangeChart');
+  if (!host) return;
+  const data = @json($exchangeChart);
+  const series = [{key:'buy',color:'#1268f3',name:'Buy'},{key:'sell',color:'#04ad72',name:'Sell'},{key:'remittance',color:'#f68c28',name:'Remittance'}];
+  const max = Math.max(1,...data.flatMap(d=>series.map(s=>Number(d[s.key])||0)));
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 360 195');svg.setAttribute('width','100%');svg.setAttribute('aria-hidden','true');
+  const el=(tag,attrs,parent=svg)=>{const n=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));parent.appendChild(n);return n};
+  for(let i=0;i<4;i++){const y=24+i*43;el('line',{x1:38,y1:y,x2:351,y2:y,stroke:'#e8edf5'});const t=el('text',{x:32,y:y+4,'text-anchor':'end',fill:'#8190a5','font-size':10});t.textContent=Intl.NumberFormat('en',{notation:'compact'}).format(max*(3-i)/3)}
+  data.forEach((d,i)=>{const x=42+i*50;el('line',{x1:x,y1:24,x2:x,y2:153,stroke:'#f0f3f8'});const t=el('text',{x,y:173,'text-anchor':'middle',fill:'#73849b','font-size':10});t.textContent=d.date});
+  series.forEach(s=>{const points=data.map((d,i)=>`${42+i*50},${153-(Number(d[s.key])||0)/max*129}`).join(' ');el('polyline',{points,fill:'none',stroke:s.color,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'});data.forEach((d,i)=>el('circle',{cx:42+i*50,cy:153-(Number(d[s.key])||0)/max*129,r:2.5,fill:s.color}))});
+  host.appendChild(svg);
+  const legend=document.createElement('div');legend.className='dashboard-chart-legend';series.forEach(s=>{const item=document.createElement('span');item.textContent='● '+s.name;item.style.color=s.color;legend.appendChild(item)});host.prepend(legend);
+});
+</script>
+@endpush
 @endsection
