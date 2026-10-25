@@ -192,6 +192,29 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $entry->fresh()->approval_status);
     }
 
+    public function test_rejection_requires_reason_and_keeps_pending_journal_unchanged(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => ''])->assertSessionHasErrors('reason');
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+        $this->assertNull($entry->fresh()->rejection_reason);
+    }
+
+    public function test_missing_journal_group_cannot_be_approved_or_rejected(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $this->actingAs($user);
+        $missing = (string) Str::uuid();
+        $this->post('/journal/approvals/'.$missing.'/approve')->assertNotFound();
+        $this->post('/journal/approvals/'.$missing.'/reject', ['reason' => 'Not found'])->assertNotFound();
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
