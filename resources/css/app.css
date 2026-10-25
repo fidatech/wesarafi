@@ -1547,3 +1547,62 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-dashboard .dashboard-filter-panel .dashboard-filter-actions a.btn-outline-secondary i{font-size:16px}
 .wes-dashboard .dashboard-filter-panel .dashboard-filter-actions a.btn-outline-secondary:hover{background:#d7eaff!important;border-color:#74acef!important;color:#08499f!important}
 @media(max-width:767.98px){.wes-dashboard .dashboard-quick-actions{display:flex;flex-wrap:wrap}.wes-dashboard .dashboard-quick-actions>a.hero-action{flex:1 1 auto}}
+
+/* Institutional table system — shared across ordinary Bootstrap and DataTables pages.
+   Scoped to application content so navigation and modal layout remain unchanged. */
+.wes-compact .content-wrapper :is(.table-responsive, .dataTables_wrapper, .dt-container) {
+    --wes-table-border: #dce5ee;
+    --wes-table-head: #f1f5fa;
+    --wes-table-text: #263b54;
+}
+.wes-compact .content-wrapper .table-responsive {
+    border: 1px solid var(--wes-table-border, #dce5ee);
+    border-radius: 10px;
+    background: var(--bs-body-bg, #fff);
+}
+.wes-compact .content-wrapper .table:not(.table-borderless) > thead > tr > th,
+.wes-compact .content-wrapper .table:not(.table-borderless) > thead > tr > td {
+    background: var(--wes-table-head, #f1f5fa);
+    color: var(--wes-table-text, #263b54);
+    border-bottom: 1px solid var(--wes-table-border, #dce5ee);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .01em;
+    text-transform: none;
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+.wes-compact .content-wrapper .table:not(.table-borderless) > tbody > tr > td,
+.wes-compact .content-wrapper .table:not(.table-borderless) > tbody > tr > th {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-bottom-color: var(--wes-table-border, #dce5ee);
+}
+.wes-compact .content-wrapper .table:not(.table-borderless) > tbody > tr:hover > * {
+    --bs-table-bg-state: rgba(27, 100, 154, .055);
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) input,
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_length, .dt-length) select {
+    border-radius: 7px;
+    border-color: var(--wes-table-border, #dce5ee);
+    min-height: 34px;
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_info, .dt-info) {
+    color: var(--bs-secondary-color, #64748b);
+    font-size: 12px;
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) .pagination .page-link {
+    border-radius: 6px;
+    margin-inline: 2px;
+    min-width: 32px;
+    text-align: center;
+}
+@media (max-width: 767.98px) {
+    .wes-compact .content-wrapper .table-responsive { max-width: 100%; }
+    .wes-compact .content-wrapper .table > thead > tr > th { white-space: nowrap; }
+}
+[data-bs-theme="dark"] .wes-compact .content-wrapper :is(.table-responsive, .dataTables_wrapper, .dt-container) {
+    --wes-table-border: #384658;
+    --wes-table-head: #253347;
+    --wes-table-text: #e0e9f3;
+}
