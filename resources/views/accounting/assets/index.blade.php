@@ -103,7 +103,7 @@
 
                 <div class="fb-table-wrapper" id="tableCard">
                     <h4 class="card-title mb-3">Asset Entries</h4>
-                    <div class="table-responsive">
+                    <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered nowrap table align-middle" id="assetTable">
                             <thead class="text-center">
                                 <tr>

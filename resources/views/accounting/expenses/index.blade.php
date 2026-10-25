@@ -45,7 +45,7 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="table-responsive wes-institutional-table">
                             <table class="table-sm table-bordered nowrap table-hover table" id="expenseTable" style="width:100%">
                                 <thead>
                                     <tr>

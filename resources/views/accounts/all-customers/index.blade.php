@@ -44,7 +44,7 @@
                         <div class="col-md-3"><label for="customerSearch" class="form-label">Search</label><input id="customerSearch" class="form-control" placeholder="Name, code or phone"></div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered table align-middle" id="customersTable">
                             <thead class="text-center">
                                 <tr>

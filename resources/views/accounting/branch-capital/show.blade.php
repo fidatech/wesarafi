@@ -16,7 +16,7 @@
 <div class="col-12 text-end"><button class="btn btn-primary">Record Repayment</button></div>
 </form></div></div>
 @endif
-<div class="card"><div class="card-header">Repayment history</div><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Amount</th><th>AFN rate</th><th>Recorded by</th><th>Notes</th></tr></thead><tbody>
+<div class="card"><div class="card-header">Repayment history</div><div class="table-responsive wes-institutional-table"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Amount</th><th>AFN rate</th><th>Recorded by</th><th>Notes</th></tr></thead><tbody>
 @forelse($item->repayments as $repayment)
 <tr><td>{{ $repayment->date->toDateString() }}</td><td><strong>{{ number_format($repayment->amount,2) }} {{ $item->currency->code }}</strong></td><td>{{ number_format($repayment->exchange_rate_afn,8) }}</td><td>{{ $repayment->creator?->name }}</td><td>{{ $repayment->description }}</td></tr>
 @empty

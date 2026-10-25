@@ -22,7 +22,7 @@
 <div class="col-md-2"><label class="form-label" for="filterTo">{{ __('To') }}</label><input id="filterTo" type="date" name="to_date" value="{{ request('to_date') }}" class="form-control"></div>
 <div class="col-12 text-end"><a href="{{ route('remittances.index') }}" class="btn btn-outline-secondary">{{ __('Reset') }}</a> <button class="btn btn-primary">{{ __('Apply filters') }}</button></div>
 </div></form>
-<div class="card"><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>{{ __('Reference / date') }}</th><th>{{ __('Route') }}</th><th>{{ __('Sender / receiver') }}</th><th>{{ __('Payout') }}</th><th>{{ __('Commission') }}</th><th>{{ __('Status') }}</th><th></th></tr></thead><tbody>
+<div class="card"><div class="table-responsive wes-institutional-table"><table class="table table-sm align-middle mb-0"><thead><tr><th>{{ __('Reference / date') }}</th><th>{{ __('Route') }}</th><th>{{ __('Sender / receiver') }}</th><th>{{ __('Payout') }}</th><th>{{ __('Commission') }}</th><th>{{ __('Status') }}</th><th></th></tr></thead><tbody>
 @forelse($remittances as $r)
 <tr><td><strong>{{ $r->reference }}</strong><small class="d-block text-muted">{{ $r->date->toDateString() }} · {{ ucfirst($r->direction) }}</small></td><td>{{ $r->fromBranch?->name }} →
 @if($r->bridgeBranch)

@@ -189,7 +189,7 @@
             @endif
             @if(!empty($restoreHistory))
             <hr class="my-4"><h5>Recent recovery events</h5>
-            <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Time</th><th>Stage</th><th>Result</th></tr></thead><tbody>
+            <div class="table-responsive wes-institutional-table"><table class="table table-sm"><thead><tr><th>Time</th><th>Stage</th><th>Result</th></tr></thead><tbody>
             @foreach($restoreHistory as $event)<tr><td>{{ $event['time'] ?? '—' }}</td><td>{{ ucfirst(str_replace('_', ' ', $event['stage'] ?? 'unknown')) }}</td><td>{{ ucfirst($event['outcome'] ?? 'unknown') }}</td></tr>@endforeach
             </tbody></table></div>
             @endif

@@ -22,7 +22,7 @@
               </select>
             </div>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive wes-institutional-table">
             <table class="table table-sm table-bordered align-middle" id="tblFxOpen">
               <thead class="table-light">
                 <tr><th>Currency</th><th>Rate (AFN per 1 unit)</th></tr>
@@ -62,7 +62,7 @@
               </select>
             </div>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive wes-institutional-table">
             <table class="table table-sm table-bordered align-middle" id="tblFxClose">
               <thead class="table-light">
                 <tr><th>Currency</th><th>Rate (AFN per 1 unit)</th></tr>

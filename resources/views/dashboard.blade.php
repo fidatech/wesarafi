@@ -160,7 +160,7 @@
                     <div><h5 class="mb-1">Recent Treasury Movements</h5><small>Approved treasury movements up to {{ $date }}</small></div>
                     <a href="{{ route('journal.transactions.index', ['branch_id' => $branchId, 'date_range' => $monthStart . ' - ' . $date]) }}" class="btn btn-sm btn-outline-primary">Open journal</a>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive wes-institutional-table">
                     <table class="table dashboard-table mb-0">
                         <thead><tr><th>Date</th><th>Reference</th><th>Linked Account</th><th>COA</th><th>Branch</th><th>Currency</th><th>Movement</th><th class="text-end">Amount</th></tr></thead>
                         <tbody>
@@ -237,7 +237,7 @@
             <div class="d-flex align-items-center gap-2"><span class="dashboard-recent-icon"><i class="bx bx-receipt"></i></span><div><h5 class="mb-1">Recent Transactions</h5><small>Latest approved journal entries through {{ $date }} · {{ $scopeLabel }}{{ $currencyId ? ' · '.$currencies->firstWhere('id', $currencyId)?->code : ' · All currencies' }}</small></div></div>
             <a class="btn btn-sm btn-outline-primary" href="{{ route('journal.transactions.index', ['branch_id' => $branchId, 'date_range' => $monthStart.' - '.$date]) }}"><i class="bx bx-list-ul me-1"></i> View all transactions</a>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive wes-institutional-table">
             <table class="table dashboard-table dashboard-recent-table align-middle mb-0">
                 <thead><tr><th>Reference</th><th>Date</th><th>Transaction type</th><th>Account</th><th>Branch</th><th>Currency</th><th>Direction</th><th class="text-end">Amount</th><th class="text-end">AFN value</th></tr></thead>
                 <tbody>

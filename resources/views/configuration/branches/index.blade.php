@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive wes-institutional-table">
                     <table class="table-hover table-borderless table align-middle" id="branches-table" style="width: 100%;">
                         <thead class="table-light sticky-top text-center">
                             <tr>

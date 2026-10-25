@@ -1,5 +1,5 @@
 @if ($liability->payments->count())
-    <div class="table-responsive">
+    <div class="table-responsive wes-institutional-table">
         <table class="table-sm table-hover table-bordered table align-middle">
             <thead>
                 <tr>

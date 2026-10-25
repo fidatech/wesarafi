@@ -18,7 +18,7 @@
 <div class="col-md-2"><label class="form-label" for="status">Status</label><select id="status" name="status" class="form-select"><option value="">All</option><option value="outstanding" @selected(request('status')==='outstanding')>Outstanding</option><option value="repaid" @selected(request('status')==='repaid')>Repaid</option></select></div>
 <div class="col-md-1"><button class="btn btn-primary">Filter</button></div>
 </div></form>
-<div class="card"><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Funding branch</th><th>Receiving branch</th><th>Currency</th><th>Shared</th><th>Repaid</th><th>Outstanding</th><th></th></tr></thead><tbody>
+<div class="card"><div class="table-responsive wes-institutional-table"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Funding branch</th><th>Receiving branch</th><th>Currency</th><th>Shared</th><th>Repaid</th><th>Outstanding</th><th></th></tr></thead><tbody>
 @forelse($items as $item)
 <tr><td>{{ $item->date->toDateString() }}</td><td>{{ $item->source->name }}</td><td>{{ $item->destination->name }}</td><td>{{ $item->currency->code }}</td><td>{{ number_format($item->amount,2) }}</td><td>{{ number_format($item->repayments_sum_amount ?? 0,2) }}</td><td><strong class="{{ $item->outstanding > 0 ? 'text-success' : 'text-muted' }}">{{ number_format($item->outstanding,2) }}</strong></td><td><a href="{{ route('accounting.branch-capital.show',$item) }}" class="btn btn-sm btn-outline-primary">Details</a></td></tr>
 @empty

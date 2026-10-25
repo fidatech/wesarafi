@@ -62,7 +62,7 @@
                 </div>
 
                 {{-- Table --}}
-                <div class="table-responsive">
+                <div class="table-responsive wes-institutional-table">
                     <table id="audit-table" class="table table-bordered table-striped w-100">
                         <thead class="table-light">
                             <tr>

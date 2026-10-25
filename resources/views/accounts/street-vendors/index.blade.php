@@ -55,7 +55,7 @@
                 {{-- Table + Pagination --}}
                 <div class="fb-table-wrapper" id="tableCard">
                     <h4 class="card-title mb-3">Street Vendors List</h4>
-                    <div class="table-responsive">
+                    <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered table align-middle nowrap" id="customersTable">
                             <thead class="text-center">
                                 <tr>

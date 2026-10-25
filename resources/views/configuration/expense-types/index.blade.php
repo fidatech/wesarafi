@@ -41,7 +41,7 @@
         <div class="fb-main">
             <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Expense Types</h4>
-                <div class="table-responsive">
+                <div class="table-responsive wes-institutional-table">
                     <table class="table table-bordered table-hover text-center" id="expense-types-table"
                         style="width: 100%;">
                         <thead class="table-light">

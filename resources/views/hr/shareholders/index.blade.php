@@ -31,7 +31,7 @@
         <div class="fb-main">
             <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Shareholders List</h4>
-                <div class="table-responsive">
+                <div class="table-responsive wes-institutional-table">
                     <table class="table-sm table-hover table-bordered table align-middle nowrap" id="shareholdersTable">
                         <thead class="text-center">
                             <tr>

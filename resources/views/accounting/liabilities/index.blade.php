@@ -52,7 +52,7 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="table-responsive wes-institutional-table">
                             <table class="table-sm table-hover table-bordered nowrap table align-middle" id="liabilityTable">
                                 <thead>
                                     <tr>

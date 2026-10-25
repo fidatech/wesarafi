@@ -37,7 +37,7 @@
       <button type="button" class="btn btn-sm btn-outline-primary" id="addLine"><i class="bx bx-plus"></i> Add Line</button>
     </label>
 
-    <div class="table-responsive">
+    <div class="table-responsive wes-institutional-table">
       <table class="table table-sm table-bordered align-middle" id="linesTable">
         <thead class="table-light text-center">
           <tr>

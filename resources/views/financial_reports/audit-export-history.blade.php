@@ -13,7 +13,7 @@
             <div class="col-md-2"><label class="form-label">To</label><input type="date" class="form-control" name="to" value="{{ $filters['to'] ?? '' }}"></div>
             <div class="col-md-2"><button class="btn btn-primary w-100"><i class="bx bx-filter-alt me-1"></i>Apply</button></div>
         </div></form>
-        <div class="card report-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Requested at</th><th>User</th><th>Branch</th><th>Export date range</th><th>IP address</th><th>Action</th></tr></thead><tbody>
+        <div class="card report-card"><div class="table-responsive wes-institutional-table"><table class="table table-hover align-middle mb-0"><thead><tr><th>Requested at</th><th>User</th><th>Branch</th><th>Export date range</th><th>IP address</th><th>Action</th></tr></thead><tbody>
             @forelse($events as $event)
                 <tr><td>{{ $event->created_at?->format('Y-m-d H:i:s') }}</td><td>{{ $event->causer?->name ?? 'Unknown user' }}</td><td>{{ $event->properties->get('branch_id') }}</td><td>{{ $event->properties->get('from') ?? 'Any' }} — {{ $event->properties->get('to') ?? 'Any' }}</td><td>{{ $event->properties->get('ip_address') ?? '—' }}</td><td><span class="badge bg-label-info">CSV requested</span></td></tr>
             @empty

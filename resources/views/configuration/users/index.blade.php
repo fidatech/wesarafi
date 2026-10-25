@@ -75,7 +75,7 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="table-responsive wes-institutional-table">
                             <table class="table-hover table-borderless table table-responsive table-bordered align-middle" id="users-table" style="width: 100%;">
                                 <thead class="table-light sticky-top text-center">
                                     <tr>
