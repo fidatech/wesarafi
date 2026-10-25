@@ -137,6 +137,32 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertTrue((bool) $entry->fresh()->is_approved);
     }
 
+    public function test_rejected_journal_cannot_be_reapproved_or_rejected_again(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $entry->update(['approval_status' => 'rejected', 'rejection_reason' => 'Original rejection']);
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertStatus(422);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'Second rejection'])->assertStatus(422);
+        $this->assertSame('rejected', $entry->fresh()->approval_status);
+        $this->assertSame('Original rejection', $entry->fresh()->rejection_reason);
+    }
+
+    public function test_admin_without_branch_cannot_review_journals(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => null]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertForbidden();
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'No branch'])->assertForbidden();
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
