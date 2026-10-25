@@ -36,7 +36,7 @@ class InterbranchSettlementAudit
         $legs = RemittanceLeg::query()
             ->with(['remittance', 'settlements'])
             ->when($branchId, fn ($query) => $query->where(fn ($q) => $q->where('debtor_branch_id', $branchId)->orWhere('creditor_branch_id', $branchId)))
-            ->orderBy('id')->cursor();
+            ->lazyById(200);
 
         foreach ($legs as $leg) {
             $checked++;

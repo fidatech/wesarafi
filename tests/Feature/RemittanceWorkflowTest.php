@@ -88,6 +88,16 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertContains('unbalanced_journal', array_column($result['issues'], 'type'));
     }
 
+    public function test_interbranch_audit_detects_deleted_approval_journal_line(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $entry = \App\Models\Transaction::where('module_name', 'remittance')->where('module_id', $r->id)->firstOrFail();
+        $entry->delete();
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $r->from_branch_id);
+        $this->assertContains('deleted_journal_entry', array_column($result['issues'], 'type'));
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();
