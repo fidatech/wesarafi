@@ -27,6 +27,20 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringContainsString('<table', $markup);
     }
 
+    public function test_users_datatable_columns_match_headers_without_duplicates(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/users/index.blade.php'));
+        preg_match('/<table[^>]*id="users-table"[^>]*>.*?<thead[^>]*>(.*?)<\/thead>/s', $markup, $header);
+        preg_match('/columns:\s*\[(.*?)\]\s*\}\);/s', $markup, $columns);
+
+        $this->assertNotEmpty($header, 'Users table header must be present.');
+        $this->assertNotEmpty($columns, 'Users DataTables column configuration must be present.');
+        $this->assertSame(substr_count($header[1], '<th'), substr_count($columns[1], 'data:'),
+            'Users table headers and DataTables columns must have the same count.');
+        $this->assertSame(1, substr_count($columns[1], "data: 'username'"),
+            'Username must not be rendered twice.');
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));
