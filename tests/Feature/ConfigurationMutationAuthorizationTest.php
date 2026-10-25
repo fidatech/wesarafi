@@ -105,6 +105,23 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertFalse($role->hasPermissionTo($permissions[0]));
     }
 
+    public function test_deleting_ordinary_role_removes_assignment_but_keeps_permission(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $employee = User::factory()->create();
+        $role = Role::create(['name' => 'Temporary Auditor', 'guard_name' => 'web']);
+        $permission = Permission::firstOrFail();
+        $role->givePermissionTo($permission);
+        $employee->assignRole($role);
+
+        $this->actingAs($admin)->delete(route('configuration.roles.destroy', $role->id))->assertOk();
+        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+        $this->assertDatabaseHas('permissions', ['id' => $permission->id]);
+        $this->assertFalse($employee->fresh()->hasRole('Temporary Auditor'));
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

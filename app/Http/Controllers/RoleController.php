@@ -139,9 +139,10 @@ class RoleController extends Controller
     {
         $role = Role::findOrFail($id);
         abort_if($role->name === 'Super Admin', 403, 'The Super Admin role cannot be deleted.');
-        $role->syncPermissions([]);
-
-        $role->delete();
+        DB::transaction(function () use ($role) {
+            $role->syncPermissions([]);
+            $role->delete();
+        });
 
         return response()->json(['message' => 'Role and its permissions removed successfully.']);
     }
