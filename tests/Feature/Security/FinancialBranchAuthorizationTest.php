@@ -651,6 +651,43 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertDontSee('Rejection reason');
     }
 
+    public function test_mixed_date_closed_group_does_not_hide_actions_for_unrelated_open_group(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+
+        $closedDebit = $this->entry($branch->id);
+        $closedCredit = $closedDebit->replicate();
+        $closedCredit->direction = 'credit';
+        $closedCredit->date = now('Asia/Kabul')->subDay()->toDateString();
+        $closedCredit->save();
+        \App\Models\BusinessDay::create([
+            'branch_id' => $branch->id,
+            'business_date' => $closedCredit->date->toDateString(),
+            'status' => 'closed',
+        ]);
+
+        $openDebit = $this->entry($branch->id);
+        $openCredit = $openDebit->replicate();
+        $openCredit->direction = 'credit';
+        $openCredit->save();
+
+        $response = $this->actingAs($reviewer)->get('/journal/approvals')->assertOk();
+        $response->assertSee($closedDebit->linked_id)
+            ->assertSee($openDebit->linked_id)
+            ->assertSee('Contains a closed business day');
+        $sections = explode('<div class="border rounded p-3 mb-3">', $response->getContent());
+        $closedSection = collect($sections)->first(fn ($section) => str_contains($section, $closedDebit->linked_id));
+        $openSection = collect($sections)->first(fn ($section) => str_contains($section, $openDebit->linked_id));
+        $this->assertNotNull($closedSection);
+        $this->assertNotNull($openSection);
+        $this->assertStringNotContainsString('Approve group', $closedSection);
+        $this->assertStringNotContainsString('Rejection reason', $closedSection);
+        $this->assertStringContainsString('Approve group', $openSection);
+        $this->assertStringContainsString('Rejection reason', $openSection);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
