@@ -390,6 +390,20 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee('Rejection reason');
     }
 
+    public function test_rejection_form_has_accessible_label_and_mobile_friendly_layout(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee('for="reject-reason-'.$entry->linked_id.'"', false)
+            ->assertSee('id="reject-reason-'.$entry->linked_id.'"', false)
+            ->assertSee('maxlength="1000"', false)
+            ->assertSee('d-flex flex-wrap gap-2', false);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
