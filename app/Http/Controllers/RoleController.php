@@ -115,6 +115,7 @@ class RoleController extends Controller
     {
         $role = Role::findOrFail($id);
         abort_if($role->name === 'Super Admin', 403, 'The Super Admin role cannot be modified.');
+        abort_if($request->input('name') === 'Super Admin', 403, 'The Super Admin role name is reserved.');
 
         $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,

@@ -49,6 +49,21 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('roles', ['name' => 'Super Admin']);
     }
 
+    public function test_other_role_cannot_be_renamed_to_super_admin_when_reserved_role_is_missing(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        Role::findByName('Super Admin', 'web')->delete();
+        $ordinary = Role::create(['name' => 'Operations Manager', 'guard_name' => 'web']);
+
+        $this->actingAs($admin)->put(route('configuration.roles.update', $ordinary->id), [
+            'name' => 'Super Admin', 'permissions' => [],
+        ])->assertForbidden();
+        $this->assertDatabaseHas('roles', ['id' => $ordinary->id, 'name' => 'Operations Manager']);
+        $this->assertDatabaseMissing('roles', ['name' => 'Super Admin']);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);
