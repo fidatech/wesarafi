@@ -101,6 +101,56 @@ class InterbranchSettlementAudit
             }
         }
 
+        // Ledger-only branch/currency pairs must not disappear simply because no leg exists.
+        // Aggregate the same active transaction rows used by ledgerBalance; never repair balances here.
+        $ledgerRows = Transaction::query()
+            ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
+            ->join('chart_of_accounts', 'transactions.chart_of_account_id', '=', 'chart_of_accounts.id')
+            ->where('accounts.account_code', 'like', 'INTERBRANCH-%')
+            ->whereIn('chart_of_accounts.code', ['2002', '1006'])
+            ->select('transactions.branch_id', 'transactions.currency_id', 'transactions.direction',
+                'transactions.amount', 'accounts.account_code', 'chart_of_accounts.code as coa_code')
+            ->cursor();
+        $orphanBalances = [];
+        foreach ($ledgerRows as $row) {
+            if (! preg_match('/^INTERBRANCH-(\d+)-(\d+)$/', $row->account_code, $matches)) {
+                continue;
+            }
+            $owner = (int) $matches[1];
+            $other = (int) $matches[2];
+            if ($owner !== (int) $row->branch_id || $owner === $other) {
+                continue;
+            }
+            if ($branchId !== null && $branchId !== $owner && $branchId !== $other) {
+                continue;
+            }
+            $debtor = $row->coa_code === '2002' ? $owner : $other;
+            $creditor = $row->coa_code === '2002' ? $other : $owner;
+            $key = implode(':', [$debtor, $creditor, (int) $row->currency_id]);
+            if (isset($positions[$key])) {
+                continue;
+            }
+            $field = $row->coa_code === '2002' ? 'payable_ledger' : 'receivable_ledger';
+            $orphanBalances[$key] ??= [
+                'debtor_branch_id' => $debtor, 'creditor_branch_id' => $creditor,
+                'currency_id' => (int) $row->currency_id,
+                'payable_ledger' => 0.0, 'receivable_ledger' => 0.0,
+            ];
+            $sign = $row->direction === 'debit' ? 1 : -1;
+            $orphanBalances[$key][$field] += (float) $row->amount * $sign * ($field === 'payable_ledger' ? -1 : 1);
+        }
+        foreach ($orphanBalances as $orphan) {
+            foreach (['payable_ledger', 'receivable_ledger'] as $field) {
+                $balance = round($orphan[$field], 4);
+                if (abs($balance) > 0.0001) {
+                    $issues[] = ['leg_id' => null, 'type' => 'orphan_interbranch_'.$field,
+                        'debtor_branch_id' => $orphan['debtor_branch_id'],
+                        'creditor_branch_id' => $orphan['creditor_branch_id'],
+                        'currency_id' => $orphan['currency_id'], 'actual' => $balance];
+                }
+            }
+        }
+
         $positions = array_values(array_map(function (array $position): array {
             foreach (['obligation', 'settled', 'outstanding'] as $field) {
                 $position[$field] = round($position[$field], 4);

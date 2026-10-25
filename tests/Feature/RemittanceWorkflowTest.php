@@ -259,6 +259,26 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertEqualsWithDelta(25, (float) $settlement->fresh()->amount, 0.0001);
     }
 
+    public function test_interbranch_audit_detects_orphaned_pair_ledgers_after_leg_is_removed(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $debtor = (int) $leg->debtor_branch_id;
+        $creditor = (int) $leg->creditor_branch_id;
+        $currency = (int) $r->currency_id;
+        $audit = app(\App\Services\InterbranchSettlementAudit::class);
+        $this->assertSame(0, $audit->inspect()['issue_count']);
+        $leg->delete();
+        $result = $audit->inspect($debtor);
+        $orphan = collect($result['issues'])->filter(fn ($issue) => str_starts_with($issue['type'], 'orphan_interbranch_')
+            && $issue['debtor_branch_id'] === $debtor && $issue['creditor_branch_id'] === $creditor
+            && $issue['currency_id'] === $currency);
+        $this->assertCount(2, $orphan);
+        $this->assertEqualsCanonicalizing(['orphan_interbranch_payable_ledger', 'orphan_interbranch_receivable_ledger'], $orphan->pluck('type')->all());
+        $this->assertSame(0, $audit->inspect(999999)['issue_count']);
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
