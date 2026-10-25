@@ -61,6 +61,19 @@ class RemittanceWorkflowTest extends TestCase
         return $q->where('direction', 'debit')->sum('amount') - $q->where('direction', 'credit')->sum('amount');
     }
 
+    public function test_interbranch_audit_detects_missing_settlement_journal_without_mutating_debt(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $clean = app(\App\Services\InterbranchSettlementAudit::class)->inspect($leg->debtor_branch_id);
+        $this->assertSame(0, $clean['issue_count']);
+        $leg->settlements()->create(['amount' => 10, 'date' => '2026-09-14', 'exchange_rate_afn' => 1, 'created_by' => $this->mainUser->id]);
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect($leg->debtor_branch_id);
+        $this->assertContains('missing_settlement_journal', array_column($result['issues'], 'type'));
+        $this->assertEquals(10, $leg->settlements()->sum('amount'));
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();
