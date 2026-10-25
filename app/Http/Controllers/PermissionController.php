@@ -10,7 +10,9 @@ class PermissionController extends Controller
 {
     public function index()
     {
-        $permissions = Permission::orderByRaw('SUBSTRING_INDEX(name, " ", -1) asc')->get();
+        $permissions = Permission::all()->sortBy(
+            fn (Permission $permission) => strtolower(trim(strrchr(' '.$permission->name, ' ') ?: $permission->name))
+        )->values();
         return view('configuration.permissions.index', compact('permissions'));
     }
 

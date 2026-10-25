@@ -149,6 +149,22 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('role_has_permissions', ['role_id' => $role->id, 'permission_id' => $permission->id]);
     }
 
+    public function test_permissions_page_loads_with_sqlite_and_orders_by_last_word(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        Permission::create(['name' => 'audit alpha', 'guard_name' => 'web']);
+        Permission::create(['name' => 'audit zulu', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($admin)->get(route('configuration.permissions.index'));
+        $response->assertOk();
+        $response->assertViewHas('permissions', function ($permissions) {
+            $names = $permissions->pluck('name')->all();
+            return array_search('audit alpha', $names, true) < array_search('audit zulu', $names, true);
+        });
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);
