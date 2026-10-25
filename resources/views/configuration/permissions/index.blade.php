@@ -65,7 +65,7 @@
                                     @foreach ($actionOrder as $action)
                                         @if (isset($actions[$action]))
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <button
+                                                <button type="button"
                                                     class="btn btn-sm @if ($action === 'view') bg-primary
                                                     @elseif($action === 'create') bg-success
                                                     @elseif($action === 'edit') bg-warning
@@ -74,10 +74,10 @@
                                                     @elseif($action === 'reject') bg-secondary
                                                     @else bg-dark @endif text-white"
                                                     onclick="editPermission({{ $actions[$action]['id'] }})"
-                                                    title="Edit {{ $actions[$action]['action'] }}">
+                                                    aria-label="Edit {{ $actions[$action]['name'] }}" title="Edit {{ $actions[$action]['action'] }}">
                                                     <i class="bx bx-edit-alt"></i> {{ $actions[$action]['action'] }}
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-light" onclick="confirmDelete({{ $actions[$action]['id'] }})" title="Delete {{ $actions[$action]['action'] }}">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ $actions[$action]['id'] }})" aria-label="Delete {{ $actions[$action]['name'] }}" title="Delete {{ $actions[$action]['action'] }}">
                                                     <i class="bx bx-trash"></i>
                                                 </button>
                                             </div>

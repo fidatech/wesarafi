@@ -89,6 +89,15 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringNotContainsString('table-borderless table table-bordered', $markup);
     }
 
+    public function test_permission_action_buttons_are_explicit_and_accessible(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/permissions/index.blade.php'));
+        $this->assertStringContainsString('<button type="button"', $markup);
+        $this->assertStringContainsString('aria-label="Edit {{ $actions[$action][', $markup);
+        $this->assertStringContainsString('aria-label="Delete {{ $actions[$action][', $markup);
+        $this->assertStringContainsString('btn-outline-danger', $markup);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));
