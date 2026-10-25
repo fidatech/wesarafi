@@ -334,6 +334,36 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $credit->fresh()->approval_status);
     }
 
+    public function test_negative_amount_journal_cannot_be_approved(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $debit->update(['amount' => -100, 'amount_afn' => -100]);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/approve')->assertStatus(422);
+        $this->assertSame('pending', $debit->fresh()->approval_status);
+        $this->assertSame('pending', $credit->fresh()->approval_status);
+    }
+
+    public function test_positive_original_amount_with_zero_base_amount_cannot_be_approved(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $debit->update(['amount_afn' => 0]);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/approve')->assertStatus(422);
+        $this->assertSame('pending', $debit->fresh()->approval_status);
+        $this->assertSame('pending', $credit->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
