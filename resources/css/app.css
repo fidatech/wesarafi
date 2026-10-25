@@ -1606,3 +1606,72 @@ select.is-invalid + .select2-container .select2-selection {
     --wes-table-head: #253347;
     --wes-table-text: #e0e9f3;
 }
+
+/* Institutional tables — pagination, actions and filter toolbars.
+   Uses Bootstrap/DataTables native markup; no JS reinitialization or pagination changes. */
+.wes-compact .content-wrapper :is(.card-footer, .card-body) > nav[role="navigation"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.wes-compact .content-wrapper :is(.pagination, .dt-paging .pagination) {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 0;
+}
+.wes-compact .content-wrapper .pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 5px 10px;
+    border: 1px solid var(--wes-table-border, #dce5ee);
+    border-radius: 7px;
+    color: var(--bs-body-color, #34445b);
+    background: var(--bs-body-bg, #fff);
+    font-size: 12px;
+    font-weight: 600;
+}
+.wes-compact .content-wrapper .pagination .page-item.active .page-link {
+    background: var(--bs-primary, #216ac4);
+    border-color: var(--bs-primary, #216ac4);
+    color: #fff;
+}
+.wes-compact .content-wrapper .pagination .page-item.disabled .page-link {
+    opacity: .55;
+    pointer-events: none;
+}
+.wes-compact .content-wrapper .pagination .page-link:focus-visible {
+    outline: 2px solid var(--bs-primary, #216ac4);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+.wes-compact .content-wrapper .table > tbody > tr > :is(td, th):last-child > :is(.btn, .btn-group, a.btn) {
+    vertical-align: middle;
+}
+.wes-compact .content-wrapper .table > tbody > tr > td .btn-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.wes-compact .content-wrapper .table > tbody > tr > td .btn-group > .btn {
+    border-radius: 6px;
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dt-layout-row, .row) {
+    row-gap: 8px;
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+}
+@media (max-width: 575.98px) {
+    .wes-compact .content-wrapper .pagination .page-link { min-width: 30px; min-height: 30px; padding: 4px 7px; }
+    .wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) { text-align: start; }
+}
