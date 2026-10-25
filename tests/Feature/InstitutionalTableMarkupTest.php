@@ -72,6 +72,16 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringNotContainsString('const btn = event.target', $view);
     }
 
+    public function test_audit_log_filters_have_accessible_labels(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/auditlogs/index.blade.php'));
+        foreach (['filter_user', 'filter_date', 'filter_action'] as $id) {
+            $this->assertStringContainsString('for="'.$id.'"', $markup);
+            $this->assertStringContainsString('id="'.$id.'"', $markup);
+        }
+        $this->assertStringContainsString('allowInput: true', $markup);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));

@@ -36,7 +36,7 @@
                 {{-- Filters --}}
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
-                        <label class="form-label">User</label>
+                        <label for="filter_user" class="form-label">User</label>
                         <select id="filter_user" class="form-select">
                             <option value="">All</option>
                             @foreach($users as $user)
@@ -46,12 +46,12 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Date</label>
+                        <label for="filter_date" class="form-label">Date</label>
                         <input type="text" id="filter_date" class="form-control" placeholder="Select date">
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Action</label>
+                        <label for="filter_action" class="form-label">Action</label>
                         <select id="filter_action" class="form-select">
                             <option value="">All</option>
                             <option value="store">Store</option>
@@ -90,7 +90,7 @@
 
 @section('page-script')
     <script>
-        flatpickr('#filter_date', { dateFormat: 'Y-m-d' });
+        flatpickr('#filter_date', { dateFormat: 'Y-m-d', allowInput: true });
 
         const table = $('#audit-table').DataTable({
             processing: true,
