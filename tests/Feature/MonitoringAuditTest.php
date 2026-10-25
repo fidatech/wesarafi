@@ -77,7 +77,7 @@ class MonitoringAuditTest extends TestCase
         $other = Branch::whereKeyNot(auth()->user()->branch_id)->firstOrFail();
         $rows = TransactionService::postMany($this->entries(100, $other->id));
         $rows[0]->update(['description' => 'Other branch confidential change']);
-        $this->get('/monitoring/modified-transactions?branch_id='.$other->id)->assertOk()->assertDontSee('Other branch confidential change');
+        $this->get('/monitoring/modified-transactions?branch_id='.$other->id)->assertForbidden();
         TransactionService::delete('audit_test', 1);
         $response = $this->get('/monitoring/deleted-transactions?branch_id='.$other->id)->assertOk();
         $this->assertSame(0, $response->viewData('transactions')->total());
