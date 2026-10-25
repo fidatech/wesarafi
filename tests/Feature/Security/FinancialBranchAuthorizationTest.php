@@ -565,6 +565,38 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertNull($credit->fresh()->rejection_reason);
     }
 
+    public function test_three_line_approval_rolls_back_after_earlier_lines_are_updated(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $debit->update(['amount' => 150, 'amount_afn' => 150]);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->amount = 100;
+        $credit->amount_afn = 100;
+        $credit->save();
+        $closedLine = $credit->replicate();
+        $closedLine->amount = 50;
+        $closedLine->amount_afn = 50;
+        $closedLine->date = now('Asia/Kabul')->subDay()->toDateString();
+        $closedLine->save();
+        \App\Models\BusinessDay::create([
+            'branch_id' => $branch->id,
+            'business_date' => $closedLine->date->toDateString(),
+            'status' => 'closed',
+        ]);
+
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/approve')
+            ->assertSessionHasErrors('business_day');
+        foreach ([$debit, $credit, $closedLine] as $line) {
+            $this->assertSame('pending', $line->fresh()->approval_status);
+            $this->assertFalse((bool) $line->fresh()->is_approved);
+            $this->assertNull($line->fresh()->approved_by);
+        }
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
