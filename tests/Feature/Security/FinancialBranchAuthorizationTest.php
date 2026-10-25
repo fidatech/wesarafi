@@ -249,6 +249,46 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee($visible->linked_id);
     }
 
+    public function test_balanced_pending_journal_approval_records_reviewer_on_every_line(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/approve')->assertRedirect();
+        foreach ([$debit, $credit] as $line) {
+            $line->refresh();
+            $this->assertSame('approved', $line->approval_status);
+            $this->assertTrue((bool) $line->is_approved);
+            $this->assertEquals($reviewer->id, $line->approved_by);
+            $this->assertNotNull($line->approved_at);
+            $this->assertNull($line->rejection_reason);
+        }
+    }
+
+    public function test_rejecting_pending_group_records_reason_on_every_line(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/reject', ['reason' => 'Incorrect supporting documents'])->assertRedirect();
+        foreach ([$debit, $credit] as $line) {
+            $line->refresh();
+            $this->assertSame('rejected', $line->approval_status);
+            $this->assertFalse((bool) $line->is_approved);
+            $this->assertSame('Incorrect supporting documents', $line->rejection_reason);
+        }
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
