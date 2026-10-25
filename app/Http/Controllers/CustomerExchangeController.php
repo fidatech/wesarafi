@@ -18,10 +18,17 @@ use Illuminate\Validation\Rule;
 
 class CustomerExchangeController extends Controller
 {
+    private function authorizedBranchId(): ?int
+    {
+        $user = auth()->user();
+        abort_if(! $user->hasRole('Super Admin') && ! $user->branch_id, 403);
+        return $user->hasRole('Super Admin') ? null : (int) $user->branch_id;
+    }
+
     public function index(Request $request)
     {
         $query = CustomerExchange::with(['customer', 'branch', 'fromCurrency', 'toCurrency'])->latest('date');
-        if (auth()->user()->branch_id) $query->where('branch_id', auth()->user()->branch_id);
+        if ($branchId = $this->authorizedBranchId()) $query->where('branch_id', $branchId);
         foreach (['customer_id', 'from_currency_id', 'to_currency_id', 'status'] as $field) {
             if ($request->$field) $query->where($field, $request->$field);
         }
@@ -31,10 +38,10 @@ class CustomerExchangeController extends Controller
         return view('exchange.customers.index', [
             'temporaryCustomerCode' => 'TEMP-'.(Account::where('type', 'customer')->whereHas('subCategory', fn ($query) => $query->where('name_en', 'Temporary Customer'))->count() + 1),
             'exchanges' => $query->paginate(30)->withQueryString(),
-            'exchangeReversals' => DB::table('journal_reversals')->join('customer_exchanges', 'customer_exchanges.linked_id', '=', 'journal_reversals.original_linked_id')->when(auth()->user()->branch_id, fn ($q, $branch) => $q->where('customer_exchanges.branch_id', $branch))->select('journal_reversals.*', 'customer_exchanges.id as exchange_id')->orderByDesc('journal_reversals.created_at')->limit(15)->get(),
-            'customers' => Account::where('type', 'customer')->where('is_active', true)->whereNull('deleted_at')->when(auth()->user()->branch_id, fn ($query, $branchId) => $query->where('branch_id', $branchId))->orderBy('full_name')->get(),
+            'exchangeReversals' => DB::table('journal_reversals')->join('customer_exchanges', 'customer_exchanges.linked_id', '=', 'journal_reversals.original_linked_id')->when($branchId, fn ($q, $branch) => $q->where('customer_exchanges.branch_id', $branch))->select('journal_reversals.*', 'customer_exchanges.id as exchange_id')->orderByDesc('journal_reversals.created_at')->limit(15)->get(),
+            'customers' => Account::where('type', 'customer')->where('is_active', true)->whereNull('deleted_at')->when($branchId, fn ($query, $branch) => $query->where('branch_id', $branch))->orderBy('full_name')->get(),
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
-            'branches' => auth()->user()->branch_id ? Branch::whereKey(auth()->user()->branch_id)->get() : Branch::orderBy('name')->get(),
+            'branches' => $branchId ? Branch::whereKey($branchId)->get() : Branch::orderBy('name')->get(),
         ]);
     }
 
@@ -45,6 +52,8 @@ class CustomerExchangeController extends Controller
             'from_currency_id' => 'required|different:to_currency_id|exists:currencies,id',
             'to_currency_id' => 'required|exists:currencies,id',
         ]);
+        $branchId = $this->authorizedBranchId();
+        abort_if($branchId && $branchId !== (int) $data['branch_id'], 403);
         $fromRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['from_currency_id'], (int) $data['branch_id']);
         $toRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['to_currency_id'], (int) $data['branch_id']);
 
@@ -80,9 +89,15 @@ class CustomerExchangeController extends Controller
             ]);
             unset($customerData['id_card_file']);
         }
-        $data['branch_id'] = auth()->user()->branch_id ?: $data['branch_id'];
-        abort_unless($data['branch_id'], 422, 'Select a branch.');
-
+        $branchId = $this->authorizedBranchId();
+        if ($branchId) {
+            abort_if(! empty($data['branch_id']) && (int) $data['branch_id'] !== $branchId, 403);
+            $data['branch_id'] = $branchId;
+        }
+        abort_unless($data['branch_id'] ?? null, 422, 'Select a branch.');
+        if (! empty($data['customer_id'])) {
+            abort_unless(Account::whereKey($data['customer_id'])->where('branch_id', $data['branch_id'])->exists(), 403);
+        }
         $fromRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['from_currency_id'], (int) $data['branch_id']);
         $toRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['to_currency_id'], (int) $data['branch_id']);
         $data['to_amount'] = $data['rate_operator'] === 'divide' ? $data['from_amount'] / $data['rate'] : $data['from_amount'] * $data['rate'];
@@ -153,7 +168,8 @@ class CustomerExchangeController extends Controller
     private function authorizeCustomerDetails(Account $account): void
     {
         abort_unless($account->type === 'customer' && $account->is_active && !$account->deleted_at, 404);
-        abort_if(auth()->user()->branch_id && auth()->user()->branch_id != $account->branch_id, 403);
+        $branchId = $this->authorizedBranchId();
+        abort_if($branchId && $branchId !== (int) $account->branch_id, 403);
     }
 
     private function customerIdPath(Account $account): ?string
@@ -180,7 +196,8 @@ class CustomerExchangeController extends Controller
     public function reverse(Request $request, CustomerExchange $exchange)
     {
         abort_unless($request->user()->hasRole('Super Admin') || $request->user()->can('edit journal'), 403);
-        abort_if($request->user()->branch_id && (int) $request->user()->branch_id !== (int) $exchange->branch_id, 403);
+        $branchId = $this->authorizedBranchId();
+        abort_if($branchId && $branchId !== (int) $exchange->branch_id, 403);
         $data = $request->validate(['reason' => 'required|string|min:5|max:1000']);
         $day = \App\Services\DailyBalanceState::forBranch((int) $exchange->branch_id);
         abort_if($day['closed'] || (config('business_day.require_open_for_posting', true) && $day['status'] !== 'open'),
@@ -216,7 +233,8 @@ class CustomerExchangeController extends Controller
 
     public function destroy(CustomerExchange $exchange)
     {
-        abort_if(auth()->user()->branch_id && auth()->user()->branch_id !== $exchange->branch_id, 403);
+        $branchId = $this->authorizedBranchId();
+        abort_if($branchId && $branchId !== (int) $exchange->branch_id, 403);
         abort_if(Transaction::where('linked_id', $exchange->linked_id)->exists(), 422,
             'Posted exchanges cannot be deleted. Use an approved accounting reversal workflow.');
         DB::transaction(fn () => $exchange->delete());
@@ -227,7 +245,7 @@ class CustomerExchangeController extends Controller
     {
         $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer|exists:customer_exchanges,id']);
         $query = CustomerExchange::whereIn('id', $data['ids']);
-        if (auth()->user()->branch_id) $query->where('branch_id', auth()->user()->branch_id);
+        if ($branchId = $this->authorizedBranchId()) $query->where('branch_id', $branchId);
         DB::transaction(function () use ($query, $data) {
             $exchanges = $query->lockForUpdate()->get();
             abort_unless($exchanges->count() === count(array_unique($data['ids'])), 403);
