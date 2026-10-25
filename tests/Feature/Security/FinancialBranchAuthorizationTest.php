@@ -364,6 +364,32 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $credit->fresh()->approval_status);
     }
 
+    public function test_view_only_journal_user_cannot_see_approval_or_rejection_actions(): void
+    {
+        $branch = Branch::firstOrFail();
+        $viewer = User::factory()->create(['branch_id' => $branch->id]);
+        $viewer->givePermissionTo('view journal');
+        $entry = $this->entry($branch->id);
+
+        $this->actingAs($viewer)->get('/journal/approvals')->assertOk()
+            ->assertSee($entry->linked_id)
+            ->assertDontSee('Approve group')
+            ->assertDontSee('Rejection reason');
+    }
+
+    public function test_journal_editor_sees_approval_and_rejection_actions(): void
+    {
+        $branch = Branch::firstOrFail();
+        $editor = User::factory()->create(['branch_id' => $branch->id]);
+        $editor->givePermissionTo(['view journal', 'edit journal']);
+        $entry = $this->entry($branch->id);
+
+        $this->actingAs($editor)->get('/journal/approvals')->assertOk()
+            ->assertSee($entry->linked_id)
+            ->assertSee('Approve group')
+            ->assertSee('Rejection reason');
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
