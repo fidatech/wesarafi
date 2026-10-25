@@ -738,6 +738,37 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee('Rejection reason');
     }
 
+    public function test_super_admin_cannot_review_mixed_branch_group_with_closed_day(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $superAdmin = User::factory()->create(['branch_id' => null]);
+        $superAdmin->assignRole('Super Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->branch_id = $other->id;
+        $credit->direction = 'credit';
+        $credit->save();
+        \App\Models\BusinessDay::create([
+            'branch_id' => $other->id,
+            'business_date' => $credit->date->toDateString(),
+            'status' => 'closed',
+        ]);
+
+        $this->actingAs($superAdmin)->get('/journal/approvals')->assertOk()
+            ->assertSee($debit->linked_id)
+            ->assertSee('Contains a closed business day')
+            ->assertDontSee('Approve group')
+            ->assertDontSee('Rejection reason');
+
+        $this->post('/journal/approvals/'.$debit->linked_id.'/approve')
+            ->assertSessionHasErrors('business_day');
+        $this->post('/journal/approvals/'.$debit->linked_id.'/reject', ['reason' => 'Invalid journal'])
+            ->assertSessionHasErrors('business_day');
+        $this->assertSame('pending', $debit->fresh()->approval_status);
+        $this->assertSame('pending', $credit->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
