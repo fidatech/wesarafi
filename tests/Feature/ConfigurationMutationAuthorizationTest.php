@@ -183,6 +183,23 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('permissions', ['name' => $oversizedName]);
     }
 
+    public function test_roles_table_escapes_permission_group_names(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $role = Role::create(['name' => 'Safe Reviewer', 'guard_name' => 'web']);
+        $permission = Permission::create(['name' => 'view <script>alert(1)</script>', 'guard_name' => 'web']);
+        $role->givePermissionTo($permission);
+
+        $response = $this->actingAs($admin)->getJson(route('configuration.roles.data'));
+        $response->assertOk();
+        $rows = collect($response->json('data'));
+        $html = $rows->firstWhere('name', 'Safe Reviewer')['permissions'];
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;SCRIPT&gt;', $html);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

@@ -61,7 +61,7 @@ class RoleController extends Controller
 
                     $html .= '<div class="col-md-4 ' . $class . '">';
                     $html .= '<div class="border rounded p-2 h-100 shadow-sm">';
-                    $html .= '<div class="fw-bold text-uppercase small text-muted mb-2">' . $entity . '</div>';
+                    $html .= '<div class="fw-bold text-uppercase small text-muted mb-2">' . e($entity) . '</div>';
                     foreach ($order as $act) {
                         if (in_array($act, $actions)) {
                             $badgeClass = $badgeColors[$act] ?? 'secondary';
