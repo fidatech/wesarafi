@@ -268,6 +268,7 @@ class FinancialBranchAuthorizationTest extends TestCase
             $this->assertNotNull($line->approved_at);
             $this->assertNull($line->rejection_reason);
         }
+        $this->assertEquals($debit->approved_at, $credit->approved_at);
     }
 
     public function test_rejecting_pending_group_records_reason_on_every_line(): void

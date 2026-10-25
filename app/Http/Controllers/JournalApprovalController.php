@@ -77,10 +77,11 @@ class JournalApprovalController extends Controller
     {
         DB::transaction(function () use ($request, $linked) {
             $group = $this->authorizeGroup($request, $linked);
+            $approvedAt = now();
             $group->each(
                 fn ($entry) => $entry->update([
                     'approval_status' => 'approved', 'is_approved' => true,
-                    'approved_by' => $request->user()->id, 'approved_at' => now(), 'rejection_reason' => null,
+                    'approved_by' => $request->user()->id, 'approved_at' => $approvedAt, 'rejection_reason' => null,
                 ])
             );
         });
