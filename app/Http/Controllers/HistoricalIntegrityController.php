@@ -17,8 +17,9 @@ class HistoricalIntegrityController extends Controller
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
         ]);
+        abort_if(! $request->user()->hasRole('Super Admin') && ! $request->user()->branch_id, 403);
         $branchId = (int) ($filters['branch_id'] ?? ($request->user()->branch_id ?: 1));
-        abort_unless($request->user()->hasRole('Super Admin') || $branchId === (int) ($request->user()->branch_id ?: 1), 403);
+        abort_unless($request->user()->hasRole('Super Admin') || $branchId === (int) $request->user()->branch_id, 403);
         // Persist an audit record before streaming the CSV response.
         activity('financial-audit')->causedBy($request->user())->withProperties([
             'action' => 'historical_integrity_csv_export',
@@ -57,8 +58,9 @@ class HistoricalIntegrityController extends Controller
             'to' => 'nullable|date|after_or_equal:from',
         ]);
         $isSuper = $request->user()->hasRole('Super Admin');
+        abort_if(! $request->user()->hasRole('Super Admin') && ! $request->user()->branch_id, 403);
         $branchId = (int) ($filters['branch_id'] ?? ($request->user()->branch_id ?: 1));
-        abort_unless($isSuper || $branchId === (int) ($request->user()->branch_id ?: 1), 403);
+        abort_unless($isSuper || $branchId === (int) $request->user()->branch_id, 403);
         $branches = $isSuper ? Branch::orderBy('name')->get(['id', 'name']) : Branch::whereKey($branchId)->get(['id', 'name']);
         $days = BusinessDay::query()->where('status', 'closed')->where('branch_id', $branchId)
             ->when(isset($filters['from']), fn ($q) => $q->whereDate('business_date', '>=', $filters['from']))

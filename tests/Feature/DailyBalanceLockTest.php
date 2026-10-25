@@ -209,6 +209,25 @@ class DailyBalanceLockTest extends TestCase
         $this->actingAs($user)->get(route('financial_reports.audit-export-history.index', ['user_id' => 999999]))->assertSessionHasErrors('user_id');
     }
 
+    public function test_audit_history_and_export_deny_cross_branch_and_unassigned_manager(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $user->givePermissionTo('manage business day');
+        $home = (int) ($user->branch_id ?: 1);
+        $other = \App\Models\Branch::create(['name' => 'Audit Isolation Branch', 'province_id' => 1, 'phone' => 0, 'type' => 'independent']);
+        $history = route('financial_reports.audit-export-history.index');
+        $export = route('financial_reports.historical-integrity.export');
+        $this->actingAs($user)->get($history.'?branch_id='.$other->id)->assertForbidden();
+        $this->actingAs($user)->get($export.'?branch_id='.$other->id)->assertForbidden();
+        $this->actingAs($user)->get($history.'?branch_id='.$home)->assertOk();
+        $user->forceFill(['branch_id' => null])->save();
+        $this->actingAs($user)->get($history)->assertForbidden();
+        $this->actingAs($user)->get($export)->assertForbidden();
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.index'))->assertForbidden();
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();

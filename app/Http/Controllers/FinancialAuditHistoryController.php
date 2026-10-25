@@ -21,11 +21,18 @@ class FinancialAuditHistoryController extends Controller
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
         ]);
+        abort_if(! $isSuper && ! $user->branch_id, 403);
         $branchId = (int) ($filters['branch_id'] ?? ($user->branch_id ?: 1));
-        abort_unless($isSuper || $branchId === (int) ($user->branch_id ?: 1), 403);
+        abort_unless($isSuper || $branchId === (int) $user->branch_id, 403);
 
         $branches = $isSuper ? Branch::orderBy('name')->get(['id', 'name']) : Branch::whereKey($branchId)->get(['id', 'name']);
-        $users = User::orderBy('name')->get(['id', 'name']);
+        // Only expose identities of users who requested exports for this branch.
+        $actorIds = Activity::query()->where('log_name', 'financial-audit')
+            ->where('description', 'Historical closing integrity report export requested')
+            ->where('properties->branch_id', $branchId)
+            ->where('causer_type', $user->getMorphClass())
+            ->whereNotNull('causer_id')->distinct()->pluck('causer_id');
+        $users = User::whereIn('id', $actorIds)->orderBy('name')->get(['id', 'name']);
         $events = Activity::query()->with('causer')
             ->where('log_name', 'financial-audit')
             ->where('description', 'Historical closing integrity report export requested')
