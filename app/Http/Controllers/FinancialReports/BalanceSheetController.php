@@ -15,6 +15,7 @@ class BalanceSheetController extends Controller
 {
     public function index(Request $request, FinancialReportService $reports, DabStatementService $dabStatements, ReportExportService $exporter)
     {
+        $request->validate(['date' => 'nullable|date', 'branch_id' => 'nullable|integer|exists:branches,id', 'format' => 'nullable|in:pdf,xlsx']);
         $date = $request->date('date')?->toDateString() ?? now()->toDateString();
         $branchId = $this->branchId($request);
         $report = $reports->balanceSheet($date, $branchId);
@@ -26,7 +27,7 @@ class BalanceSheetController extends Controller
             'date' => $date,
             'jalaliDate' => JalaliDate::fromGregorian($date),
             'branchId' => $branchId,
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => $request->user()->hasRole('Super Admin') ? Branch::orderBy('name')->get() : Branch::whereKey($request->user()->branch_id)->get(),
             'selectedBranch' => $branchId ? Branch::find($branchId) : null,
             'setting' => Setting::query()->first(),
             'frequency' => in_array($frequency, ['monthly', 'quarterly', 'annual'], true) ? $frequency : 'quarterly',
@@ -42,7 +43,9 @@ class BalanceSheetController extends Controller
 
     private function branchId(Request $request): ?int
     {
-        if ($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id) { abort(403); }
+        $isSuper = $request->user()->hasRole('Super Admin');
+        abort_if(! $isSuper && ! $request->user()->branch_id, 403);
+        abort_if(! $isSuper && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         if ($request->filled('branch_id')) {
             return $request->integer('branch_id') ?: null;
         }

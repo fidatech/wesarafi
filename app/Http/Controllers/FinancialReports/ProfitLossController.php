@@ -15,9 +15,12 @@ class ProfitLossController extends Controller
 {
     public function index(Request $request, FinancialReportService $reports, DabStatementService $dabStatements, ReportExportService $exporter)
     {
+        $request->validate(['from' => 'nullable|date', 'to' => 'nullable|date|after_or_equal:from', 'branch_id' => 'nullable|integer|exists:branches,id', 'format' => 'nullable|in:pdf,xlsx']);
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
         $from = $request->date('from')?->toDateString() ?? now()->startOfQuarter()->toDateString();
-        abort_if($request->user()->branch_id && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
+        $isSuper = $request->user()->hasRole('Super Admin');
+        abort_if(! $isSuper && ! $request->user()->branch_id, 403);
+        abort_if(! $isSuper && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         $branchId = $request->filled('branch_id')
             ? ($request->integer('branch_id') ?: null)
             : (auth()->user()->branch_id ?? null);
@@ -37,7 +40,7 @@ class ProfitLossController extends Controller
             'jalaliFrom' => JalaliDate::fromGregorian($from),
             'jalaliTo' => JalaliDate::fromGregorian($to),
             'branchId' => $branchId,
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => $isSuper ? Branch::orderBy('name')->get() : Branch::whereKey($request->user()->branch_id)->get(),
             'selectedBranch' => $branchId ? Branch::find($branchId) : null,
             'setting' => Setting::query()->first(),
             'frequency' => in_array($frequency, ['monthly', 'quarterly', 'annual'], true) ? $frequency : 'quarterly',
