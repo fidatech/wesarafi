@@ -76,6 +76,36 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('rejected', $second->fresh()->approval_status);
     }
 
+    public function test_admin_cannot_reject_another_branch_journal(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($other->id);
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'Cross-branch attempt'])->assertForbidden();
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+        $this->assertNull($entry->fresh()->rejection_reason);
+    }
+
+    public function test_admin_cannot_approve_mixed_branch_journal_group(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $otherEntry = $entry->replicate();
+        $otherEntry->branch_id = $other->id;
+        $otherEntry->direction = 'credit';
+        $otherEntry->save();
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertForbidden();
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+        $this->assertSame('pending', $otherEntry->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
