@@ -60,7 +60,7 @@
             <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Roles</h4>
                 <div class="table-responsive wes-institutional-table">
-                    <table class="table-hover table-borderless table table-bordered align-middle text-center" id="roles-table" style="width: 100%;">
+                    <table class="table-hover table table-bordered align-middle text-center" id="roles-table" style="width: 100%;">
                         <thead class="table-light sticky-top">
                             <tr>
                                 <th>#</th>

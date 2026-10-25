@@ -82,6 +82,13 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringContainsString('allowInput: true', $markup);
     }
 
+    public function test_roles_table_does_not_mix_borderless_and_bordered_styles(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/roles/index.blade.php'));
+        $this->assertStringContainsString('id="roles-table"', $markup);
+        $this->assertStringNotContainsString('table-borderless table table-bordered', $markup);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));
