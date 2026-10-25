@@ -1714,3 +1714,31 @@ select.is-invalid + .select2-container .select2-selection {
     --wes-table-head: #253347;
     --wes-table-text: #e0e9f3;
 }
+
+/* Consistent horizontal table scrolling and compact, accessible filter controls. */
+.wes-compact .content-wrapper .wes-institutional-table {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+.wes-compact .content-wrapper .wes-institutional-table > .table {
+    margin-bottom: 0;
+}
+.wes-compact .content-wrapper .wes-institutional-table .table :is(th, td) {
+    font-variant-numeric: tabular-nums;
+}
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) input:focus-visible,
+.wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_length, .dt-length) select:focus-visible {
+    outline: 2px solid var(--bs-primary, #216ac4);
+    outline-offset: 1px;
+}
+@media (max-width: 575.98px) {
+    .wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) input {
+        max-width: 100%;
+        min-width: 0;
+    }
+    .wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dt-layout-cell, .dataTables_filter, .dataTables_length) {
+        min-width: 0;
+        max-width: 100%;
+    }
+}
