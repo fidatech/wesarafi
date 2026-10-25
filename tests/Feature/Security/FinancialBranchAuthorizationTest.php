@@ -419,6 +419,21 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee('5,250.00');
     }
 
+    public function test_approval_list_shows_group_afn_totals(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee('AFN totals')
+            ->assertSee('100.00');
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
