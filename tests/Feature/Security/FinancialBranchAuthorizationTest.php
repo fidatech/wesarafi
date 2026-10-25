@@ -215,6 +215,23 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->post('/journal/approvals/'.$missing.'/reject', ['reason' => 'Not found'])->assertNotFound();
     }
 
+    public function test_approval_list_hides_entire_mixed_branch_group(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $mixed = $this->entry($branch->id);
+        $foreign = $mixed->replicate();
+        $foreign->branch_id = $other->id;
+        $foreign->direction = 'credit';
+        $foreign->save();
+        $visible = $this->entry($branch->id);
+        $this->actingAs($user)->get('/journal/approvals')->assertOk()
+            ->assertDontSee($mixed->linked_id)
+            ->assertSee($visible->linked_id);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();

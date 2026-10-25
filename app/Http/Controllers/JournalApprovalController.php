@@ -14,11 +14,17 @@ class JournalApprovalController extends Controller
         $query = Transaction::with(['account', 'currency', 'chartOfAccount', 'createdBy'])
             ->where('approval_status', 'pending')->orderByDesc('date');
         abort_if(! $request->user()->hasRole('Super Admin') && ! $request->user()->branch_id, 403);
+        // Never expose a partial cross-branch group as reviewable: approval and
+        // rejection require authorization over every entry sharing linked_id.
+        $groups = $query->get()->groupBy('linked_id');
         if (! $request->user()->hasRole('Super Admin')) {
-            $query->where('branch_id', $request->user()->branch_id);
+            $branchId = (int) $request->user()->branch_id;
+            $groups = $groups->filter(fn ($rows) => $rows->every(
+                fn ($entry) => (int) $entry->branch_id === $branchId
+            ));
         }
 
-        return view('journal.approvals.index', ['groups' => $query->get()->groupBy('linked_id')]);
+        return view('journal.approvals.index', ['groups' => $groups]);
     }
 
     private function authorizeGroup(Request $request, string $linked): void
