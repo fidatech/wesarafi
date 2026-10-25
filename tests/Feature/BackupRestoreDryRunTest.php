@@ -44,6 +44,27 @@ class BackupRestoreDryRunTest extends TestCase
         }
     }
 
+    public function test_restore_command_rejects_non_mysql_driver_before_archive_processing(): void
+    {
+        config(['database.default' => 'sqlite']);
+        $this->assertSame(1, Artisan::call('backup:restore-current', ['archive' => '/nonexistent/backup.zip', '--dry-run' => true]));
+        $this->assertStringContainsString('Standard MySQL configuration required', Artisan::output());
+    }
+
+    public function test_dry_run_rejects_invalid_configured_database_identifier(): void
+    {
+        config(['database.default' => 'mysql', 'database.connections.mysql.database' => 'unsafe-db-name']);
+        $this->assertSame(1, Artisan::call('backup:restore-current', ['archive' => '/nonexistent/backup.zip', '--dry-run' => true]));
+        $this->assertStringContainsString('Invalid configured database name', Artisan::output());
+    }
+
+    public function test_dry_run_rejects_missing_archive(): void
+    {
+        config(['database.default' => 'mysql', 'database.connections.mysql.database' => 'wesarafi_disposable_test']);
+        $this->assertSame(1, Artisan::call('backup:restore-current', ['archive' => '/nonexistent/backup.zip', '--dry-run' => true]));
+        $this->assertStringContainsString('Backup not found', Artisan::output());
+    }
+
     public function test_dry_run_rejects_archive_with_unexpected_entry(): void
     {
         $archive = $this->archive('../database.sql', '-- MySQL dump');
