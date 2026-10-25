@@ -132,6 +132,30 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertContains('interbranch_receivable_ledger_mismatch', $issues);
     }
 
+    public function test_interbranch_audit_separates_currencies_and_branch_pairs(): void
+    {
+        $first = $this->store();
+        $this->post('/remittances/'.$first->id.'/approve')->assertRedirect();
+        $otherCurrency = Currency::where('code', 'USD')->firstOrFail();
+        $second = $this->store(['currency_id' => $otherCurrency->id, 'exchange_rate_afn' => 70, 'amount' => 200]);
+        $this->post('/remittances/'.$second->id.'/approve')->assertRedirect();
+        $audit = app(\App\Services\InterbranchSettlementAudit::class);
+        $result = $audit->inspect((int) $first->from_branch_id);
+        $this->assertSame(0, $result['issue_count']);
+        $this->assertCount(2, $result['positions']);
+        $this->assertCount(2, array_unique(array_column($result['positions'], 'currency_id')));
+        $entry = Transaction::where('module_name', 'remittance')->where('module_id', $second->id)
+            ->where('direction', 'credit')->whereHas('chartOfAccount', fn ($q) => $q->where('code', '2002'))
+            ->firstOrFail();
+        $entry->amount = (float) $entry->amount + 7;
+        $entry->save();
+        $result = $audit->inspect((int) $first->from_branch_id);
+        $mismatches = array_values(array_filter($result['issues'], fn ($issue) => $issue['type'] === 'interbranch_payable_ledger_mismatch'));
+        $this->assertCount(1, $mismatches);
+        $this->assertSame((int) $otherCurrency->id, $mismatches[0]['currency_id']);
+        $this->assertSame(0, $audit->inspect(999999)['legs_checked']);
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
