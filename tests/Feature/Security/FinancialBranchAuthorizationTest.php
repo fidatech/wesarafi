@@ -163,6 +163,35 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $entry->fresh()->approval_status);
     }
 
+    public function test_admin_cannot_review_group_with_already_finalized_entry(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $finalized = $entry->replicate();
+        $finalized->direction = 'credit';
+        $finalized->approval_status = 'approved';
+        $finalized->is_approved = true;
+        $finalized->save();
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertStatus(422);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'Mixed status'])->assertStatus(422);
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+        $this->assertSame('approved', $finalized->fresh()->approval_status);
+    }
+
+    public function test_admin_cannot_approve_single_line_journal(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $this->actingAs($user);
+        $this->post('/journal/approvals/'.$entry->linked_id.'/approve')->assertStatus(422);
+        $this->assertSame('pending', $entry->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
