@@ -98,6 +98,24 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertContains('deleted_journal_entry', array_column($result['issues'], 'type'));
     }
 
+    public function test_interbranch_audit_reconciles_pair_ledgers_and_detects_payable_mismatch(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $audit = app(\App\Services\InterbranchSettlementAudit::class);
+        $clean = $audit->inspect((int) $r->from_branch_id);
+        $this->assertSame(0, $clean['issue_count']);
+        $position = $clean['positions'][0];
+        $this->assertEqualsWithDelta($position['outstanding'], $position['payable_ledger'], 0.0001);
+        $this->assertEqualsWithDelta($position['outstanding'], $position['receivable_ledger'], 0.0001);
+        $entry = \App\Models\Transaction::where('module_name', 'remittance')->where('branch_id', $r->from_branch_id)
+            ->where('direction', 'credit')->whereHas('chartOfAccount', fn ($q) => $q->where('code', '2002'))->firstOrFail();
+        $entry->amount = (float) $entry->amount + 25;
+        $entry->save();
+        $issues = array_column($audit->inspect((int) $r->from_branch_id)['issues'], 'type');
+        $this->assertContains('interbranch_payable_ledger_mismatch', $issues);
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();

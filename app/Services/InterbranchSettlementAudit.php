@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Account;
+use App\Models\ChartOfAccount;
 use App\Models\RemittanceLeg;
 use App\Models\Transaction;
 
@@ -26,6 +28,20 @@ class InterbranchSettlementAudit
             }
         }
         return $issues;
+    }
+
+    private function ledgerBalance(int $owner, int $other, int $currencyId, string $coaCode): float
+    {
+        $accountId = Account::query()->where('account_code', 'INTERBRANCH-'.$owner.'-'.$other)
+            ->where('branch_id', $owner)->value('id');
+        $coaId = ChartOfAccount::query()->where('code', $coaCode)->value('id');
+        if (! $accountId || ! $coaId) {
+            return 0.0;
+        }
+        $rows = Transaction::query()->where('branch_id', $owner)->where('account_id', $accountId)
+            ->where('currency_id', $currencyId)->where('chart_of_account_id', $coaId)->get(['direction', 'amount']);
+        $signed = $rows->sum(fn ($row) => (float) $row->amount * ($row->direction === 'debit' ? 1 : -1));
+        return round($coaCode === '2002' ? -$signed : $signed, 4);
     }
 
     public function inspect(?int $branchId = null): array
@@ -91,6 +107,23 @@ class InterbranchSettlementAudit
             }
             return $position;
         }, $positions));
+
+        foreach ($positions as &$position) {
+            $debtor = $position['debtor_branch_id'];
+            $creditor = $position['creditor_branch_id'];
+            $currency = $position['currency_id'];
+            $expected = $position['outstanding'];
+            $position['payable_ledger'] = $this->ledgerBalance($debtor, $creditor, $currency, '2002');
+            $position['receivable_ledger'] = $this->ledgerBalance($creditor, $debtor, $currency, '1006');
+            foreach (['payable_ledger', 'receivable_ledger'] as $field) {
+                if (abs($position[$field] - $expected) > 0.0001) {
+                    $issues[] = ['leg_id' => null, 'type' => 'interbranch_'.$field.'_mismatch',
+                        'debtor_branch_id' => $debtor, 'creditor_branch_id' => $creditor,
+                        'currency_id' => $currency, 'expected' => $expected, 'actual' => $position[$field]];
+                }
+            }
+        }
+        unset($position);
 
         return ['legs_checked' => $checked, 'positions' => $positions, 'issues' => $issues, 'issue_count' => count($issues)];
     }
