@@ -167,12 +167,13 @@
         }
     </script>
     <script>
-        function togglePermissions(roleId) {
+        function togglePermissions(roleId, button) {
             const rows = document.querySelectorAll('.more-perms-' + roleId);
             rows.forEach(el => el.classList.toggle('d-none'));
 
-            const btn = event.target;
-            btn.textContent = btn.textContent.includes('More') ? 'Show Less' : 'Show More';
+            const expanded = button.getAttribute('aria-expanded') !== 'true';
+            button.setAttribute('aria-expanded', String(expanded));
+            button.textContent = expanded ? 'Show Less' : 'Show More';
         }
     </script>
 <script>

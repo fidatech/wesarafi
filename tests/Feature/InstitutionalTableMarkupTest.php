@@ -60,6 +60,18 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringContainsString("$('#filterType, #filterProvince').on('change'", $markup);
     }
 
+    public function test_roles_permission_expander_is_rendered_for_hidden_groups(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/RoleController.php'));
+        $view = file_get_contents(resource_path('views/configuration/roles/index.blade.php'));
+
+        $this->assertStringContainsString('if (count($grouped) > 3)', $controller);
+        $this->assertStringContainsString('aria-expanded="false"', $controller);
+        $this->assertStringContainsString('function togglePermissions(roleId, button)', $view);
+        $this->assertStringContainsString("button.setAttribute('aria-expanded', String(expanded))", $view);
+        $this->assertStringNotContainsString('const btn = event.target', $view);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));

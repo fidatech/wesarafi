@@ -72,9 +72,9 @@ class RoleController extends Controller
                     $html .= '</div></div>';
                 }
 
-                if (count($grouped) > 6) {
+                if (count($grouped) > 3) {
                     $html .= '<div class="col-12 mt-2">
-                                <button class="btn btn-sm btn-link px-0" onclick="togglePermissions(' . $role->id . ')">Show More</button>
+                                <button type="button" class="btn btn-sm btn-link px-0" aria-expanded="false" onclick="togglePermissions(' . $role->id . ', this)">Show More</button>
                             </div>';
                 }
 
