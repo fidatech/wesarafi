@@ -404,6 +404,21 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee('d-flex flex-wrap gap-2', false);
     }
 
+    public function test_approval_list_shows_base_currency_amounts_alongside_original_amounts(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $entry->update(['amount' => 75, 'amount_afn' => 5250]);
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee('Debit (AFN)')
+            ->assertSee('Credit (AFN)')
+            ->assertSee('75.00')
+            ->assertSee('5,250.00');
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
