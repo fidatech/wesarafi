@@ -712,6 +712,32 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertDontSee('Rejection reason');
     }
 
+    public function test_legacy_fx_close_only_disables_review_for_its_own_branch(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+        \App\Models\FxRate::create([
+            'branch_id' => $other->id,
+            'as_of' => $debit->date->toDateString(),
+            'type' => 'close',
+            'currency_id' => Currency::where('code', 'AFN')->value('id'),
+            'rate_afn_per_unit' => 1,
+        ]);
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee($debit->linked_id)
+            ->assertDontSee('Contains a closed business day')
+            ->assertSee('Approve group')
+            ->assertSee('Rejection reason');
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
