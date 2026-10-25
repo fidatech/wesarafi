@@ -199,6 +199,32 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertSame(1, $leg->settlements()->count());
     }
 
+    public function test_interbranch_audit_detects_missing_approval_journal_without_changing_obligation(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $expected = (float) $leg->amount;
+        Transaction::where('module_name', 'remittance')->where('module_id', $r->id)->forceDelete();
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $leg->debtor_branch_id);
+        $this->assertContains('missing_approval_journal', array_column($result['issues'], 'type'));
+        $this->assertEqualsWithDelta($expected, $leg->fresh()->outstanding, 0.0001);
+    }
+
+    public function test_interbranch_audit_detects_over_settlement_without_modifying_records(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $excess = (float) $leg->amount + 1;
+        $settlement = $leg->settlements()->create(['amount' => $excess, 'date' => '2026-09-14', 'exchange_rate_afn' => 1, 'created_by' => $this->mainUser->id]);
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $leg->debtor_branch_id);
+        $types = array_column($result['issues'], 'type');
+        $this->assertContains('invalid_obligation', $types);
+        $this->assertContains('missing_settlement_journal', $types);
+        $this->assertEqualsWithDelta($excess, (float) $settlement->fresh()->amount, 0.0001);
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
