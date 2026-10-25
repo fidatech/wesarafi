@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
 use Spatie\Permission\Models\Permission;
@@ -99,8 +100,10 @@ class RoleController extends Controller
 
         abort_if($request->name === 'Super Admin', 403, 'The Super Admin role is reserved.');
 
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        DB::transaction(function () use ($request) {
+            $role = Role::create(['name' => $request->name]);
+            $role->syncPermissions($request->permissions);
+        });
 
         return response()->json(['message' => 'Role created successfully.']);
     }
@@ -124,8 +127,10 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        DB::transaction(function () use ($role, $request) {
+            $role->update(['name' => $request->name]);
+            $role->syncPermissions($request->permissions);
+        });
 
         return response()->json(['message' => 'Role updated successfully.']);
     }

@@ -82,6 +82,29 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => 'Cashier Assistant']);
     }
 
+    public function test_role_create_and_update_persist_selected_permissions(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $permissions = Permission::query()->limit(2)->get();
+        $this->assertCount(2, $permissions);
+
+        $this->actingAs($admin)->postJson(route('configuration.roles.store'), [
+            'name' => 'Treasury Reviewer', 'permissions' => [$permissions[0]->id],
+        ])->assertOk();
+        $role = Role::findByName('Treasury Reviewer', 'web');
+        $this->assertTrue($role->hasPermissionTo($permissions[0]));
+
+        $this->putJson(route('configuration.roles.update', $role->id), [
+            'name' => 'Treasury Approver', 'permissions' => [$permissions[1]->id],
+        ])->assertOk();
+        $role->refresh();
+        $this->assertSame('Treasury Approver', $role->name);
+        $this->assertTrue($role->hasPermissionTo($permissions[1]));
+        $this->assertFalse($role->hasPermissionTo($permissions[0]));
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);
