@@ -33,6 +33,9 @@ class FinancialAuditHistoryController extends Controller
             ->where('causer_type', $user->getMorphClass())
             ->whereNotNull('causer_id')->distinct()->pluck('causer_id');
         $users = User::whereIn('id', $actorIds)->orderBy('name')->get(['id', 'name']);
+        if (isset($filters['user_id']) && ! $actorIds->contains((int) $filters['user_id'])) {
+            abort(403, 'Selected audit actor is outside this branch history.');
+        }
         $events = Activity::query()->with('causer')
             ->where('log_name', 'financial-audit')
             ->where('description', 'Historical closing integrity report export requested')
