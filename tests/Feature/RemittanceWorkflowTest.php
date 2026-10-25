@@ -68,6 +68,9 @@ class RemittanceWorkflowTest extends TestCase
         $leg = $r->legs()->firstOrFail();
         $clean = app(\App\Services\InterbranchSettlementAudit::class)->inspect($leg->debtor_branch_id);
         $this->assertSame(0, $clean['issue_count']);
+        $position = collect($clean['positions'])->first(fn ($row) => $row['debtor_branch_id'] === (int) $leg->debtor_branch_id && $row['creditor_branch_id'] === (int) $leg->creditor_branch_id);
+        $this->assertNotNull($position);
+        $this->assertEqualsWithDelta((float) $leg->amount, $position['outstanding'], 0.0001);
         $leg->settlements()->create(['amount' => 10, 'date' => '2026-09-14', 'exchange_rate_afn' => 1, 'created_by' => $this->mainUser->id]);
         $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect($leg->debtor_branch_id);
         $this->assertContains('missing_settlement_journal', array_column($result['issues'], 'type'));

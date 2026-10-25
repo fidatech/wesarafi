@@ -12,6 +12,7 @@ class InterbranchSettlementAudit
     {
         $issues = [];
         $checked = 0;
+        $positions = [];
         $legs = RemittanceLeg::query()
             ->with(['remittance', 'settlements'])
             ->when($branchId, fn ($query) => $query->where(fn ($q) => $q->where('debtor_branch_id', $branchId)->orWhere('creditor_branch_id', $branchId)))
@@ -21,6 +22,20 @@ class InterbranchSettlementAudit
             $checked++;
             $principal = (float) $leg->amount;
             $settled = round($leg->settlements->sum(fn ($row) => (float) $row->amount), 4);
+            $outstanding = round($principal - $settled, 4);
+            $currencyId = (int) ($leg->remittance?->currency_id ?? 0);
+            $pairKey = implode(':', [(int) $leg->debtor_branch_id, (int) $leg->creditor_branch_id, $currencyId]);
+            $positions[$pairKey] ??= [
+                'debtor_branch_id' => (int) $leg->debtor_branch_id,
+                'creditor_branch_id' => (int) $leg->creditor_branch_id,
+                'currency_id' => $currencyId,
+                'obligation' => 0.0,
+                'settled' => 0.0,
+                'outstanding' => 0.0,
+            ];
+            $positions[$pairKey]['obligation'] += $principal;
+            $positions[$pairKey]['settled'] += $settled;
+            $positions[$pairKey]['outstanding'] += $outstanding;
             if ($principal <= 0 || $settled < 0 || $settled > $principal + 0.00005) {
                 $issues[] = ['leg_id' => $leg->id, 'type' => 'invalid_obligation', 'amount' => $principal, 'settled' => $settled];
             }
@@ -40,6 +55,13 @@ class InterbranchSettlementAudit
             }
         }
 
-        return ['legs_checked' => $checked, 'issues' => $issues, 'issue_count' => count($issues)];
+        $positions = array_values(array_map(function (array $position): array {
+            foreach (['obligation', 'settled', 'outstanding'] as $field) {
+                $position[$field] = round($position[$field], 4);
+            }
+            return $position;
+        }, $positions));
+
+        return ['legs_checked' => $checked, 'positions' => $positions, 'issues' => $issues, 'issue_count' => count($issues)];
     }
 }
