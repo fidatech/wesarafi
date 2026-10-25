@@ -52,7 +52,7 @@ class JournalApprovalController extends Controller
         return view('journal.approvals.index', compact('groups', 'closedGroups'));
     }
 
-    private function authorizeGroup(Request $request, string $linked): void
+    private function authorizeGroup(Request $request, string $linked): \Illuminate\Database\Eloquent\Collection
     {
         abort_unless($request->user()->can('edit journal') || $request->user()->hasRole('Super Admin'), 403);
         $group = Transaction::withTrashed()->where('linked_id', $linked)->lockForUpdate()->get();
@@ -69,13 +69,15 @@ class JournalApprovalController extends Controller
             $credits = $group->where('direction', 'credit')->sum('amount_afn');
             abort_unless($group->every(fn ($entry) => in_array($entry->direction, ['debit', 'credit'], true)) && abs($debits - $credits) <= 0.02, 422, 'Unbalanced journal group cannot be approved.');
         }
+
+        return $group;
     }
 
     public function approve(Request $request, string $linked)
     {
         DB::transaction(function () use ($request, $linked) {
-            $this->authorizeGroup($request, $linked);
-            Transaction::where('linked_id', $linked)->where('approval_status', 'pending')->get()->each(
+            $group = $this->authorizeGroup($request, $linked);
+            $group->each(
                 fn ($entry) => $entry->update([
                     'approval_status' => 'approved', 'is_approved' => true,
                     'approved_by' => $request->user()->id, 'approved_at' => now(), 'rejection_reason' => null,
@@ -90,8 +92,8 @@ class JournalApprovalController extends Controller
     {
         $data = $request->validate(['reason' => 'required|string|max:1000']);
         DB::transaction(function () use ($request, $linked, $data) {
-            $this->authorizeGroup($request, $linked);
-            Transaction::where('linked_id', $linked)->where('approval_status', 'pending')->get()->each(
+            $group = $this->authorizeGroup($request, $linked);
+            $group->each(
                 fn ($entry) => $entry->update([
                     'approval_status' => 'rejected', 'is_approved' => false,
                     'approved_by' => null, 'approved_at' => null,
