@@ -1675,3 +1675,42 @@ select.is-invalid + .select2-container .select2-selection {
     .wes-compact .content-wrapper .pagination .page-link { min-width: 30px; min-height: 30px; padding: 4px 7px; }
     .wes-compact .content-wrapper :is(.dataTables_wrapper, .dt-container) :is(.dataTables_filter, .dt-search) { text-align: start; }
 }
+
+/* Financial report grids participate in the institutional system on screen.
+   Regulatory DAB statements, printable slips, and export templates retain their
+   document-specific layouts and are deliberately excluded. */
+@media screen {
+    .wes-compact .content-wrapper .report-table-wrap {
+        border: 1px solid var(--wes-table-border, #dce5ee);
+        border-radius: 10px;
+        background: var(--bs-body-bg, #fff);
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+    .wes-compact .content-wrapper .report-table-wrap > .report-table {
+        margin-bottom: 0;
+        width: 100%;
+    }
+    .wes-compact .content-wrapper .report-table-wrap .report-table > thead > tr > th {
+        background: var(--wes-table-head, #f1f5fa);
+        color: var(--wes-table-text, #263b54);
+        border-bottom: 1px solid var(--wes-table-border, #dce5ee);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: none;
+        letter-spacing: .01em;
+        white-space: nowrap;
+    }
+    .wes-compact .content-wrapper .report-table-wrap .report-table > tbody > tr:hover > * {
+        --bs-table-bg-state: rgba(27, 100, 154, .055);
+    }
+    .wes-compact .content-wrapper .report-table-wrap .report-table .number-cell {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+}
+[data-bs-theme="dark"] .wes-compact .content-wrapper .report-table-wrap {
+    --wes-table-border: #384658;
+    --wes-table-head: #253347;
+    --wes-table-text: #e0e9f3;
+}
