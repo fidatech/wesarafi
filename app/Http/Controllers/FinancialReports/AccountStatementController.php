@@ -15,6 +15,15 @@ class AccountStatementController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'from' => 'nullable|date', 'to' => 'nullable|date|after_or_equal:from',
+            'account_id' => 'nullable|integer|exists:accounts,id',
+            'currency_id' => 'nullable|integer|exists:currencies,id',
+            'branch_id' => 'nullable|integer|exists:branches,id',
+        ]);
+        $isSuper = $request->user()->hasRole('Super Admin');
+        abort_if(! $isSuper && ! $request->user()->branch_id, 403);
+        abort_if(! $isSuper && $request->filled('branch_id') && $request->integer('branch_id') !== (int) $request->user()->branch_id, 403);
         $from = $request->date('from')?->toDateString() ?? now()->startOfMonth()->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
         $accountId = $request->integer('account_id') ?: null;
@@ -22,6 +31,12 @@ class AccountStatementController extends Controller
         $branchId = $request->filled('branch_id')
             ? ($request->integer('branch_id') ?: null)
             : (auth()->user()->branch_id ?? null);
+
+        if ($accountId) {
+            $account = Account::findOrFail($accountId);
+            abort_if($branchId && (int) $account->branch_id !== (int) $branchId, 403);
+            abort_if(! $isSuper && (int) $account->branch_id !== (int) $request->user()->branch_id, 403);
+        }
 
         $transactions = collect();
         $openingBalance = 0.0;
@@ -59,7 +74,7 @@ class AccountStatementController extends Controller
             'accounts' => Account::when($branchId, fn ($query) => $query->where('branch_id', $branchId))
                 ->orderBy('full_name')->get(),
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => $isSuper ? Branch::orderBy('name')->get() : Branch::whereKey($request->user()->branch_id)->get(),
             'transactions' => $transactions,
             'openingBalance' => round($openingBalance, 2),
             'closingBalance' => round($closingBalance, 2),
