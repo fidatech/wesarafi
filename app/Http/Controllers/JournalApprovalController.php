@@ -75,6 +75,7 @@ class JournalApprovalController extends Controller
             Transaction::where('linked_id', $linked)->where('approval_status', 'pending')->get()->each(
                 fn ($entry) => $entry->update([
                     'approval_status' => 'rejected', 'is_approved' => false,
+                    'approved_by' => null, 'approved_at' => null,
                     'rejection_reason' => $data['reason'],
                 ])
             );

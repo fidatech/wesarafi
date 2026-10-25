@@ -303,6 +303,21 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee($visible->linked_id);
     }
 
+    public function test_rejection_clears_stale_approval_metadata_from_pending_entries(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $entry = $this->entry($branch->id);
+        $entry->update(['approved_by' => $reviewer->id, 'approved_at' => now()]);
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$entry->linked_id.'/reject', ['reason' => 'Invalid document'])->assertRedirect();
+        $entry->refresh();
+        $this->assertSame('rejected', $entry->approval_status);
+        $this->assertNull($entry->approved_by);
+        $this->assertNull($entry->approved_at);
+        $this->assertSame('Invalid document', $entry->rejection_reason);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
