@@ -11,18 +11,26 @@ class JournalApprovalController extends Controller
     public function index(Request $request)
     {
         abort_unless($request->user()->can('view journal') || $request->user()->hasRole('Super Admin'), 403);
-        $query = Transaction::with(['account', 'currency', 'chartOfAccount', 'createdBy'])
-            ->where('approval_status', 'pending')->orderByDesc('date');
         abort_if(! $request->user()->hasRole('Super Admin') && ! $request->user()->branch_id, 403);
-        // Never expose a partial cross-branch group as reviewable: approval and
-        // rejection require authorization over every entry sharing linked_id.
-        $groups = $query->get()->groupBy('linked_id');
+
+        // A reviewable journal is an entire pending group, not just its pending
+        // rows. Exclude groups containing finalized rows or foreign-branch rows.
+        $query = Transaction::with(['account', 'currency', 'chartOfAccount', 'createdBy'])
+            ->where('approval_status', 'pending')
+            ->whereNotIn('linked_id', Transaction::select('linked_id')->where(function ($query) {
+                $query->where('approval_status', '!=', 'pending')->orWhereNull('approval_status');
+            }))
+            ->orderByDesc('date');
+
         if (! $request->user()->hasRole('Super Admin')) {
             $branchId = (int) $request->user()->branch_id;
-            $groups = $groups->filter(fn ($rows) => $rows->every(
-                fn ($entry) => (int) $entry->branch_id === $branchId
-            ));
+            $query->where('branch_id', $branchId)
+                ->whereNotIn('linked_id', Transaction::select('linked_id')->where(function ($query) use ($branchId) {
+                    $query->where('branch_id', '!=', $branchId)->orWhereNull('branch_id');
+                }));
         }
+
+        $groups = $query->get()->groupBy('linked_id');
 
         return view('journal.approvals.index', ['groups' => $groups]);
     }

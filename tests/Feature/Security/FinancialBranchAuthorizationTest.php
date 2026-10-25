@@ -232,6 +232,23 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertSee($visible->linked_id);
     }
 
+    public function test_approval_list_hides_partially_finalized_group(): void
+    {
+        $branch = Branch::firstOrFail();
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole('Admin');
+        $pending = $this->entry($branch->id);
+        $finalized = $pending->replicate();
+        $finalized->direction = 'credit';
+        $finalized->approval_status = 'approved';
+        $finalized->is_approved = true;
+        $finalized->save();
+        $visible = $this->entry($branch->id);
+        $this->actingAs($user)->get('/journal/approvals')->assertOk()
+            ->assertDontSee($pending->linked_id)
+            ->assertSee($visible->linked_id);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
