@@ -383,6 +383,9 @@ class FinancialBranchAuthorizationTest extends TestCase
         $editor = User::factory()->create(['branch_id' => $branch->id]);
         $editor->givePermissionTo(['view journal', 'edit journal']);
         $entry = $this->entry($branch->id);
+        $credit = $entry->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
 
         $this->actingAs($editor)->get('/journal/approvals')->assertOk()
             ->assertSee($entry->linked_id)
@@ -447,6 +450,38 @@ class FinancialBranchAuthorizationTest extends TestCase
 
         $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
             ->assertSee('AFN difference: 25.00 (Unbalanced)');
+    }
+
+    public function test_unbalanced_group_shows_rejection_but_not_approval_action(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->amount_afn = 50;
+        $credit->save();
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee('Not eligible for approval')
+            ->assertDontSee('Approve group')
+            ->assertSee('Rejection reason');
+    }
+
+    public function test_balanced_two_line_group_keeps_approval_action(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee('Approve group')
+            ->assertDontSee('Not eligible for approval');
     }
 
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
