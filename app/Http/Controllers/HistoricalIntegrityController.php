@@ -19,6 +19,15 @@ class HistoricalIntegrityController extends Controller
         ]);
         $branchId = (int) ($filters['branch_id'] ?? ($request->user()->branch_id ?: 1));
         abort_unless($request->user()->hasRole('Super Admin') || $branchId === (int) ($request->user()->branch_id ?: 1), 403);
+        // Persist an audit record before streaming the CSV response.
+        activity('financial-audit')->causedBy($request->user())->withProperties([
+            'action' => 'historical_integrity_csv_export',
+            'branch_id' => $branchId,
+            'from' => $filters['from'] ?? null,
+            'to' => $filters['to'] ?? null,
+            'requested_at' => now()->toIso8601String(),
+            'ip_address' => $request->ip(),
+        ])->log('Historical closing integrity report export requested');
         $days = BusinessDay::query()->where('status', 'closed')->where('branch_id', $branchId)
             ->when(isset($filters['from']), fn ($q) => $q->whereDate('business_date', '>=', $filters['from']))
             ->when(isset($filters['to']), fn ($q) => $q->whereDate('business_date', '<=', $filters['to']))

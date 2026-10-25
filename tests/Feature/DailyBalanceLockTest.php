@@ -182,6 +182,14 @@ class DailyBalanceLockTest extends TestCase
         $user->assignRole('Super Admin');
         $response = $this->actingAs($user)->get(route('financial_reports.historical-integrity.export'));
         $response->assertOk()->assertDownload();
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'financial-audit',
+            'causer_id' => $user->id,
+            'description' => 'Historical closing integrity report export requested',
+        ]);
+        $log = \Spatie\Activitylog\Models\Activity::where('log_name', 'financial-audit')->latest('id')->firstOrFail();
+        $this->assertSame('historical_integrity_csv_export', $log->properties->get('action'));
+        $this->assertNotNull($log->properties->get('requested_at'));
         $this->actingAs($user)->get(route('financial_reports.historical-integrity.export', ['branch_id' => 999999]))
             ->assertSessionHasErrors('branch_id');
     }
