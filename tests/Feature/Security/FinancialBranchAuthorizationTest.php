@@ -289,6 +289,20 @@ class FinancialBranchAuthorizationTest extends TestCase
         }
     }
 
+    public function test_approval_list_hides_other_branch_group_even_for_view_only_user(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $viewer = User::factory()->create(['branch_id' => $branch->id]);
+        $viewer->givePermissionTo('view journal');
+        $foreign = $this->entry($other->id);
+        $visible = $this->entry($branch->id);
+
+        $this->actingAs($viewer)->get('/journal/approvals')->assertOk()
+            ->assertDontSee($foreign->linked_id)
+            ->assertSee($visible->linked_id);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
