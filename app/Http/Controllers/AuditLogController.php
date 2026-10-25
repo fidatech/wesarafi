@@ -11,12 +11,15 @@ class AuditLogController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->hasRole('Super Admin'), 403);
         $users = User::select('id', 'name')->get();
         return view('configuration.auditlogs.index', compact('users'));
     }
 
     public function data(Request $request)
     {
+        abort_unless($request->user()->hasRole('Super Admin'), 403);
+        $request->validate(['user_id' => 'nullable|integer|exists:users,id', 'date' => 'nullable|date', 'action' => 'nullable|string|max:255']);
         $query = Activity::with('causer')->latest();
 
         if ($request->filled('user_id')) {

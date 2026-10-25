@@ -227,7 +227,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('backups')->name('backups.')->middleware('role:Super Admin')->group(function () { Route::get('/', [BackupController::class, 'index'])->name('index'); Route::get('/download', [BackupController::class, 'download'])->name('download'); Route::post('/restore', [BackupController::class, 'restore'])->name('restore'); Route::post('/restore/apply', [BackupController::class, 'applyRestore'])->name('restore.apply'); });
 
         //Audit Log
-        Route::prefix('auditlogs')->name('auditlogs.')->middleware('auth')->group(function () {
+        Route::prefix('auditlogs')->name('auditlogs.')->middleware('role:Super Admin')->group(function () {
             Route::get('/', [AuditLogController::class, 'index'])->name('index');
             Route::get('/data', [AuditLogController::class, 'data'])->name('data');
         });

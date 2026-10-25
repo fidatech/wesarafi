@@ -209,6 +209,18 @@ class DailyBalanceLockTest extends TestCase
         $this->actingAs($user)->get(route('financial_reports.audit-export-history.index', ['user_id' => 999999]))->assertSessionHasErrors('user_id');
     }
 
+    public function test_general_audit_log_requires_super_admin_for_page_and_data(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $this->actingAs($user)->get(route('configuration.auditlogs.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('configuration.auditlogs.data'))->assertForbidden();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user)->get(route('configuration.auditlogs.index'))->assertOk();
+        $this->actingAs($user)->get(route('configuration.auditlogs.data'))->assertOk();
+    }
+
     public function test_audit_history_and_export_deny_cross_branch_and_unassigned_manager(): void
     {
         $this->seed();
