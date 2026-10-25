@@ -225,6 +225,40 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertEqualsWithDelta($excess, (float) $settlement->fresh()->amount, 0.0001);
     }
 
+    public function test_interbranch_audit_flags_deleted_settlement_journal(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        app(\App\Services\RemittanceWorkflowService::class)->settle($leg, [
+            'amount' => 25, 'date' => '2026-09-14', 'exchange_rate_afn' => 1,
+        ]);
+        $settlement = $leg->settlements()->firstOrFail();
+        $this->assertSame(0, app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $leg->debtor_branch_id)['issue_count']);
+        $entry = Transaction::where('module_name', 'remittance_settlement')->where('module_id', $settlement->id)->firstOrFail();
+        $entry->delete();
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $leg->debtor_branch_id);
+        $this->assertContains('deleted_journal_entry', array_column($result['issues'], 'type'));
+        $this->assertEqualsWithDelta(25, (float) $settlement->fresh()->amount, 0.0001);
+    }
+
+    public function test_interbranch_audit_flags_unbalanced_settlement_journal(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        app(\App\Services\RemittanceWorkflowService::class)->settle($leg, [
+            'amount' => 25, 'date' => '2026-09-14', 'exchange_rate_afn' => 1,
+        ]);
+        $settlement = $leg->settlements()->firstOrFail();
+        $entry = Transaction::where('module_name', 'remittance_settlement')->where('module_id', $settlement->id)->firstOrFail();
+        $entry->amount_afn = (float) $entry->amount_afn + 5;
+        $entry->save();
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $leg->debtor_branch_id);
+        $this->assertContains('unbalanced_journal', array_column($result['issues'], 'type'));
+        $this->assertEqualsWithDelta(25, (float) $settlement->fresh()->amount, 0.0001);
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
