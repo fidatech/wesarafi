@@ -200,6 +200,24 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertStringContainsString('&lt;SCRIPT&gt;', $html);
     }
 
+    public function test_oversized_role_names_are_rejected_before_database_writes(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $role = Role::create(['name' => 'Branch Reviewer', 'guard_name' => 'web']);
+        $oversizedName = str_repeat('x', 256);
+
+        $this->actingAs($admin)->postJson(route('configuration.roles.store'), [
+            'name' => $oversizedName, 'permissions' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors('name');
+        $this->putJson(route('configuration.roles.update', $role->id), [
+            'name' => $oversizedName, 'permissions' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors('name');
+        $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => 'Branch Reviewer']);
+        $this->assertDatabaseMissing('roles', ['name' => $oversizedName]);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

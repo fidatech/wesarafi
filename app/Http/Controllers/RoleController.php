@@ -93,7 +93,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:roles,name',
+            'name' => 'required|string|max:255|unique:roles,name',
             'permissions' => 'nullable|array',
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
@@ -122,7 +122,7 @@ class RoleController extends Controller
         abort_if($request->input('name') === 'Super Admin', 403, 'The Super Admin role name is reserved.');
 
         $request->validate([
-            'name' => 'required|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
             'permissions' => 'nullable|array',
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
