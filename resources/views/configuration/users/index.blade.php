@@ -139,8 +139,11 @@
             userTable.ajax.reload();
         });
 
-        $('#searchBox').on('keyup', function () {
-            userTable.ajax.reload();
+        // Avoid a server request for every keystroke on large user directories.
+        let searchTimer;
+        $('#searchBox').on('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => userTable.ajax.reload(), 300);
         });
     });
 

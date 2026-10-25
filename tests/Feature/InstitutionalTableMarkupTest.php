@@ -41,6 +41,15 @@ class InstitutionalTableMarkupTest extends TestCase
             'Username must not be rendered twice.');
     }
 
+    public function test_users_search_is_debounced_before_server_reload(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/users/index.blade.php'));
+
+        $this->assertStringContainsString("$('#searchBox').on('input'", $markup);
+        $this->assertStringContainsString('clearTimeout(searchTimer)', $markup);
+        $this->assertStringContainsString('setTimeout(() => userTable.ajax.reload(), 300)', $markup);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));
