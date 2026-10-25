@@ -173,6 +173,19 @@ class DailyBalanceLockTest extends TestCase
             ->assertSessionHasErrors('branch_id');
     }
 
+    public function test_historical_integrity_csv_export_is_permission_protected(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.export'))->assertForbidden();
+        $user->assignRole('Super Admin');
+        $response = $this->actingAs($user)->get(route('financial_reports.historical-integrity.export'));
+        $response->assertOk()->assertDownload();
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.export', ['branch_id' => 999999]))
+            ->assertSessionHasErrors('branch_id');
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();

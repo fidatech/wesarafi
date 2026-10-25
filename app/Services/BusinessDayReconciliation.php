@@ -19,14 +19,21 @@ class BusinessDayReconciliation
         $stored = $day->closing_snapshot['reconciliation'];
         $current = self::report($branchId, $date);
         $differences = [];
+        $comparisons = [];
         foreach (['cash_book_by_currency', 'ledger_totals_by_currency_and_direction', 'pending_approvals', 'invalid_journal_count'] as $field) {
+            $comparisons[$field] = [
+                'recorded' => $stored[$field] ?? null,
+                'recalculated' => $current[$field] ?? null,
+                'matches' => array_key_exists($field, $stored)
+                    && self::canonical($stored[$field]) === self::canonical($current[$field]),
+            ];
             if (! array_key_exists($field, $stored)) {
                 $differences[] = $field.' was not recorded in the closing snapshot.';
             } elseif (self::canonical($stored[$field]) !== self::canonical($current[$field])) {
                 $differences[] = $field.' differs from the finalized snapshot.';
             }
         }
-        return ['verifiable' => true, 'consistent' => $differences === [], 'differences' => $differences];
+        return ['verifiable' => true, 'consistent' => $differences === [], 'differences' => $differences, 'comparisons' => $comparisons];
     }
 
     private static function canonical(mixed $value): string
