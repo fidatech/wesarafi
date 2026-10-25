@@ -135,6 +135,39 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertEqualsWithDelta(0, $all['difference'], 0.02);
     }
 
+    public function test_profit_loss_totals_match_balance_sheet_current_profit_for_each_branch(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $reports = app(FinancialReportService::class);
+        foreach ([null, $this->turkey->id, $this->main->id, $this->mazar->id] as $branchId) {
+            $pnl = $reports->profitLoss('2026-01-01', '2026-09-14', $branchId);
+            $sheet = $reports->balanceSheet('2026-09-14', $branchId);
+            $this->assertEqualsWithDelta(
+                $pnl['income']['total']['total'] - $pnl['expenses']['total']['total'],
+                $pnl['net_profit']['total'], 0.02
+            );
+            $this->assertEqualsWithDelta(
+                $pnl['net_profit']['total'],
+                collect($sheet['equity']['rows'])->firstWhere('code', '3002-CALC')['columns']['total'], 0.02
+            );
+            $this->assertEqualsWithDelta(0, $sheet['difference']['total'], 0.50);
+        }
+    }
+
+    public function test_pending_remittance_does_not_change_financial_report_totals(): void
+    {
+        $reports = app(FinancialReportService::class);
+        $before = $reports->trialBalance('2026-09-14');
+        $pnlBefore = $reports->profitLoss('2026-01-01', '2026-09-14');
+        $this->store();
+        $after = $reports->trialBalance('2026-09-14');
+        $pnlAfter = $reports->profitLoss('2026-01-01', '2026-09-14');
+        $this->assertSame($before['total_debit'], $after['total_debit']);
+        $this->assertSame($before['total_credit'], $after['total_credit']);
+        $this->assertSame($pnlBefore['net_profit']['total'], $pnlAfter['net_profit']['total']);
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();
