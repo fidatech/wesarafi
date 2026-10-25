@@ -64,6 +64,24 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('roles', ['name' => 'Super Admin']);
     }
 
+    public function test_role_mutations_reject_unknown_permission_ids_without_partial_changes(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $role = Role::create(['name' => 'Cashier Assistant', 'guard_name' => 'web']);
+        $unknownPermission = (int) Permission::max('id') + 100;
+
+        $this->actingAs($admin)->postJson(route('configuration.roles.store'), [
+            'name' => 'Invalid Permissions Role', 'permissions' => [$unknownPermission],
+        ])->assertUnprocessable()->assertJsonValidationErrors('permissions.0');
+        $this->putJson(route('configuration.roles.update', $role->id), [
+            'name' => 'Renamed Cashier', 'permissions' => [$unknownPermission],
+        ])->assertUnprocessable()->assertJsonValidationErrors('permissions.0');
+        $this->assertDatabaseMissing('roles', ['name' => 'Invalid Permissions Role']);
+        $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => 'Cashier Assistant']);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

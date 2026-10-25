@@ -94,6 +94,7 @@ class RoleController extends Controller
         $request->validate([
             'name' => 'required|unique:roles,name',
             'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
         abort_if($request->name === 'Super Admin', 403, 'The Super Admin role is reserved.');
@@ -120,6 +121,7 @@ class RoleController extends Controller
         $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,
             'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
         $role->update(['name' => $request->name]);
