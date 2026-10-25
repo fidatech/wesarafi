@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\BusinessDay;
 use App\Services\BusinessDayReconciliation;
+use App\Services\InterbranchSettlementAudit;
 use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
 
@@ -41,6 +42,7 @@ class FinancialAuditDashboardController extends Controller
             ->when(isset($filters['to']), fn ($q) => $q->whereDate('created_at', '<=', $filters['to']));
         $exportCount = (clone $exports)->count();
         $recentExports = $exports->with('causer')->latest('id')->limit(10)->get();
-        return view('financial_reports.audit-dashboard', compact('counts', 'exportCount', 'recentExports', 'branches', 'branchId', 'filters'));
+        $interbranchAudit = app(InterbranchSettlementAudit::class)->inspect($branchId);
+        return view('financial_reports.audit-dashboard', compact('counts', 'exportCount', 'recentExports', 'branches', 'branchId', 'filters', 'interbranchAudit'));
     }
 }
