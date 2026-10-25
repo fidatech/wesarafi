@@ -61,6 +61,24 @@ class RemittanceWorkflowTest extends TestCase
         return $q->where('direction', 'debit')->sum('amount') - $q->where('direction', 'credit')->sum('amount');
     }
 
+    public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $before = Transaction::count();
+        try {
+            app(\App\Services\RemittanceWorkflowService::class)->settle($leg, [
+                'amount' => -10, 'date' => '2026-09-14', 'exchange_rate_afn' => 1,
+            ]);
+            $this->fail('Negative settlement must be rejected.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
+        $this->assertSame($before, Transaction::count());
+        $this->assertSame(0, $leg->settlements()->count());
+    }
+
     public function test_repeated_remittance_approval_preserves_existing_journal_and_state(): void
     {
         $remittance = $this->store();

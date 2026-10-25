@@ -93,7 +93,12 @@ class RemittanceWorkflowService
         DB::transaction(function () use ($leg, $data) {
             $r = Remittance::lockForUpdate()->findOrFail($leg->remittance_id);
             $leg = RemittanceLeg::lockForUpdate()->findOrFail($leg->id);
-            abort_unless(in_array($r->status, ['approved', 'completed']), 422, 'Approve the remittance before settling.');
+            abort_unless((int) $leg->remittance_id === (int) $r->id, 404);
+            abort_unless(in_array($r->status, ['approved', 'completed']) && (int) $r->workflow_version === 2, 422,
+                'This remittance must use the approved current ledger workflow before settlement.');
+            abort_unless(is_numeric($data['amount'] ?? null) && (float) $data['amount'] > 0, 422, 'Settlement amount must be positive.');
+            abort_unless(is_numeric($data['exchange_rate_afn'] ?? null) && (float) $data['exchange_rate_afn'] > 0, 422,
+                'Settlement exchange rate must be positive.');
             if ((float) $data['amount'] > $leg->outstanding) {
                 throw ValidationException::withMessages(['amount' => 'Settlement exceeds the outstanding branch debt.']);
             }
