@@ -156,6 +156,27 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertSame(0, $audit->inspect(999999)['legs_checked']);
     }
 
+    public function test_usd_partial_settlement_reconciles_both_ledgers_and_rejects_overpayment(): void
+    {
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        $r = $this->store(['currency_id' => $usd->id, 'exchange_rate_afn' => 70, 'amount' => 100, 'bridge_commission' => 0, 'receiver_branch_commission' => 0]);
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $leg = $r->legs()->firstOrFail();
+        $audit = app(\App\Services\InterbranchSettlementAudit::class);
+        $this->assertSame(0, $audit->inspect((int) $leg->debtor_branch_id)['issue_count']);
+        app(\App\Services\RemittanceWorkflowService::class)->settle($leg, ['amount' => 25, 'date' => '2026-09-14', 'exchange_rate_afn' => 70]);
+        $position = collect($audit->inspect((int) $leg->debtor_branch_id)['positions'])->first(fn ($row) => $row['currency_id'] === (int) $usd->id && $row['debtor_branch_id'] === (int) $leg->debtor_branch_id && $row['creditor_branch_id'] === (int) $leg->creditor_branch_id);
+        $this->assertNotNull($position);
+        $this->assertEqualsWithDelta(25, $position['settled'], 0.0001);
+        $this->assertEqualsWithDelta($position['outstanding'], $position['payable_ledger'], 0.0001);
+        $this->assertEqualsWithDelta($position['outstanding'], $position['receivable_ledger'], 0.0001);
+        $this->assertSame(0, $audit->inspect((int) $leg->debtor_branch_id)['issue_count']);
+        $before = Transaction::count();
+        $this->postJson('/remittances/'.$r->id.'/legs/'.$leg->id.'/settle', ['amount' => (float) $leg->fresh()->outstanding + 1, 'date' => '2026-09-14', 'exchange_rate_afn' => 70])->assertStatus(422);
+        $this->assertSame($before, Transaction::count());
+        $this->assertSame(1, $leg->settlements()->count());
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
