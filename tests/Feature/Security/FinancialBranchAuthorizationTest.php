@@ -484,6 +484,25 @@ class FinancialBranchAuthorizationTest extends TestCase
             ->assertDontSee('Not eligible for approval');
     }
 
+    public function test_group_with_soft_deleted_line_is_hidden_and_cannot_be_approved_or_rejected(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+        $credit->delete();
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertDontSee($debit->linked_id);
+        $this->post('/journal/approvals/'.$debit->linked_id.'/approve')->assertStatus(422);
+        $this->post('/journal/approvals/'.$debit->linked_id.'/reject', ['reason' => 'Incomplete'])->assertStatus(422);
+        $this->assertSame('pending', $debit->fresh()->approval_status);
+        $this->assertSame('pending', $credit->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();

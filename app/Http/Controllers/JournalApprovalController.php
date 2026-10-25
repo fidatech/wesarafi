@@ -17,15 +17,15 @@ class JournalApprovalController extends Controller
         // rows. Exclude groups containing finalized rows or foreign-branch rows.
         $query = Transaction::with(['account', 'currency', 'chartOfAccount', 'createdBy'])
             ->where('approval_status', 'pending')
-            ->whereNotIn('linked_id', Transaction::select('linked_id')->where(function ($query) {
-                $query->where('approval_status', '!=', 'pending')->orWhereNull('approval_status');
+            ->whereNotIn('linked_id', Transaction::withTrashed()->select('linked_id')->where(function ($query) {
+                $query->where('approval_status', '!=', 'pending')->orWhereNull('approval_status')->orWhereNotNull('deleted_at');
             }))
             ->orderByDesc('date');
 
         if (! $request->user()->hasRole('Super Admin')) {
             $branchId = (int) $request->user()->branch_id;
             $query->where('branch_id', $branchId)
-                ->whereNotIn('linked_id', Transaction::select('linked_id')->where(function ($query) use ($branchId) {
+                ->whereNotIn('linked_id', Transaction::withTrashed()->select('linked_id')->where(function ($query) use ($branchId) {
                     $query->where('branch_id', '!=', $branchId)->orWhereNull('branch_id');
                 }));
         }
@@ -38,8 +38,9 @@ class JournalApprovalController extends Controller
     private function authorizeGroup(Request $request, string $linked): void
     {
         abort_unless($request->user()->can('edit journal') || $request->user()->hasRole('Super Admin'), 403);
-        $group = Transaction::where('linked_id', $linked)->lockForUpdate()->get();
+        $group = Transaction::withTrashed()->where('linked_id', $linked)->lockForUpdate()->get();
         abort_if($group->isEmpty(), 404);
+        abort_if($group->contains(fn ($entry) => $entry->trashed()), 422, 'Journal groups containing deleted lines cannot be reviewed.');
         $isSuper = $request->user()->hasRole('Super Admin');
         abort_if(! $isSuper && ! $request->user()->branch_id, 403);
         abort_unless($isSuper || $group->every(fn ($entry) => (int) $entry->branch_id === (int) $request->user()->branch_id), 403);
