@@ -50,6 +50,16 @@ class InstitutionalTableMarkupTest extends TestCase
         $this->assertStringContainsString('setTimeout(() => userTable.ajax.reload(), 300)', $markup);
     }
 
+    public function test_branches_search_is_debounced_without_delaying_filters(): void
+    {
+        $markup = file_get_contents(resource_path('views/configuration/branches/index.blade.php'));
+
+        $this->assertStringContainsString("$('#searchBox').on('input'", $markup);
+        $this->assertStringContainsString('clearTimeout(searchTimer)', $markup);
+        $this->assertStringContainsString('setTimeout(() => table.ajax.reload(), 300)', $markup);
+        $this->assertStringContainsString("$('#filterType, #filterProvince').on('change'", $markup);
+    }
+
     public function test_page_scripts_wait_for_vite_globals(): void
     {
         $layout = file_get_contents(resource_path('views/layouts/layoutMaster.blade.php'));

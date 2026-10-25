@@ -184,8 +184,11 @@
             table.ajax.reload();
         });
 
-        $('#searchBox').on('keyup', function() {
-            table.ajax.reload();
+        // Debounce server-side search; filters still apply immediately.
+        let searchTimer;
+        $('#searchBox').on('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => table.ajax.reload(), 300);
         });
     });
 
