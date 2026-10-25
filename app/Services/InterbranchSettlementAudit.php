@@ -8,6 +8,26 @@ use App\Models\Transaction;
 /** Read-only checks of interbranch remittance obligations and settlement evidence. */
 class InterbranchSettlementAudit
 {
+    private function journalIssues(string $module, int $moduleId, int $legId): array
+    {
+        $entries = Transaction::withTrashed()->where('module_name', $module)->where('module_id', $moduleId)->get();
+        if ($entries->isEmpty()) {
+            return [['leg_id' => $legId, 'type' => 'missing_journal']];
+        }
+        $issues = [];
+        if ($entries->contains(fn ($entry) => $entry->trashed())) {
+            $issues[] = ['leg_id' => $legId, 'type' => 'deleted_journal_entry'];
+        }
+        foreach ($entries->groupBy('linked_id') as $group) {
+            $debit = round($group->where('direction', 'debit')->sum('amount_afn'), 2);
+            $credit = round($group->where('direction', 'credit')->sum('amount_afn'), 2);
+            if (abs($debit - $credit) > 0.02) {
+                $issues[] = ['leg_id' => $legId, 'type' => 'unbalanced_journal', 'debit_afn' => $debit, 'credit_afn' => $credit];
+            }
+        }
+        return $issues;
+    }
+
     public function inspect(?int $branchId = null): array
     {
         $issues = [];
@@ -44,6 +64,12 @@ class InterbranchSettlementAudit
             } elseif (! Transaction::withTrashed()->where('module_name', 'remittance')->where('module_id', $leg->remittance_id)->exists()) {
                 $issues[] = ['leg_id' => $leg->id, 'type' => 'missing_approval_journal'];
             }
+            if ($leg->remittance && in_array($leg->remittance->status, ['approved', 'completed'], true)) {
+                $issues = array_merge($issues, array_filter(
+                    $this->journalIssues('remittance', (int) $leg->remittance_id, (int) $leg->id),
+                    fn ($issue) => $issue['type'] !== 'missing_journal'
+                ));
+            }
             foreach ($leg->settlements as $settlement) {
                 if ((float) $settlement->amount <= 0) {
                     $issues[] = ['leg_id' => $leg->id, 'settlement_id' => $settlement->id, 'type' => 'invalid_settlement'];
@@ -51,6 +77,10 @@ class InterbranchSettlementAudit
                 $posted = Transaction::withTrashed()->where('module_name', 'remittance_settlement')->where('module_id', $settlement->id)->exists();
                 if (! $posted) {
                     $issues[] = ['leg_id' => $leg->id, 'settlement_id' => $settlement->id, 'type' => 'missing_settlement_journal'];
+                } else {
+                    foreach ($this->journalIssues('remittance_settlement', (int) $settlement->id, (int) $leg->id) as $issue) {
+                        $issues[] = $issue + ['settlement_id' => $settlement->id];
+                    }
                 }
             }
         }

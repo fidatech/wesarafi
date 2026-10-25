@@ -77,6 +77,17 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertEquals(10, $leg->settlements()->sum('amount'));
     }
 
+    public function test_interbranch_audit_detects_unbalanced_remittance_journal(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $entry = \App\Models\Transaction::where('module_name', 'remittance')->where('module_id', $r->id)->firstOrFail();
+        $entry->amount_afn = (float) $entry->amount_afn + 50;
+        $entry->save();
+        $result = app(\App\Services\InterbranchSettlementAudit::class)->inspect((int) $r->from_branch_id);
+        $this->assertContains('unbalanced_journal', array_column($result['issues'], 'type'));
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();
