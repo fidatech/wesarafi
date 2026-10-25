@@ -503,6 +503,20 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $credit->fresh()->approval_status);
     }
 
+    public function test_other_branch_soft_deleted_journal_does_not_disclose_group_state(): void
+    {
+        $branch = Branch::firstOrFail();
+        $other = Branch::whereKeyNot($branch->id)->firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $foreign = $this->entry($other->id);
+        $foreign->delete();
+
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$foreign->linked_id.'/approve')->assertForbidden();
+        $this->post('/journal/approvals/'.$foreign->linked_id.'/reject', ['reason' => 'Not mine'])->assertForbidden();
+        $this->assertSame('pending', $foreign->fresh()->approval_status);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();

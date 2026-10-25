@@ -40,10 +40,10 @@ class JournalApprovalController extends Controller
         abort_unless($request->user()->can('edit journal') || $request->user()->hasRole('Super Admin'), 403);
         $group = Transaction::withTrashed()->where('linked_id', $linked)->lockForUpdate()->get();
         abort_if($group->isEmpty(), 404);
-        abort_if($group->contains(fn ($entry) => $entry->trashed()), 422, 'Journal groups containing deleted lines cannot be reviewed.');
         $isSuper = $request->user()->hasRole('Super Admin');
         abort_if(! $isSuper && ! $request->user()->branch_id, 403);
         abort_unless($isSuper || $group->every(fn ($entry) => (int) $entry->branch_id === (int) $request->user()->branch_id), 403);
+        abort_if($group->contains(fn ($entry) => $entry->trashed()), 422, 'Journal groups containing deleted lines cannot be reviewed.');
         abort_unless($group->every(fn ($entry) => $entry->approval_status === 'pending'), 422, 'Only pending journal groups can be reviewed.');
         if ($request->routeIs('journal.approvals.approve')) {
             abort_unless($group->count() >= 2, 422, 'Journal group requires at least two entries.');
