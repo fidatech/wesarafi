@@ -116,6 +116,25 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertContains('interbranch_payable_ledger_mismatch', $issues);
     }
 
+    public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $reports = app(FinancialReportService::class);
+        $date = '2026-09-14';
+        $all = $reports->trialBalance($date);
+        $branchDebit = 0.0;
+        $branchCredit = 0.0;
+        foreach (Branch::query()->pluck('id') as $branchId) {
+            $branch = $reports->trialBalance($date, (int) $branchId);
+            $branchDebit += $branch['total_debit'];
+            $branchCredit += $branch['total_credit'];
+        }
+        $this->assertEqualsWithDelta($all['total_debit'], $branchDebit, 0.02);
+        $this->assertEqualsWithDelta($all['total_credit'], $branchCredit, 0.02);
+        $this->assertEqualsWithDelta(0, $all['difference'], 0.02);
+    }
+
     public function test_settlement_service_rejects_nonpositive_amount_without_posting(): void
     {
         $r = $this->store();
@@ -185,6 +204,9 @@ class RemittanceWorkflowTest extends TestCase
         $this->post('/remittances/'.$r->id.'/legs/'.$second->id.'/settle', ['amount' => 10100, 'date' => '2026-09-14'])->assertRedirect();
         $this->assertEquals(0, $first->outstanding);
         $this->assertEquals(0, $second->outstanding);
+        $settledAudit = app(\App\Services\InterbranchSettlementAudit::class)->inspect();
+        $this->assertSame(0, $settledAudit['issue_count'], json_encode($settledAudit['issues']));
+        $this->assertEqualsWithDelta(0, collect($settledAudit['positions'])->sum('outstanding'), 0.0001);
         $this->assertEquals(100, $this->net($this->main->id, '1000'));
         $this->assertEquals(0, $this->net($this->main->id, '1006'));
         $this->assertEquals(0, $this->net($this->main->id, '2002'));
