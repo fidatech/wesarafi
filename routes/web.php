@@ -396,6 +396,8 @@ Route::middleware('auth')->group(function () {
         });
     });
 
+    Route::get('financial-reports/historical-integrity', [\App\Http\Controllers\HistoricalIntegrityController::class, 'index'])->name('financial_reports.historical-integrity.index');
+
     Route::prefix('fx')->name('fx.')->group(function () {
         Route::get('/rates/meta',  [FxRateController::class, 'meta'])->name('rates.meta');   // defaults for date/branch
         Route::post('/rates/open', [FxRateController::class, 'setOpen'])->name('rates.open');

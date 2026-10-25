@@ -9,6 +9,12 @@
         <i class="bx bx-bar-chart-alt-2 icon-xl me-2"></i> Balance Sheet
     </button>
 
+    @if(auth()->user()?->hasRole('Super Admin') || auth()->user()?->can('manage business day'))
+    <button onclick="window.location='{{ route('financial_reports.historical-integrity.index') }}'" {{ request()->routeIs('financial_reports.historical-integrity.index') ? 'class=active' : '' }}>
+        <i class="bx bx-shield-quarter icon-xl me-2"></i> Closing Integrity
+    </button>
+    @endif
+
     <button onclick="window.location='{{ route('financial_reports.trial-balance.index') }}'" {{ request()->routeIs('financial_reports.trial-balance.index') ? 'class=active' : '' }}>
         <i class="bx bx-task icon-xl me-2"></i> Trial Balance
     </button>

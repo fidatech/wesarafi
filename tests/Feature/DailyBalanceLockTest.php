@@ -160,6 +160,19 @@ class DailyBalanceLockTest extends TestCase
         $this->assertSame($snapshot, $day->fresh()->closing_snapshot);
     }
 
+    public function test_historical_integrity_report_requires_permission_and_respects_branch_scope(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.index'))->assertForbidden();
+        $user->assignRole('Super Admin');
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.index'))
+            ->assertOk()->assertSee('Historical Closing Integrity');
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.index', ['branch_id' => 999999]))
+            ->assertSessionHasErrors('branch_id');
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
