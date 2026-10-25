@@ -31,8 +31,25 @@ class JournalApprovalController extends Controller
         }
 
         $groups = $query->get()->groupBy('linked_id');
+        $dayStates = [];
+        $closedGroups = [];
+        foreach ($groups as $linked => $rows) {
+            foreach ($rows as $row) {
+                $branchId = (int) $row->branch_id;
+                $date = $row->date?->toDateString();
+                if (! $branchId || ! $date) {
+                    continue;
+                }
+                $key = $branchId.':'.$date;
+                $dayStates[$key] ??= \App\Services\DailyBalanceState::forBranch($branchId, $date)['closed'];
+                if ($dayStates[$key]) {
+                    $closedGroups[$linked] = true;
+                    break;
+                }
+            }
+        }
 
-        return view('journal.approvals.index', ['groups' => $groups]);
+        return view('journal.approvals.index', compact('groups', 'closedGroups'));
     }
 
     private function authorizeGroup(Request $request, string $linked): void

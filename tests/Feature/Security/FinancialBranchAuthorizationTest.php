@@ -629,6 +629,28 @@ class FinancialBranchAuthorizationTest extends TestCase
         }
     }
 
+    public function test_closed_day_journal_group_shows_no_review_actions(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->save();
+        \App\Models\BusinessDay::create([
+            'branch_id' => $branch->id,
+            'business_date' => $debit->date->toDateString(),
+            'status' => 'closed',
+        ]);
+
+        $this->actingAs($reviewer)->get('/journal/approvals')->assertOk()
+            ->assertSee($debit->linked_id)
+            ->assertSee('Contains a closed business day')
+            ->assertDontSee('Approve group')
+            ->assertDontSee('Rejection reason');
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
