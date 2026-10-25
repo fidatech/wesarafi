@@ -165,6 +165,24 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         });
     }
 
+    public function test_permission_names_over_database_limit_are_rejected_without_mutation(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $permission = Permission::create(['name' => 'limited permission', 'guard_name' => 'web']);
+        $oversizedName = str_repeat('a', 256);
+
+        $this->actingAs($admin)->postJson(route('configuration.permissions.store'), [
+            'name' => $oversizedName,
+        ])->assertUnprocessable()->assertJsonValidationErrors('name');
+        $this->putJson(route('configuration.permissions.permissions.update', $permission->id), [
+            'name' => $oversizedName,
+        ])->assertUnprocessable()->assertJsonValidationErrors('name');
+        $this->assertDatabaseHas('permissions', ['id' => $permission->id, 'name' => 'limited permission']);
+        $this->assertDatabaseMissing('permissions', ['name' => $oversizedName]);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

@@ -39,7 +39,7 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:permissions,name',
+            'name' => 'required|string|max:255|unique:permissions,name',
         ]);
 
         Permission::create(['name' => $request->name, 'guard_name' => 'web']);
@@ -59,7 +59,7 @@ class PermissionController extends Controller
         $permission = Permission::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|unique:permissions,name,' . $permission->id,
+            'name' => 'required|string|max:255|unique:permissions,name,' . $permission->id,
         ]);
 
         $permission->update(['name' => $request->name]);
