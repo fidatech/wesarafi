@@ -96,6 +96,8 @@ class RoleController extends Controller
             'permissions' => 'nullable|array',
         ]);
 
+        abort_if($request->name === 'Super Admin', 403, 'The Super Admin role is reserved.');
+
         $role = Role::create(['name' => $request->name]);
         $role->syncPermissions($request->permissions);
 

@@ -35,6 +35,20 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertTrue($admin->fresh()->hasRole('Super Admin'));
     }
 
+    public function test_super_admin_role_name_cannot_be_recreated_after_missing_role(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $protected = Role::findByName('Super Admin', 'web');
+        $protected->delete();
+
+        $this->actingAs($admin)->post(route('configuration.roles.store'), [
+            'name' => 'Super Admin', 'permissions' => [],
+        ])->assertForbidden();
+        $this->assertDatabaseMissing('roles', ['name' => 'Super Admin']);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);
