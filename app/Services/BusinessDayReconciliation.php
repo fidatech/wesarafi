@@ -33,7 +33,29 @@ class BusinessDayReconciliation
                 $differences[] = $field.' differs from the finalized snapshot.';
             }
         }
-        return ['verifiable' => true, 'consistent' => $differences === [], 'differences' => $differences, 'comparisons' => $comparisons];
+        // Physical counts are recorded separately from the closing ledger snapshot.
+        // Compare only when an actual count was supplied; absence is not evidence of agreement.
+        $counts = $day->cash_counts;
+        $cashCountRecorded = is_array($counts) && $counts !== [];
+        $cashCountMatches = null;
+        if ($cashCountRecorded) {
+            $cashCountMatches = true;
+            $expected = $stored['cash_book_by_currency'] ?? [];
+            foreach ($expected as $currencyId => $balance) {
+                if (! array_key_exists($currencyId, $counts) || abs((float) $counts[$currencyId] - (float) $balance) >= 0.01) {
+                    $cashCountMatches = false;
+                }
+            }
+            foreach ($counts as $currencyId => $amount) {
+                if (! array_key_exists($currencyId, $expected) && abs((float) $amount) >= 0.01) {
+                    $cashCountMatches = false;
+                }
+            }
+            if (! $cashCountMatches) $differences[] = 'Recorded physical cash counts differ from the closing cash book.';
+        }
+        return ['verifiable' => true, 'consistent' => $differences === [], 'differences' => $differences,
+            'comparisons' => $comparisons, 'cash_count_recorded' => $cashCountRecorded,
+            'cash_count_matches_closing_book' => $cashCountMatches];
     }
 
     private static function canonical(mixed $value): string
