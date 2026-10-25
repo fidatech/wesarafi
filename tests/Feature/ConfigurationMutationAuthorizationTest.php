@@ -20,6 +20,21 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('roles', ['name' => 'Guest Attempt']);
     }
 
+    public function test_super_admin_role_cannot_be_renamed_or_deleted(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $protected = Role::findByName('Super Admin', 'web');
+
+        $this->actingAs($admin)->put(route('configuration.roles.update', $protected->id), [
+            'name' => 'Renamed Admin', 'permissions' => [],
+        ])->assertForbidden();
+        $this->delete(route('configuration.roles.destroy', $protected->id))->assertForbidden();
+        $this->assertDatabaseHas('roles', ['id' => $protected->id, 'name' => 'Super Admin']);
+        $this->assertTrue($admin->fresh()->hasRole('Super Admin'));
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

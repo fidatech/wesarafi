@@ -112,6 +112,7 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $role = Role::findOrFail($id);
+        abort_if($role->name === 'Super Admin', 403, 'The Super Admin role cannot be modified.');
 
         $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,
@@ -127,6 +128,7 @@ class RoleController extends Controller
     public function destroy($id)
     {
         $role = Role::findOrFail($id);
+        abort_if($role->name === 'Super Admin', 403, 'The Super Admin role cannot be deleted.');
         $role->syncPermissions([]);
 
         $role->delete();
