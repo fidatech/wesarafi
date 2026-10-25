@@ -46,6 +46,7 @@ class JournalApprovalController extends Controller
         abort_unless($group->every(fn ($entry) => $entry->approval_status === 'pending'), 422, 'Only pending journal groups can be reviewed.');
         if ($request->routeIs('journal.approvals.approve')) {
             abort_unless($group->count() >= 2, 422, 'Journal group requires at least two entries.');
+            abort_unless($group->every(fn ($entry) => (float) $entry->amount > 0 && (float) $entry->amount_afn > 0), 422, 'Journal entries must have positive amounts.');
             $debits = $group->where('direction', 'debit')->sum('amount_afn');
             $credits = $group->where('direction', 'credit')->sum('amount_afn');
             abort_unless($group->every(fn ($entry) => in_array($entry->direction, ['debit', 'credit'], true)) && abs($debits - $credits) <= 0.02, 422, 'Unbalanced journal group cannot be approved.');
