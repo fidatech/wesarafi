@@ -13,7 +13,8 @@ class JournalApprovalController extends Controller
         abort_unless($request->user()->can('view journal') || $request->user()->hasRole('Super Admin'), 403);
         $query = Transaction::with(['account', 'currency', 'chartOfAccount', 'createdBy'])
             ->where('approval_status', 'pending')->orderByDesc('date');
-        if ($request->user()->branch_id) {
+        abort_if(! $request->user()->hasRole('Super Admin') && ! $request->user()->branch_id, 403);
+        if (! $request->user()->hasRole('Super Admin')) {
             $query->where('branch_id', $request->user()->branch_id);
         }
 
@@ -25,7 +26,9 @@ class JournalApprovalController extends Controller
         abort_unless($request->user()->can('edit journal') || $request->user()->hasRole('Super Admin'), 403);
         $group = Transaction::where('linked_id', $linked)->lockForUpdate()->get();
         abort_if($group->isEmpty(), 404);
-        abort_unless($group->every(fn ($entry) => !$request->user()->branch_id || (int) $entry->branch_id === (int) $request->user()->branch_id), 403);
+        $isSuper = $request->user()->hasRole('Super Admin');
+        abort_if(! $isSuper && ! $request->user()->branch_id, 403);
+        abort_unless($isSuper || $group->every(fn ($entry) => (int) $entry->branch_id === (int) $request->user()->branch_id), 403);
         abort_unless($group->every(fn ($entry) => $entry->approval_status === 'pending'), 422, 'Only pending journal groups can be reviewed.');
         if ($request->routeIs('journal.approvals.approve')) {
             abort_unless($group->count() >= 2, 422, 'Journal group requires at least two entries.');
