@@ -60,7 +60,7 @@
                             </div>
                         </div>
 
-                        <table id="transactionsTable" class="table-bordered table-striped table">
+                        <div class="table-responsive wes-institutional-table"><table id="transactionsTable" class="table-bordered table-striped table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -74,7 +74,7 @@
                                     <th>Description</th>
                                 </tr>
                             </thead>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             </div>
