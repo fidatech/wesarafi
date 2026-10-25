@@ -116,6 +116,22 @@ class RemittanceWorkflowTest extends TestCase
         $this->assertContains('interbranch_payable_ledger_mismatch', $issues);
     }
 
+    public function test_interbranch_audit_detects_receivable_mismatch_independently(): void
+    {
+        $r = $this->store();
+        $this->post('/remittances/'.$r->id.'/approve')->assertRedirect();
+        $audit = app(\App\Services\InterbranchSettlementAudit::class);
+        $this->assertSame(0, $audit->inspect((int) $r->to_branch_id)['issue_count']);
+        $entry = Transaction::where('module_name', 'remittance')
+            ->where('direction', 'debit')
+            ->whereHas('chartOfAccount', fn ($q) => $q->where('code', '1006'))
+            ->firstOrFail();
+        $entry->amount = (float) $entry->amount + 25;
+        $entry->save();
+        $issues = array_column($audit->inspect((int) $entry->branch_id)['issues'], 'type');
+        $this->assertContains('interbranch_receivable_ledger_mismatch', $issues);
+    }
+
     public function test_consolidated_trial_balance_equals_sum_of_branch_trial_balances(): void
     {
         $r = $this->store();
