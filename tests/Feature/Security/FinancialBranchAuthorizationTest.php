@@ -517,6 +517,30 @@ class FinancialBranchAuthorizationTest extends TestCase
         $this->assertSame('pending', $foreign->fresh()->approval_status);
     }
 
+    public function test_approval_rolls_back_when_one_journal_line_belongs_to_closed_business_day(): void
+    {
+        $branch = Branch::firstOrFail();
+        $reviewer = User::factory()->create(['branch_id' => $branch->id]);
+        $reviewer->assignRole('Admin');
+        $debit = $this->entry($branch->id);
+        $credit = $debit->replicate();
+        $credit->direction = 'credit';
+        $credit->date = now('Asia/Kabul')->subDay()->toDateString();
+        $credit->save();
+        \App\Models\BusinessDay::create([
+            'branch_id' => $branch->id,
+            'business_date' => $credit->date->toDateString(),
+            'status' => 'closed',
+        ]);
+
+        $this->actingAs($reviewer)->post('/journal/approvals/'.$debit->linked_id.'/approve')
+            ->assertSessionHasErrors('business_day');
+        $this->assertSame('pending', $debit->fresh()->approval_status);
+        $this->assertSame('pending', $credit->fresh()->approval_status);
+        $this->assertNull($debit->fresh()->approved_by);
+        $this->assertNull($credit->fresh()->approved_by);
+    }
+
     public function test_admin_with_branch_assignment_cannot_approve_other_branch_journal(): void
     {
         $branch = Branch::firstOrFail();
