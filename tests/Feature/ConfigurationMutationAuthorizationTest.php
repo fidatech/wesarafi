@@ -218,6 +218,23 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('roles', ['name' => $oversizedName]);
     }
 
+    public function test_deleting_permission_clears_direct_user_grants(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $employee = User::factory()->create();
+        $permission = Permission::create(['name' => 'temporary direct grant', 'guard_name' => 'web']);
+        $employee->givePermissionTo($permission);
+
+        $this->actingAs($admin)->deleteJson(route('configuration.permissions.destroy', $permission->id))
+            ->assertOk();
+        $this->assertDatabaseMissing('permissions', ['id' => $permission->id]);
+        $this->assertDatabaseMissing('model_has_permissions', [
+            'model_id' => $employee->id, 'permission_id' => $permission->id,
+        ]);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Yajra\DataTables\DataTables;
 
@@ -71,7 +72,9 @@ class PermissionController extends Controller
     public function destroy($id)
     {
         $permission = Permission::findOrFail($id);
-        $permission->delete();
+        DB::transaction(function () use ($permission) {
+            $permission->delete();
+        });
 
         return response()->json(['success' => 'Permission deleted successfully.']);
     }
