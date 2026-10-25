@@ -10,6 +10,9 @@
     </button>
 
     @if(auth()->user()?->hasRole('Super Admin') || auth()->user()?->can('manage business day'))
+    <button onclick="window.location='{{ route('financial_reports.audit-export-history.index') }}'" {{ request()->routeIs('financial_reports.audit-export-history.index') ? 'class=active' : '' }}>
+        <i class="bx bx-history icon-xl me-2"></i> Audit Export History
+    </button>
     <button onclick="window.location='{{ route('financial_reports.historical-integrity.index') }}'" {{ request()->routeIs('financial_reports.historical-integrity.index') ? 'class=active' : '' }}>
         <i class="bx bx-shield-quarter icon-xl me-2"></i> Closing Integrity
     </button>

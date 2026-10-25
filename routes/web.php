@@ -396,6 +396,7 @@ Route::middleware('auth')->group(function () {
         });
     });
 
+    Route::get('financial-reports/audit-export-history', [\App\Http\Controllers\FinancialAuditHistoryController::class, 'index'])->name('financial_reports.audit-export-history.index');
     Route::get('financial-reports/historical-integrity/export', [\App\Http\Controllers\HistoricalIntegrityController::class, 'export'])->name('financial_reports.historical-integrity.export');
     Route::get('financial-reports/historical-integrity', [\App\Http\Controllers\HistoricalIntegrityController::class, 'index'])->name('financial_reports.historical-integrity.index');
 

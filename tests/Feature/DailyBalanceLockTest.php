@@ -194,6 +194,21 @@ class DailyBalanceLockTest extends TestCase
             ->assertSessionHasErrors('branch_id');
     }
 
+    public function test_financial_audit_export_history_is_authorized_filterable_and_branch_scoped(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $user->syncRoles([]);
+        $url = route('financial_reports.audit-export-history.index');
+        $this->actingAs($user)->get($url)->assertForbidden();
+        $user->assignRole('Super Admin');
+        $branchId = (int) ($user->branch_id ?: 1);
+        $this->actingAs($user)->get(route('financial_reports.historical-integrity.export', ['branch_id' => $branchId]))->assertOk();
+        $this->actingAs($user)->get($url)->assertOk()->assertSee('Financial Audit Export History')->assertSee('CSV requested');
+        $this->actingAs($user)->get(route('financial_reports.audit-export-history.index', ['user_id' => $user->id]))->assertOk()->assertSee('CSV requested');
+        $this->actingAs($user)->get(route('financial_reports.audit-export-history.index', ['user_id' => 999999]))->assertSessionHasErrors('user_id');
+    }
+
     public function test_day_transitions_and_post_close_mutation_lock(): void
     {
         $this->seed();
