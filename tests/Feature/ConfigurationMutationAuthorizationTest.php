@@ -122,6 +122,33 @@ class ConfigurationMutationAuthorizationTest extends TestCase
         $this->assertFalse($employee->fresh()->hasRole('Temporary Auditor'));
     }
 
+    public function test_deleting_missing_permission_returns_not_found(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $missingId = (int) Permission::max('id') + 100;
+
+        $this->actingAs($admin)->deleteJson(route('configuration.permissions.destroy', $missingId))
+            ->assertNotFound();
+    }
+
+    public function test_deleting_permission_removes_role_grant_but_preserves_role(): void
+    {
+        $this->seed();
+        $admin = User::factory()->create();
+        $admin->assignRole('Super Admin');
+        $role = Role::create(['name' => 'Temporary Reviewer', 'guard_name' => 'web']);
+        $permission = Permission::create(['name' => 'temporary review permission', 'guard_name' => 'web']);
+        $role->givePermissionTo($permission);
+
+        $this->actingAs($admin)->deleteJson(route('configuration.permissions.destroy', $permission->id))
+            ->assertOk();
+        $this->assertDatabaseMissing('permissions', ['id' => $permission->id]);
+        $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => 'Temporary Reviewer']);
+        $this->assertDatabaseMissing('role_has_permissions', ['role_id' => $role->id, 'permission_id' => $permission->id]);
+    }
+
     public function test_non_admin_cannot_change_roles_or_permissions(): void
     {
         Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);

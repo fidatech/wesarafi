@@ -68,7 +68,9 @@ class PermissionController extends Controller
 
     public function destroy($id)
     {
-        Permission::destroy($id);
+        $permission = Permission::findOrFail($id);
+        $permission->delete();
+
         return response()->json(['success' => 'Permission deleted successfully.']);
     }
 }
