@@ -50,6 +50,43 @@ class CustomerExchangeTest extends TestCase
         $this->assertEqualsWithDelta(68.75, (float) \App\Models\FxRateUpdate::where('source', 'manual')->firstOrFail()->rate_afn_per_unit, 0.000001);
     }
 
+    public function test_cross_currency_quote_uses_both_midpoints_and_records_pair_direction(): void
+    {
+        $branch = Branch::firstOrFail();
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        $eur = Currency::where('code', 'EUR')->first();
+        if (! $eur) $eur = Currency::create(['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€', 'is_active' => true]);
+        foreach ([[$usd, 68.5, 69.5], [$eur, 78.5, 79.5]] as [$currency, $buy, $sell]) {
+            \App\Models\FxRateUpdate::create([
+                'branch_id' => $branch->id, 'currency_id' => $currency->id,
+                'rate_date' => '2026-09-27', 'rate_afn_per_unit' => ($buy + $sell) / 2,
+                'buy_rate_afn' => $buy, 'sell_rate_afn' => $sell,
+                'source' => 'manual', 'recorded_at' => now(),
+            ]);
+        }
+        $this->getJson(route('exchange.customers.quote', [
+            'branch_id' => $branch->id, 'date' => '2026-09-27',
+            'from_currency_id' => $usd->id, 'to_currency_id' => $eur->id,
+        ]))->assertOk()->assertJsonPath('multiply_rate', 69 / 79);
+        $data = $this->payload();
+        $data['to_currency_id'] = $eur->id;
+        $data['rate_operator'] = 'divide';
+        $data['rate'] = 1.2;
+        $this->post(route('exchange.customers.store'), $data)->assertSessionHasNoErrors();
+        $exchange = CustomerExchange::latest('id')->firstOrFail();
+        $observation = \App\Models\FxRateUpdate::where('customer_exchange_id', $exchange->id)->firstOrFail();
+        $this->assertSame('divide', $observation->rate_operator);
+        $this->assertSame((int) $eur->id, (int) $observation->to_currency_id);
+        $this->assertEqualsWithDelta(1.2, (float) $observation->quoted_rate, 0.00000001);
+        $this->assertEqualsWithDelta(79 / 1.2, (float) $observation->rate_afn_per_unit, 0.00000001);
+        $admin = User::firstOrFail();
+        $admin->assignRole('Super Admin');
+        $this->actingAs($admin);
+        $this->post(route('exchange.customers.reverse', $exchange), ['reason' => 'Incorrect custom cross rate'])->assertRedirect();
+        $this->assertSame('reversed', $exchange->fresh()->status);
+        $this->assertSame(1, \App\Models\FxRateUpdate::where('customer_exchange_id', $exchange->id)->count());
+    }
+
     private function payload(): array
     {
         return [

@@ -50,7 +50,7 @@ class CustomerExchangeController extends Controller
     {
         if (Currency::whereKey($currencyId)->value('code') === 'AFN') return 1.0;
         $latest = FxRateUpdate::where('branch_id', $branchId)->where('currency_id', $currencyId)
-            ->whereDate('rate_date', '<=', $date)->whereNotNull('buy_rate_afn')->whereNotNull('sell_rate_afn')
+            ->whereDate('rate_date', '<=', $date)->where('recorded_at', '<=', now())->whereNotNull('buy_rate_afn')->whereNotNull('sell_rate_afn')
             ->orderByDesc('recorded_at')->orderByDesc('id')->first();
         if ($latest) return ((float) $latest->buy_rate_afn + (float) $latest->sell_rate_afn) / 2;
         return DailyValuationService::effectiveRate($date, 'close', $currencyId, $branchId);
