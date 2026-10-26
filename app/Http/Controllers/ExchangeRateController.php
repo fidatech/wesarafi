@@ -16,13 +16,13 @@ class ExchangeRateController extends Controller
         $date = $request->date('date')?->toDateString() ?? now()->toDateString();
         $rates = FxRate::where('branch_id', $branch)->whereDate('as_of', $date)->get()->groupBy('currency_id');
 
-        $updates = FxRateUpdate::with(['currency', 'creator'])->where('branch_id', $branch)
+        $updates = FxRateUpdate::with(['currency', 'toCurrency', 'creator'])->where('branch_id', $branch)
             ->whereDate('rate_date', $date)->orderByDesc('recorded_at')->orderByDesc('id')->paginate(50)->withQueryString();
         $latest = FxRateUpdate::where('branch_id', $branch)->whereDate('rate_date', $date)
             ->orderByDesc('recorded_at')->orderByDesc('id')->get()->unique('currency_id')->keyBy('currency_id');
 
         return view('exchange.rates.index', compact('branch', 'date', 'rates', 'updates', 'latest') + [
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => auth()->user()->hasRole('Super Admin') ? Branch::orderBy('name')->get() : Branch::whereKey($branch)->get(),
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
         ]);
     }

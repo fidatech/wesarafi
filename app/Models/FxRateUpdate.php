@@ -15,6 +15,11 @@ class FxRateUpdate extends Model
         return $this->belongsTo(Currency::class);
     }
 
+    public function toCurrency()
+    {
+        return $this->belongsTo(Currency::class, 'to_currency_id');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
