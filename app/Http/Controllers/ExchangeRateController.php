@@ -12,6 +12,7 @@ class ExchangeRateController extends Controller
     public function index(Request $request)
     {
         $branch = $request->filled('branch_id') ? $request->integer('branch_id') : auth()->user()->branch_id;
+        abort_unless(auth()->user()->hasRole('Super Admin') || (auth()->user()->branch_id && (int) auth()->user()->branch_id === (int) $branch), 403);
         $date = $request->date('date')?->toDateString() ?? now()->toDateString();
         $rates = FxRate::where('branch_id', $branch)->whereDate('as_of', $date)->get()->groupBy('currency_id');
 
@@ -32,11 +33,11 @@ class ExchangeRateController extends Controller
             'branch_id' => 'required|exists:branches,id',
             'date' => 'required|date|before_or_equal:today',
             'currency_id' => 'required|exists:currencies,id',
-            'rate' => 'required|numeric|min:0.000001',
+            'rate' => 'nullable|required_without_all:buy_rate,sell_rate|numeric|min:0.000001',
             'buy_rate' => 'nullable|required_with:sell_rate|numeric|min:0.000001',
             'sell_rate' => 'nullable|required_with:buy_rate|numeric|min:0.000001',
         ]);
-        abort_unless(auth()->user()->hasRole('Super Admin') || (int) auth()->user()->branch_id === (int) $data['branch_id'], 403);
+        abort_unless(auth()->user()->hasRole('Super Admin') || (auth()->user()->branch_id && (int) auth()->user()->branch_id === (int) $data['branch_id']), 403);
         $currency = Currency::findOrFail($data['currency_id']);
         if ($currency->code === 'AFN') {
             throw ValidationException::withMessages(['rate' => 'AFN is the base currency and remains 1.']);
@@ -71,6 +72,7 @@ class ExchangeRateController extends Controller
             'rates.*.open' => 'required|numeric|min:.000001',
             'rates.*.close' => 'nullable|numeric|min:.000001',
         ]);
+        abort_unless(auth()->user()->hasRole('Super Admin') || (auth()->user()->branch_id && (int) auth()->user()->branch_id === (int) $data['branch_id']), 403);
         $currencyIds = Currency::whereIn('id', array_keys($data['rates']))->pluck('id');
         if ($currencyIds->count() !== count($data['rates'])) {
             throw ValidationException::withMessages(['rates' => 'Select valid currencies.']);
