@@ -25,6 +25,12 @@ class DailyValuationService
     /** @var array<int,string|null> Request-local currency code memoization. */
     private static array $currencyCodeCache = [];
 
+    /** Clear request-local cached rates after direct rate writes. */
+    public static function clearEffectiveRateCache(): void
+    {
+        self::$effectiveRateCache = [];
+    }
+
     /** Save opening rates for a date/branch. $rates = [currency_id => AFN per unit]. */
     public static function setOpeningRates(string $date, int $branchId, array $rates): void
     {

@@ -44,6 +44,35 @@ class ExchangeRateTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_saving_official_rates_invalidates_valuation_rate_cache_without_overwriting_intraday_quotes(): void
+    {
+        $this->seed();
+        $user = User::firstOrFail();
+        $this->actingAs($user);
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        $branchId = (int) $user->branch_id;
+        $date = '2026-09-27';
+        $this->post(route('exchange.rates.store'), [
+            'branch_id' => $branchId, 'date' => $date,
+            'rates' => [$usd->id => ['open' => 70, 'close' => 71]],
+        ])->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(71, \App\Services\DailyValuationService::effectiveRate($date, 'close', $usd->id, $branchId), 0.000001);
+        $this->post(route('exchange.rates.intraday.store'), [
+            'branch_id' => $branchId, 'date' => $date,
+            'currency_id' => $usd->id, 'buy_rate' => 68, 'sell_rate' => 69,
+        ])->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(71, \App\Services\DailyValuationService::effectiveRate($date, 'close', $usd->id, $branchId), 0.000001);
+        $this->post(route('exchange.rates.store'), [
+            'branch_id' => $branchId, 'date' => $date,
+            'rates' => [$usd->id => ['open' => 70, 'close' => 72]],
+        ])->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(72, \App\Services\DailyValuationService::effectiveRate($date, 'close', $usd->id, $branchId), 0.000001);
+        $this->assertDatabaseHas('fx_rate_updates', [
+            'branch_id' => $branchId, 'currency_id' => $usd->id,
+            'rate_afn_per_unit' => 68.5, 'source' => 'manual',
+        ]);
+    }
+
     public function test_afn_is_fixed_at_one_and_custom_precision_is_preserved(): void
     {
         $this->seed();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Branch, Currency, FxRate, FxRateUpdate};
+use App\Services\DailyValuationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -80,13 +81,23 @@ class ExchangeRateController extends Controller
         DB::transaction(function () use ($data) {
             foreach ($data['rates'] as $currencyId => $rate) {
                 foreach (['open' => $rate['open'], 'close' => $rate['close'] ?? $rate['open']] as $type => $value) {
-                    FxRate::updateOrCreate([
-                        'branch_id' => $data['branch_id'], 'currency_id' => $currencyId,
-                        'as_of' => $data['date'], 'type' => $type,
-                    ], ['rate_afn_per_unit' => $value]);
+                    $existing = FxRate::where('branch_id', $data['branch_id'])
+                        ->where('currency_id', $currencyId)->whereDate('as_of', $data['date'])
+                        ->where('type', $type)->first();
+                    if ($existing) {
+                        $existing->update(['rate_afn_per_unit' => $value]);
+                    } else {
+                        FxRate::create([
+                            'branch_id' => $data['branch_id'], 'currency_id' => $currencyId,
+                            'as_of' => $data['date'], 'type' => $type,
+                            'rate_afn_per_unit' => $value,
+                        ]);
+                    }
                 }
             }
         });
+
+        DailyValuationService::clearEffectiveRateCache();
 
         return back()->with('success', 'Branch exchange rates saved.');
     }
