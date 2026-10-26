@@ -48,3 +48,8 @@ protects the decisions for core financial and identity tables.
 **Scope limit:** dynamic package-created tables, `Schema::table` changes, runtime
 foreign keys and MySQL connection isolation still require independent inspection
 and disposable-database tests. These checks are not proof of tenant isolation.
+
+## Runtime database inspection
+
+See `phase-01-runtime-schema-audit.md` for scoped local MySQL metadata counts,
+confirmed package tables, foreign-key implications and remaining two-tenant checks.
