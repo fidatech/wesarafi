@@ -32,15 +32,28 @@
                         <div class="container-fluid flex-grow-1 container-p-y">
                 @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
                 @if($businessDayView && $businessDayView['status'] === 'not_opened')
-                    <div class="alert alert-info wes-business-day-notice pt-2" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day opening required.</strong> Financial transactions are blocked until today’s opening rates are saved.
+                    <div class="alert alert-info wes-business-day-notice pt-2" role="status">
+                        <div class="wes-day-notice-icon" aria-hidden="true"><i class="bx bx-calendar-exclamation"></i></div>
+                        <div class="wes-day-notice-body">
+                            <div class="wes-day-notice-heading">Business day opening required</div>
+                            <p>Financial transactions are paused until today's opening rates are saved.</p>
+                            @unless(auth()->user()->hasRole('Super Admin') || auth()->user()->can('manage business day'))
+                                <p class="wes-day-notice-help">Ask your branch manager or an authorized administrator to open the business day.</p>
+                            @endunless
+                        </div>
                         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('manage business day'))
-                            <button type="button" class="btn btn-primary btn-sm ms-2" id="btnOpenBusinessDayRequired">Open business day</button>
-                        @else
-                            <span class="d-block small mt-1">Contact your branch manager or an authorized administrator to open the day.</span>
-                        @endif</div>
+                            <button type="button" class="btn btn-primary btn-sm wes-day-notice-action" id="btnOpenBusinessDayRequired">Open business day <i class="bx bx-right-arrow-alt ms-1" aria-hidden="true"></i></button>
+                        @endif
+                    </div>
                 @endif
                 @if($businessDayView && $businessDayView['closed'])
-                    <div class="alert alert-warning wes-business-day-notice pt-2" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
+                    <div class="alert alert-warning wes-business-day-notice wes-day-notice-closed pt-2" role="status">
+                        <div class="wes-day-notice-icon" aria-hidden="true"><i class="bx bx-lock-alt"></i></div>
+                        <div class="wes-day-notice-body">
+                            <div class="wes-day-notice-heading">Business day closed</div>
+                            <p>Changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</p>
+                        </div>
+                    </div>
                 @endif
 
 
