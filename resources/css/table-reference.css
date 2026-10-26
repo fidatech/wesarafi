@@ -201,3 +201,88 @@
   }
   html[data-bs-theme="dark"] .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > :is(.card-header,.card-footer) { background: #26354a; }
 }
+
+/* R-03: remove the stacked-panel appearance in account list workspaces.
+   One header surface + one content surface; filters and table belong to the
+   same content card rather than separate nested cards. */
+@media screen {
+  .wes-compact .content-wrapper .wes-accounts-ui {
+    background: transparent!important;
+    border: 0!important;
+    box-shadow: none!important;
+    padding: 0 12px 18px!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui > .wes-list-hero {
+    margin: 0 0 16px!important;
+    border-radius: 14px!important;
+    border: 1px solid #e0e8f2!important;
+    box-shadow: 0 4px 14px rgba(30,61,107,.035)!important;
+    background: linear-gradient(110deg,#fff,#f8fbff)!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui > .fb-main {
+    padding: 0!important;
+    margin: 0!important;
+    background: transparent!important;
+    border: 0!important;
+    box-shadow: none!important;
+    border-radius: 0!important;
+    min-height: 0;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .fb-main > .wes-accounts-table {
+    margin: 0!important;
+    padding: 18px!important;
+    border: 1px solid #dfe8f3!important;
+    border-radius: 14px!important;
+    background: #fff!important;
+    box-shadow: 0 6px 20px rgba(30,61,107,.045)!important;
+    overflow: visible;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters {
+    margin: 0 0 18px!important;
+    padding: 14px!important;
+    background: #f3f7fc!important;
+    border: 0!important;
+    border-radius: 10px!important;
+    box-shadow: none!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table > .wes-institutional-table {
+    background: #fff;
+    border: 1px solid #e0e8f2!important;
+    border-radius: 10px!important;
+    box-shadow: none!important;
+    overflow-x: auto;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table :is(.dt-container,.dataTables_wrapper) {
+    padding: 0!important;
+    background: transparent!important;
+    border: 0!important;
+    box-shadow: none!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table :is(.dt-layout-row,.dataTables_wrapper > .row) {
+    background: transparent!important;
+    border: 0!important;
+    box-shadow: none!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table :is(.dt-layout-row:first-child,.dataTables_wrapper > .row:first-child) {
+    margin: 0 0 12px!important;
+    padding: 0!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table :is(.dt-layout-row:last-child,.dataTables_wrapper > .row:last-child) {
+    margin: 12px 0 0!important;
+    padding: 0!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table { background: #fff!important; }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table thead th { background: #f0f5fc!important; }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table tbody td { background: #fff; }
+  @media (max-width: 767.98px) {
+    .wes-compact .content-wrapper .wes-accounts-ui { padding: 0 4px 12px!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui .fb-main > .wes-accounts-table { padding: 12px!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters { padding: 12px!important; margin-bottom: 12px!important; }
+  }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui > .wes-list-hero,
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .fb-main > .wes-accounts-table,
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table > .wes-institutional-table,
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table { background: #202d40!important; border-color: #35465e!important; }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters,
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table thead th { background: #26354a!important; }
+}
