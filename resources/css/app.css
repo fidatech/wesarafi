@@ -1993,3 +1993,24 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form .card-body { padding:1.2rem; }
 .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form :is(.form-control,.form-select) { border-radius:8px; }
 @media(max-width:767.98px){ .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero { padding:1rem!important; } .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table { padding:.75rem; } .wes-compact .content-wrapper .wes-exchange-reference :is(.exchange-filters,.wes-reference-filters) { padding:.75rem; } }
+
+/* UI-04: Remittance operational forms, approvals and settlement tables.
+   Opt-in shell class leaves receipt/PDF output and navigation unchanged. */
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-header { background:linear-gradient(125deg,var(--bs-body-bg,#fff),var(--bs-tertiary-bg,#f6faff)); border:1px solid #e0e8f2; border-radius:14px; padding:1.25rem 1.4rem; box-shadow:0 5px 18px rgba(30,61,107,.04); }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-header h4 { font-size:1.5rem; font-weight:800; letter-spacing:-.025em; color:var(--bs-heading-color,#183557); }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-header .btn { border-radius:9px; font-weight:650; padding:.6rem .9rem; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card { background:var(--bs-body-bg,#fff); border:1px solid #e0e8f2; border-radius:13px; box-shadow:0 5px 18px rgba(30,61,107,.035); overflow:hidden; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card > .card-header { background:var(--bs-tertiary-bg,#f5f8fc); border-bottom:1px solid #e4ebf5; padding:.9rem 1.1rem; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card > .card-header h5 { font-weight:750; color:var(--bs-heading-color,#183557); }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card > .card-body { padding:1.2rem; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card :is(.form-label,legend) { font-size:.8rem; font-weight:700; color:var(--bs-secondary-color,#425d7d); }
+.wes-compact .content-wrapper .wes-remittance-reference :is(.form-control,.form-select) { border-radius:8px; min-height:40px; background-color:var(--bs-body-bg,#fff); }
+.wes-compact .content-wrapper .wes-remittance-reference .btn { border-radius:8px; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table { border:1px solid #dce6f2; border-radius:9px; overflow-x:auto; margin:1rem; width:calc(100% - 2rem); }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table .table { margin-bottom:0; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table thead th { background:var(--bs-tertiary-bg,#eff5fc); padding:.85rem .75rem; font-size:.76rem; font-weight:750; color:var(--bs-heading-color,#253e5f); white-space:nowrap; border-bottom:1px solid #dce6f2; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table tbody td { padding:.85rem .75rem; vertical-align:middle; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-payment { border:1px solid #e0e8f2; border-radius:13px; overflow:hidden; background:var(--bs-body-bg,#fff); }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-payment .fb-inline-form-header { background:var(--bs-tertiary-bg,#f5f8fc); padding:1rem; border-bottom:1px solid #e4ebf5; }
+.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-payment .fb-inline-form-body { padding:1.2rem; }
+@media(max-width:767.98px){.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-header{padding:1rem}.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card>.card-body{padding:.85rem}.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table{margin:.7rem;width:calc(100% - 1.4rem)}}

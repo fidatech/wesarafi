@@ -1,4 +1,4 @@
-<div class="fb-inline-form-panel d-none" id="remittancePaymentPanel"><div class="fb-inline-form-header"><h5 class="mb-0">Pay Receiver · {{ $r->reference }}</h5><button type="button" class="btn btn-outline-secondary" data-wes-form-close>{{ __('Back to Details') }}</button></div><form method="POST" action="{{ route('remittances.complete',$r) }}" enctype="multipart/form-data" class="fb-inline-form-body">
+<div class="fb-inline-form-panel wes-remittance-payment d-none" id="remittancePaymentPanel"><div class="fb-inline-form-header"><h5 class="mb-0">Pay Receiver · {{ $r->reference }}</h5><button type="button" class="btn btn-outline-secondary" data-wes-form-close>{{ __('Back to Details') }}</button></div><form method="POST" action="{{ route('remittances.complete',$r) }}" enctype="multipart/form-data" class="fb-inline-form-body">
 @csrf
 @if(auth()->user()->branch_id != $r->to_branch_id)
 <div class="alert alert-info">Record this only after {{ $r->toBranch->name }} confirms it has paid the receiver.</div>

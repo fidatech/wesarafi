@@ -1,7 +1,7 @@
 @extends('layouts.layoutMaster')
 @section('title', 'Remittances')
 @section('content')
-<div class="row g-3"><div class="col-lg-2">@include('layouts.menu.remittance-sidebar')</div><div class="col-lg-10 fb-content">
+<div class="row g-3"><div class="col-lg-2">@include('layouts.menu.remittance-sidebar')</div><div class="col-lg-10 fb-content wes-remittance-reference">
 @if(session('success'))
 <div class="alert alert-success">{{ session('success') }}</div>
 @endif

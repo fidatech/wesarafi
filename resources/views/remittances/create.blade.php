@@ -1,6 +1,6 @@
 @extends('remittances.shell')
 @section('remittance-content')
-<div class="d-flex align-items-center justify-content-between mb-3"><div><h4 class="mb-1">{{ __('New Remittance') }}</h4><span class="text-muted">{{ __('Choose the route, add the parties, and review the payment.') }}</span></div><a href="{{ route('remittances.index') }}" class="btn btn-outline-secondary">{{ __('Back to List') }}</a></div>
+<div class="d-flex align-items-center justify-content-between mb-3 wes-remittance-header"><div><h4 class="mb-1">{{ __('New Remittance') }}</h4><span class="text-muted">{{ __('Choose the route, add the parties, and review the payment.') }}</span></div><a href="{{ route('remittances.index') }}" class="btn btn-outline-secondary">{{ __('Back to List') }}</a></div>
 <form method="POST" action="{{ route('remittances.store') }}" enctype="multipart/form-data" id="remittanceForm">
 @csrf
 <div class="row g-2 mb-3">
@@ -8,7 +8,7 @@
 <div class="col-md-4"><input type="radio" class="btn-check" name="direction" id="type-{{ $value }}" value="{{ $value }}" @checked(old('direction',request('direction','outgoing'))===$value)><label for="type-{{ $value }}" class="btn btn-outline-primary w-100 d-flex align-items-center gap-3 text-start py-3"><i class="bx {{ $choice[0] }} fs-3"></i><span><strong class="d-block">{{ __($choice[1]) }}</strong><small>{{ __($choice[2]) }}</small></span></label></div>
 @endforeach
 </div>
-<div class="card mb-3"><div class="card-header"><h5 class="mb-0">{{ __('Route & Date') }}</h5></div><div class="card-body row g-3">
+<div class="card mb-3 wes-remittance-card"><div class="card-header"><h5 class="mb-0">{{ __('Route & Date') }}</h5></div><div class="card-body row g-3">
 <div class="col-md-4"><label for="routing" class="form-label">{{ __('Routing') }}</label><select id="routing" name="routing_mode" class="form-select" required><option value="direct" @selected(old('routing_mode')==='direct')>{{ __('Direct branch to branch') }}</option><option value="via_main" @selected(old('routing_mode')==='via_main')>{{ __('Through Main Branch') }}</option></select></div>
 <div class="col-md-4"><label for="fromBranch" class="form-label">{{ __('From branch') }}</label><select id="fromBranch" name="from_branch_id" class="form-select" required><option value="">{{ __('Select branch') }}</option>
 @foreach($branches as $branch)
@@ -25,7 +25,7 @@
 </div></div>
 <div class="row g-3 mb-3">
 @foreach(['sender'=>'Sender','receiver'=>'Receiver'] as $party=>$label)
-<div class="col-xl-6"><div class="card h-100"><div class="card-header"><h5 class="mb-0">{{ __($label) }}</h5></div><div class="card-body row g-2">
+<div class="col-xl-6"><div class="card h-100 wes-remittance-card"><div class="card-header"><h5 class="mb-0">{{ __($label) }}</h5></div><div class="card-body row g-2">
 <div class="col-12"><label class="form-label" for="{{ $party }}Account">{{ __('Existing customer') }}</label><select id="{{ $party }}Account" name="{{ $party }}_account_id" class="form-select" data-old-id="{{ old($party.'_account_id') }}"><option value="">{{ __('New / enter details') }}</option></select><small class="text-muted" id="{{ $party }}AccountHint">{{ __('Search customers in the selected branch.') }}</small></div>
 @foreach(['name'=>'Full name','father_name'=>"Father’s name",'phone'=>'Phone','tazkira_number'=>'Tazkira / ID number'] as $field=>$text)
 <div class="col-md-6"><label class="form-label" for="{{ $party }}-{{ $field }}">{{ __($text) }}</label><input id="{{ $party }}-{{ $field }}" name="{{ $party }}_{{ $field }}" value="{{ old($party.'_'.$field) }}" class="form-control" @required($field==='name') maxlength="{{ $field==='phone'?50:($field==='tazkira_number'?100:255) }}"></div>
@@ -38,7 +38,7 @@
 </div></div></div>
 @endforeach
 </div>
-<div class="card mb-3"><div class="card-header"><h5 class="mb-0">{{ __('Amount & Commission') }}</h5></div><div class="card-body row g-3">
+<div class="card mb-3 wes-remittance-card"><div class="card-header"><h5 class="mb-0">{{ __('Amount & Commission') }}</h5></div><div class="card-body row g-3">
 <div class="col-md-3"><label for="currency" class="form-label">{{ __('Currency') }}</label><select name="currency_id" id="currency" class="form-select" required>
 @foreach($currencies as $currency)
 <option value="{{ $currency->id }}" data-code="{{ $currency->code }}" @selected(old('currency_id')==$currency->id)>{{ $currency->code }}</option>
