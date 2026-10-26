@@ -11,9 +11,9 @@
         {{-- Sidebar --}}
         <div class="col-lg-2">@include('layouts.menu.accounts-sidebar')</div>
         {{-- Main Content --}}
-        <div class="col-lg-10 fb-content">
+        <div class="col-lg-10 fb-content wes-accounts-ui">
             {{-- Sticky Header --}}
-            <div class="fb-header">
+            <div class="fb-header wes-accounts-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -31,7 +31,7 @@
             {{-- Scrollable Table Area --}}
             <div class="fb-main">
                 {{-- Table + Pagination --}}
-                <div class="fb-table-wrapper" id="tableCard">
+                <div class="fb-table-wrapper wes-accounts-table" id="tableCard">
                     <h4 class="card-title mb-3">All Branches Accounts List</h4>
 
                     <div class="table-responsive wes-institutional-table">

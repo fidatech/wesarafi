@@ -1945,3 +1945,25 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-ui-empty strong { display:block; color:var(--bs-heading-color,#243c5a); font-size:.95rem; }
 .wes-ui-empty span { display:block; margin-top:.35rem; font-size:.8rem; }
 @media(max-width:767.98px) { .wes-compact .content-wrapper .wes-ui-page-header { padding:1rem; } .wes-compact .content-wrapper .wes-ui-filter-card > .card-body { margin:.7rem; padding:.75rem; } .wes-compact .content-wrapper .wes-ui-table-card { padding:.7rem; } }
+
+/* UI-02 Accounts: unified institutional surfaces, scoped away from navigation. */
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-header { background:var(--bs-body-bg,#fff); border:1px solid #e0e8f2; border-radius:13px; padding:1.1rem 1.25rem; margin-bottom:1rem; box-shadow:0 4px 16px rgba(28,56,92,.035); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-header .btn { border-radius:9px; padding:.65rem 1rem; font-weight:650; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table { background:var(--bs-body-bg,#fff); border:1px solid #e0e8f2; border-radius:13px; padding:1.1rem; box-shadow:0 5px 17px rgba(28,56,92,.035); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table > .card-title,
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table > .d-flex .card-title { font-weight:750; font-size:1.08rem; color:var(--bs-heading-color,#183457); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .wes-institutional-table { border:1px solid #dce5f0; border-radius:9px; overflow-x:auto; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table table { margin-bottom:0; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table table thead th { background:var(--bs-tertiary-bg,#f0f5fc); color:var(--bs-heading-color,#243b59); font-weight:700; font-size:.76rem; padding:.85rem .8rem; white-space:nowrap; border-bottom:1px solid #dce5f0; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table table tbody td { padding:.8rem; vertical-align:middle; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .dataTables_wrapper :is(.dataTables_length,.dataTables_filter,.dataTables_info,.dataTables_paginate) { padding:.6rem .25rem; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .dataTables_wrapper :is(select,input) { border:1px solid #dce5f0; border-radius:8px; min-height:36px; background:var(--bs-body-bg,#fff); color:var(--bs-body-color); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters { background:var(--bs-tertiary-bg,#f5f8fc); border:1px solid #e6edf6; border-radius:10px; padding:1rem; margin-inline:0; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters .form-label { font-size:.77rem; font-weight:700; color:var(--bs-secondary-color,#45617e); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters :is(.form-select,.form-control) { background-color:var(--bs-body-bg,#fff); border-radius:8px; min-height:40px; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card { border:1px solid #e0e8f2; border-radius:13px; box-shadow:0 4px 16px rgba(28,56,92,.035); }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card .card-header { background:var(--bs-tertiary-bg,#f5f8fc); border-bottom:1px solid #e6edf6; padding:.85rem 1rem; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card .card-header h4 { font-size:1rem; font-weight:750; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card .card-body { padding:1.1rem; }
+.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card :is(.form-control,.form-select) { border-radius:8px; }
+@media(max-width:767.98px) { .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-header,.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table { padding:.85rem; } .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters { padding:.7rem; } }

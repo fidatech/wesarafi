@@ -11,9 +11,9 @@
         {{-- Sidebar --}}
         <div class="col-lg-2">@include('layouts.menu.accounts-sidebar')</div>
         {{-- Main Content --}}
-        <div class="col-lg-10 fb-content">
+        <div class="col-lg-10 fb-content wes-accounts-ui">
             {{-- Sticky Header --}}
-            <div class="fb-header">
+            <div class="fb-header wes-accounts-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -35,7 +35,7 @@
             {{-- Scrollable Table Area --}}
             <div class="fb-main">
                 {{-- Create Form --}}
-                <div class="card mb-4" id="createCard" style="display: none;">
+                <div class="card mb-4 wes-accounts-form-card" id="createCard" style="display: none;">
                     <div class="card-header text-dark py-2">
                         <h4 class="mb-0"><i class="bx bx-user-plus me-2"></i> Create Bank</h4>
                     </div>
@@ -53,7 +53,7 @@
                 </div>
 
                 {{-- Table + Pagination --}}
-                <div class="fb-table-wrapper" id="tableCard">
+                <div class="fb-table-wrapper wes-accounts-table" id="tableCard">
                     <h4 class="card-title mb-3">Banks List</h4>
                     <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered table align-middle nowrap" id="customersTable">

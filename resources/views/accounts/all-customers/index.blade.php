@@ -11,9 +11,9 @@
         {{-- Sidebar --}}
         <div class="col-lg-2">@include('layouts.menu.accounts-sidebar')</div>
         {{-- Main Content --}}
-        <div class="col-lg-10 fb-content">
+        <div class="col-lg-10 fb-content wes-accounts-ui">
             {{-- Sticky Header --}}
-            <div class="fb-header">
+            <div class="fb-header wes-accounts-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -31,12 +31,12 @@
             {{-- Scrollable Table Area --}}
             <div class="fb-main">
                 {{-- Table + Pagination --}}
-                <div class="fb-table-wrapper" id="tableCard">
+                <div class="fb-table-wrapper wes-accounts-table" id="tableCard">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h4 class="card-title mb-0">All Customers</h4>
                         <div class="d-flex gap-2"><button type="button" class="btn btn-outline-danger export-customers" data-format="pdf">Export PDF</button><button type="button" class="btn btn-outline-success export-customers" data-format="xlsx">Export Excel</button></div>
                     </div>
-                    <div class="row g-2 mb-3">
+                    <div class="row g-2 mb-3 wes-accounts-filters">
                         <div class="col-md-3"><label for="filterCustomerType" class="form-label">Type</label><select id="filterCustomerType" class="form-select"><option value="">All types</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name_en }}</option>@endforeach</select></div>
                         <div class="col-md-2"><label for="filterStatus" class="form-label">Status</label><select id="filterStatus" class="form-select"><option value="">All statuses</option><option value="1">Active</option><option value="0">Inactive</option></select></div>
                         <div class="col-md-2"><label for="filterBalance" class="form-label">Balance</label><select id="filterBalance" class="form-select"><option value="">All balances</option><option value="credit">Credit (Cr)</option><option value="debit">Debit (Dr)</option><option value="zero">Zero</option><option value="nonzero">Non-zero</option></select></div>
