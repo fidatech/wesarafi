@@ -641,3 +641,20 @@
   html[data-bs-theme="dark"] body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header { border-color: #35465e!important; }
   html[data-bs-theme="dark"] body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header h5 { color: #e4edfa; }
 }
+
+/* Exchange History: one compact card header, without a separate hero layer. */
+@media screen {
+  body.wes-compact .content-wrapper #exchangeHistory > .card-header {
+    padding: 12px 16px!important;
+    min-height: 0!important;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: transparent!important;
+    border-bottom: 1px solid #e7edf6!important;
+    box-shadow: none!important;
+  }
+  body.wes-compact .content-wrapper #exchangeHistory .wes-exchange-list-action { margin-inline-start: auto; }
+  body.wes-compact .content-wrapper #exchangeHistory .wes-exchange-list-action .btn { min-height: 34px; padding: .4rem .75rem; font-size: .83rem; }
+  body.wes-compact .content-wrapper #exchangeHistory .exchange-section-description { font-size: .8rem; }
+  html[data-bs-theme="dark"] body.wes-compact .content-wrapper #exchangeHistory > .card-header { border-color: #35465e!important; }
+}
