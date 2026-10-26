@@ -33,6 +33,8 @@ class ExchangeRateController extends Controller
             'date' => 'required|date|before_or_equal:today',
             'currency_id' => 'required|exists:currencies,id',
             'rate' => 'required|numeric|min:0.000001',
+            'buy_rate' => 'nullable|required_with:sell_rate|numeric|min:0.000001',
+            'sell_rate' => 'nullable|required_with:buy_rate|numeric|min:0.000001',
         ]);
         abort_unless(auth()->user()->hasRole('Super Admin') || (int) auth()->user()->branch_id === (int) $data['branch_id'], 403);
         $currency = Currency::findOrFail($data['currency_id']);
@@ -43,7 +45,10 @@ class ExchangeRateController extends Controller
             'branch_id' => $data['branch_id'],
             'currency_id' => $currency->id,
             'rate_date' => $data['date'],
-            'rate_afn_per_unit' => $data['rate'],
+            'rate_afn_per_unit' => isset($data['buy_rate'], $data['sell_rate']) ? ($data['buy_rate'] + $data['sell_rate']) / 2 : $data['rate'],
+            'buy_rate_afn' => $data['buy_rate'] ?? null,
+            'sell_rate_afn' => $data['sell_rate'] ?? null,
+            'source' => 'manual',
             'created_by' => auth()->id(),
             'recorded_at' => now(),
         ]);

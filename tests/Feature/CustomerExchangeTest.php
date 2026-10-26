@@ -20,6 +20,36 @@ class CustomerExchangeTest extends TestCase
         Storage::fake('local');
     }
 
+    public function test_quote_uses_buy_sell_midpoint_and_custom_exchange_is_recorded(): void
+    {
+        $branch = Branch::firstOrFail();
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        $afn = Currency::where('code', 'AFN')->firstOrFail();
+        \App\Models\FxRateUpdate::create([
+            'branch_id' => $branch->id, 'currency_id' => $usd->id,
+            'rate_date' => '2026-09-27', 'rate_afn_per_unit' => 68.75,
+            'buy_rate_afn' => 68.5, 'sell_rate_afn' => 69,
+            'source' => 'manual', 'recorded_at' => now(),
+        ]);
+        $this->getJson(route('exchange.customers.quote', [
+            'branch_id' => $branch->id, 'date' => '2026-09-27',
+            'from_currency_id' => $usd->id, 'to_currency_id' => $afn->id,
+        ]))->assertOk()->assertJsonPath('multiply_rate', 68.75);
+
+        $payload = $this->payload();
+        $payload['rate'] = 68.9;
+        $this->post(route('exchange.customers.store'), $payload)->assertSessionHasNoErrors();
+        $exchange = CustomerExchange::latest('id')->firstOrFail();
+        $this->assertDatabaseHas('fx_rate_updates', [
+            'branch_id' => $branch->id, 'currency_id' => $usd->id,
+            'to_currency_id' => $afn->id, 'source' => 'customer_exchange',
+            'customer_exchange_id' => $exchange->id, 'rate_operator' => 'multiply',
+        ]);
+        $this->assertEqualsWithDelta(68.9, (float) $exchange->rate, 0.000001);
+        $this->assertEqualsWithDelta(68.75, (float) $exchange->system_rate, 0.000001);
+        $this->assertEqualsWithDelta(68.75, (float) \App\Models\FxRateUpdate::where('source', 'manual')->firstOrFail()->rate_afn_per_unit, 0.000001);
+    }
+
     private function payload(): array
     {
         return [

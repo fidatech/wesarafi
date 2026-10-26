@@ -7,6 +7,7 @@ use App\Models\AccountSubCategory;
 use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CustomerExchange;
+use App\Models\FxRateUpdate;
 use App\Models\Transaction;
 use App\Services\DailyValuationService;
 use App\Services\OperationalLedgerService;
@@ -45,6 +46,16 @@ class CustomerExchangeController extends Controller
         ]);
     }
 
+    private function midpointRate(string $date, int $currencyId, int $branchId): float
+    {
+        if (Currency::whereKey($currencyId)->value('code') === 'AFN') return 1.0;
+        $latest = FxRateUpdate::where('branch_id', $branchId)->where('currency_id', $currencyId)
+            ->whereDate('rate_date', '<=', $date)->whereNotNull('buy_rate_afn')->whereNotNull('sell_rate_afn')
+            ->orderByDesc('recorded_at')->orderByDesc('id')->first();
+        if ($latest) return ((float) $latest->buy_rate_afn + (float) $latest->sell_rate_afn) / 2;
+        return DailyValuationService::effectiveRate($date, 'close', $currencyId, $branchId);
+    }
+
     public function quote(Request $request)
     {
         $data = $request->validate([
@@ -54,8 +65,8 @@ class CustomerExchangeController extends Controller
         ]);
         $branchId = $this->authorizedBranchId();
         abort_if($branchId && $branchId !== (int) $data['branch_id'], 403);
-        $fromRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['from_currency_id'], (int) $data['branch_id']);
-        $toRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['to_currency_id'], (int) $data['branch_id']);
+        $fromRate = $this->midpointRate($data['date'], (int) $data['from_currency_id'], (int) $data['branch_id']);
+        $toRate = $this->midpointRate($data['date'], (int) $data['to_currency_id'], (int) $data['branch_id']);
 
         return response()->json([
             'from_rate_afn' => $fromRate, 'to_rate_afn' => $toRate,
@@ -98,10 +109,11 @@ class CustomerExchangeController extends Controller
         if (! empty($data['customer_id'])) {
             abort_unless(Account::whereKey($data['customer_id'])->where('branch_id', $data['branch_id'])->exists(), 403);
         }
-        $fromRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['from_currency_id'], (int) $data['branch_id']);
-        $toRate = DailyValuationService::effectiveRate($data['date'], 'close', (int) $data['to_currency_id'], (int) $data['branch_id']);
+        $fromRate = $this->midpointRate($data['date'], (int) $data['from_currency_id'], (int) $data['branch_id']);
+        $toRate = $this->midpointRate($data['date'], (int) $data['to_currency_id'], (int) $data['branch_id']);
         $data['to_amount'] = $data['rate_operator'] === 'divide' ? $data['from_amount'] / $data['rate'] : $data['from_amount'] * $data['rate'];
-        $data['system_rate'] = $data['system_rate'] ?? ($data['rate_operator'] === 'divide' ? $toRate / $fromRate : $fromRate / $toRate);
+        $defaultRate = $data['rate_operator'] === 'divide' ? $toRate / $fromRate : $fromRate / $toRate;
+        $data['system_rate'] = $data['system_rate'] ?? $defaultRate;
         $data['system_to_amount'] = $data['rate_operator'] === 'divide' ? $data['from_amount'] / $data['system_rate'] : $data['from_amount'] * $data['system_rate'];
         $data['rate_variance_percent'] = $data['system_rate'] ? (($data['rate'] - $data['system_rate']) / $data['system_rate']) * 100 : 0;
         $fromAfn = $data['from_amount'] * $fromRate;
@@ -114,7 +126,7 @@ class CustomerExchangeController extends Controller
 
         $idCardPath = null;
         try {
-            DB::transaction(function () use ($data, $ledger, $fromRate, $toRate, $fromAfn, $toAfn, $customerData, $request, &$idCardPath) {
+            DB::transaction(function () use ($data, $ledger, $fromRate, $toRate, $fromAfn, $toAfn, $customerData, $request, $defaultRate, &$idCardPath) {
                 if (empty($data['customer_id'])) {
                     $category = AccountSubCategory::where('name_en', 'Temporary Customer')->where('type', 'customer')->lockForUpdate()->firstOrFail();
                     $customerCode = 'TEMP-'.(Account::where('type', 'customer')->where('account_sub_category_id', $category->id)->count() + 1);
@@ -135,6 +147,21 @@ class CustomerExchangeController extends Controller
                     $data['customer_id'] = $customer->id;
                 }
                 $exchange = CustomerExchange::create($data);
+                if (abs((float) $data['rate'] - $defaultRate) > 0.00000001) {
+                    // Preserve the quoted currency pair and operator. The normalized AFN
+                    // rate is an observation, not an official buy/sell valuation quote.
+                    $normalized = $data['rate_operator'] === 'divide'
+                        ? $toRate / (float) $data['rate']
+                        : $toRate * (float) $data['rate'];
+                    FxRateUpdate::create([
+                        'branch_id' => $data['branch_id'], 'currency_id' => $data['from_currency_id'],
+                        'to_currency_id' => $data['to_currency_id'], 'rate_date' => $data['date'],
+                        'rate_afn_per_unit' => $normalized, 'quoted_rate' => $data['rate'],
+                        'rate_operator' => $data['rate_operator'], 'source' => 'customer_exchange',
+                        'customer_exchange_id' => $exchange->id, 'created_by' => auth()->id(),
+                        'recorded_at' => now(),
+                    ]);
+                }
                 $base = ['linked_id' => $data['linked_id'], 'date' => $data['date'], 'branch_id' => $data['branch_id'], 'module_name' => 'customer_exchange', 'module_id' => $exchange->id, 'created_by' => auth()->id(), 'account_id' => $data['customer_id'], 'accountable_type' => $data['customer_id'] ? Account::class : null, 'accountable_id' => $data['customer_id'], 'description' => $data['description'] ?? 'Customer currency exchange'];
                 $lines = [
                     ['currency_id' => $data['from_currency_id'], 'chart_of_account_id' => $ledger->coa('1000'), 'amount' => $data['from_amount'], 'exchange_rate_afn' => $fromRate, 'amount_afn' => $fromAfn, 'direction' => 'debit', 'is_safe' => 1],

@@ -31,7 +31,7 @@ Generated from static `Schema::create` calls in repository migrations; dynamic p
 | `fx_daily_valuations` | Tenant | `2025_08_10_221029_create_fx_daily_valuations_table.php` |
 | `fx_positions` | Tenant | `2025_08_10_222458_create_fx_positions_table.php` |
 | `fx_rates` | Tenant | `2025_08_10_220943_create_fx_rates_table.php` |
-| `fx_rate_updates` | Tenant | `2026_10_26_230000_create_fx_rate_updates_table.php` |
+| `fx_rate_updates` | Tenant | `2026_10_26_230000_create_fx_rate_updates_table.php`, `2026_10_27_000000_add_quote_metadata_to_fx_rate_updates.php` |
 | `income_sources` | Tenant | `2025_06_21_022714_create_income_sources_table.php` |
 | `job_batches` | Infrastructure — review connection | `0001_01_01_000002_create_jobs_table.php` |
 | `jobs` | Infrastructure — review connection | `0001_01_01_000002_create_jobs_table.php` |
