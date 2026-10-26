@@ -9,14 +9,15 @@
     <div class="row g-3">
         <div class="col-lg-2">@include('layouts.menu.accounting-sidebar')</div>
         <div class="col-lg-10 fb-content">
-            <div class="fb-header d-flex justify-content-between align-items-center mb-3">
+
+            <div class="fb-main">
+                <div class="card">
+                <div class="fb-header d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Expenses</h5>
                 <button class="btn btn-primary" data-wes-form-target="#expenseFormPanel" onclick="resetExpenseForm()">
                     <i class="bi bi-plus-circle me-1"></i> Add Expense
                 </button>
             </div>
-            <div class="fb-main">
-                <div class="card">
                     <div class="card-body">
                         <div class="row mb-3" id="expenseSummary">
                             <div class="col-md-4 col-sm-6 mb-2">

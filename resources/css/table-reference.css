@@ -579,3 +579,32 @@
   .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header .btn { margin-inline-start: auto; }
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header { border-color: #35465e!important; }
 }
+
+/* Accounting and Journal list headers live within their existing cards. */
+@media screen {
+  .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header {
+    display: flex!important;
+    align-items: center!important;
+    justify-content: space-between!important;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 0!important;
+    padding: 11px 14px!important;
+    margin: 0!important;
+    background: transparent!important;
+    border: 0!important;
+    border-bottom: 1px solid #e7edf6!important;
+    border-radius: 0!important;
+    box-shadow: none!important;
+  }
+  .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header > div {
+    display: flex!important;
+    align-items: center!important;
+    justify-content: space-between!important;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header .btn { margin-inline-start: auto; }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header { border-color: #35465e!important; }
+}

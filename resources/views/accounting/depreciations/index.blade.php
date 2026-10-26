@@ -9,7 +9,11 @@
     <div class="row g-3">
         <div class="col-lg-2">@include('layouts.menu.accounting-sidebar')</div>
         <div class="col-lg-10 fb-content">
-            <div class="fb-header">
+
+
+            <div class="fb-main">
+                <div class="card">
+                <div class="fb-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -26,9 +30,6 @@
                     </button>
                 </div>
             </div>
-
-            <div class="fb-main">
-                <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-3">Depreciation</h4>
                         <div class="table-responsive wes-institutional-table">

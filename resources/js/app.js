@@ -110,6 +110,22 @@ $(function () {
         card.classList.add('wes-integrated-card');
     });
 
+    // Specialized list cards also have Blade-native headers now.
+    document.querySelectorAll('.fb-main > .card > .fb-header').forEach(header => {
+        const card = header.parentElement;
+        header.classList.add('wes-blade-card-header');
+        card.classList.add('wes-integrated-card');
+        header.querySelector('nav[aria-label="breadcrumb"]')?.remove();
+        const title = header.querySelector('h1,h2,h3,h4,h5,h6');
+        if (title) title.classList.add('wes-integrated-card-title');
+        else {
+            const h = document.createElement('h4');
+            h.className = 'wes-integrated-card-title';
+            h.textContent = document.title.split(' - ')[0] || 'Records';
+            header.prepend(h);
+        }
+    });
+
     // Reuse the real action controls in each list card header. This supports
     // plain table wrappers and list cards nested inside a Bootstrap row.
     document.querySelectorAll('.fb-content').forEach(content => {
