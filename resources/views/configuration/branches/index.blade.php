@@ -18,7 +18,12 @@
     {{-- Main Content --}}
     <div class="col-lg-10 fb-content">
         {{-- Sticky Header --}}
-        <div class="fb-header">
+
+
+        {{-- Filter + Table --}}
+        <div class="fb-main">
+            <div class="fb-table-wrapper">
+                <div class="fb-header">
             <div class="d-flex justify-content-between align-items-center">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
@@ -35,10 +40,6 @@
                 </button>
             </div>
         </div>
-
-        {{-- Filter + Table --}}
-        <div class="fb-main">
-            <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Branches</h4>
 
                 <div class="row g-3 mb-3">

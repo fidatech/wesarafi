@@ -9,24 +9,7 @@
 <div class="row g-3">
     <div class="col-lg-2">@include('layouts.menu.hr-sidebar')</div>
     <div class="col-lg-10 fb-content">
-        <div class="fb-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
-                                <i class="bx bx-home-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active">Employees</li>
-                    </ol>
-                </nav>
 
-                <button class="btn btn-primary" data-wes-form-target="#employeeFormPanel" onclick="resetEmployeeForm()">
-                    <i class="bx bx-user-plus me-1"></i> Add Employee
-                </button>
-            </div>
-        </div>
 
         <div class="fb-main">
             <div class="row mb-3">
@@ -56,6 +39,24 @@
             </div>
 
             <div class="fb-table-wrapper">
+                <div class="fb-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
+                                <i class="bx bx-home-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Employees</li>
+                    </ol>
+                </nav>
+
+                <button class="btn btn-primary" data-wes-form-target="#employeeFormPanel" onclick="resetEmployeeForm()">
+                    <i class="bx bx-user-plus me-1"></i> Add Employee
+                </button>
+            </div>
+        </div>
                 <h4 class="card-title mb-3">Employees List</h4>
                 <div class="table-responsive wes-institutional-table">
                     <table class="table-sm table-hover table-bordered table align-middle nowrap" id="employeesTable">

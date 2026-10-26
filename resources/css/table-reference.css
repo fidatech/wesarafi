@@ -555,3 +555,27 @@
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-integrated-card-title { color: #e4edfa; }
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-integrated-card > .wes-integrated-card-header { border-color: #35465e!important; }
 }
+
+/* Blade-native card headers: title at start, action buttons at end. */
+@media screen {
+  .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header {
+    padding: 11px 14px!important;
+    min-height: 0!important;
+    margin: 0 0 12px!important;
+    border: 0!important;
+    border-bottom: 1px solid #e7edf6!important;
+    border-radius: 0!important;
+    background: transparent!important;
+    box-shadow: none!important;
+  }
+  .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header > div {
+    display: flex!important;
+    align-items: center!important;
+    justify-content: space-between!important;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header .wes-integrated-card-title { margin: 0!important; }
+  .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header .btn { margin-inline-start: auto; }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .fb-table-wrapper > .fb-header.wes-blade-card-header { border-color: #35465e!important; }
+}

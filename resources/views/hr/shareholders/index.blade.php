@@ -9,7 +9,11 @@
 <div class="row g-3">
     <div class="col-lg-2">@include('layouts.menu.hr-sidebar')</div>
     <div class="col-lg-10 fb-content">
-        <div class="fb-header">
+
+
+        <div class="fb-main">
+            <div class="fb-table-wrapper">
+                <div class="fb-header">
             <div class="d-flex justify-content-between align-items-center">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
@@ -27,9 +31,6 @@
                 </button>
             </div>
         </div>
-
-        <div class="fb-main">
-            <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Shareholders List</h4>
                 <div class="table-responsive wes-institutional-table">
                     <table class="table-sm table-hover table-bordered table align-middle nowrap" id="shareholdersTable">

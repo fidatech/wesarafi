@@ -9,23 +9,7 @@
     <div class="row g-3">
         <div class="col-lg-2">@include('layouts.menu.accounting-sidebar')</div>
         <div class="col-lg-10 fb-content">
-            <div class="fb-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
-                                    <i class="bx bx-home-alt me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="breadcrumb-item active">Capital</li>
-                        </ol>
-                    </nav>
-                    <button class="btn btn-primary" id="toggleCreate">
-                        <i class="bx bx-plus me-1"></i> Add Capital
-                    </button>
-                </div>
-            </div>
+
 
             <div class="fb-main">
                 <div class="card mb-4" id="createCard" style="display: none;">
@@ -49,6 +33,23 @@
                 </div>
 
                 <div class="fb-table-wrapper" id="tableCard">
+                <div class="fb-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
+                                    <i class="bx bx-home-alt me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active">Capital</li>
+                        </ol>
+                    </nav>
+                    <button class="btn btn-primary" id="toggleCreate">
+                        <i class="bx bx-plus me-1"></i> Add Capital
+                    </button>
+                </div>
+            </div>
                     <h4 class="card-title mb-3">Capital Entries</h4>
                     <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered nowrap table align-middle" id="capitalTable">
@@ -235,7 +236,7 @@
                 $shareholder.val(data.shareholder_id).trigger('change.select2');
                 $branch.val(String(data.branch_id)).trigger('change.select2');
                 syncBranchAccount(data.account_id);
-                
+
                 $capitalForm.find('[name="currency_id"]').val(data.currency_id).trigger('change.select2');
                 $capitalForm.find('[name="amount"]').val(data.amount);
                 $capitalForm.find('[name="share_percentage"]').val(data.share_percentage);

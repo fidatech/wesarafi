@@ -13,24 +13,7 @@
         {{-- Main Content --}}
         <div class="col-lg-10 fb-content wes-accounts-ui">
             {{-- Sticky Header --}}
-            <div class="fb-header wes-accounts-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
-                                    <i class="bx bx-home-alt me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="breadcrumb-item active">Corporate Customers</li>
-                        </ol>
-                    </nav>
 
-                    <button class="btn btn-primary" id="toggleCreate">
-                        <i class="bx bx-user-plus me-1"></i> Add Customer
-                    </button>
-                </div>
-            </div>
 
             {{-- Scrollable Table Area --}}
             <div class="fb-main">
@@ -54,6 +37,24 @@
 
                 {{-- Table + Pagination --}}
                 <div class="fb-table-wrapper wes-accounts-table" id="tableCard">
+                <div class="fb-header wes-accounts-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
+                                    <i class="bx bx-home-alt me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active">Corporate Customers</li>
+                        </ol>
+                    </nav>
+
+                    <button class="btn btn-primary" id="toggleCreate">
+                        <i class="bx bx-user-plus me-1"></i> Add Customer
+                    </button>
+                </div>
+            </div>
                     <h4 class="card-title mb-3">Corporate Customers List</h4>
 
                     <div class="table-responsive wes-institutional-table">

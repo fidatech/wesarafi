@@ -12,7 +12,12 @@
     {{-- Main Content --}}
     <div class="col-lg-10 fb-content">
         {{-- Sticky Header --}}
-        <div class="fb-header">
+
+
+        {{-- Table --}}
+        <div class="fb-main">
+            <div class="fb-table-wrapper">
+                <div class="fb-header">
             <div class="d-flex justify-content-between align-items-center">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
@@ -31,10 +36,6 @@
                 </button>
             </div>
         </div>
-
-        {{-- Table --}}
-        <div class="fb-main">
-            <div class="fb-table-wrapper">
                 <h4 class="card-title mb-3">Liability Types</h4>
                 <div class="table-responsive wes-institutional-table">
                     <table class="table table-bordered table-hover text-center" id="liability-types-table" style="width: 100%;">
