@@ -1840,3 +1840,25 @@ select.is-invalid + .select2-container .select2-selection {
     .exchange-filters { padding:.65rem; }
     .exchange-filter-submit,.exchange-filter-submit .btn { width:100%; }
 }
+
+/* Inner breathing room for exchange tables, including audit tables without a card body. */
+.layout-wrapper.layout-horizontal .exchange-section-card > .wes-institutional-table {
+    margin-inline: 1.2rem;
+    width: calc(100% - 2.4rem);
+    margin-bottom: 1.1rem;
+}
+.layout-wrapper.layout-horizontal .exchange-section-card > .card-body > .wes-institutional-table {
+    margin-inline: 0;
+    width: 100%;
+    margin-bottom: 0;
+}
+/* Explicit pt-2 should not be overridden by the notice's uniform padding. */
+.layout-wrapper.layout-horizontal .wes-business-day-notice.pt-2 {
+    padding-top: .5rem !important;
+}
+@media (max-width: 767.98px) {
+    .layout-wrapper.layout-horizontal .exchange-section-card > .wes-institutional-table {
+        margin-inline: .9rem;
+        width: calc(100% - 1.8rem);
+    }
+}
