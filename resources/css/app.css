@@ -1797,3 +1797,46 @@ select.is-invalid + .select2-container .select2-selection {
         padding-inline: 0.85rem !important;
     }
 }
+
+/* Exchange workspace: institutional visual hierarchy without changing navigation. */
+.layout-wrapper.layout-horizontal .exchange-hero {
+    background: linear-gradient(112deg, #fff 0%, #f6f9fe 100%);
+    border: 1px solid #dce5f0;
+    border-inline-start: 4px solid #2264ac;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 3px 14px rgba(26, 54, 93, .035);
+}
+.exchange-hero .eyebrow { display:inline-flex;align-items:center;gap:.35rem;color:#2765a7;font-weight:750;font-size:.7rem;letter-spacing:.085em; }
+.exchange-hero h3 { font-size:1.55rem;font-weight:750;letter-spacing:-.025em;color:#192c45;margin:.45rem 0 .3rem; }
+.exchange-hero p { color:#64748b;max-width:42rem;font-size:.875rem;line-height:1.5; }
+.exchange-hero-actions { display:flex;align-items:center;flex-shrink:0; }
+.exchange-hero-actions .btn { border-radius:8px;padding:.7rem 1.05rem;font-weight:650;white-space:nowrap; }
+.layout-wrapper.layout-horizontal .exchange-section-card { border:1px solid #e1e7ef;border-radius:12px;box-shadow:0 2px 10px rgba(30,54,80,.035);overflow:hidden;background:#fff; }
+.exchange-section-card > .card-header { padding:1.05rem 1.2rem;border-bottom:1px solid #eef1f5;background:#fff;gap:.8rem;flex-wrap:wrap; }
+.exchange-section-card > .card-header h5 { font-size:.98rem;font-weight:750;color:#243650; }
+.exchange-section-description { color:#7b8798;font-size:.77rem;line-height:1.4; }
+.exchange-section-card > .card-body { padding:1.05rem 1.2rem 1.25rem; }
+.exchange-filters { background:#f7f9fc;border:1px solid #e8edf4;border-radius:9px;padding:.75rem;margin-inline:0;align-items:end; }
+.exchange-filters .form-label { font-size:.72rem;font-weight:700;color:#64748b;margin-bottom:.3rem; }
+.exchange-filters .form-control { background:#fff;min-height:38px; }
+.exchange-filter-submit .btn { min-height:38px;border-radius:7px; }
+.exchange-section-card .wes-institutional-table { border:1px solid #e2e8f0;border-radius:9px; }
+.exchange-section-card .table > thead > tr > th { background:#f1f5fa;color:#42566e;border-bottom:1px solid #dce5ef;font-size:.69rem;letter-spacing:.015em;padding:.72rem .75rem; }
+.exchange-section-card .table > tbody > tr > td { padding:.8rem .75rem; }
+.exchange-section-card .exchange-empty-state { padding:1.75rem 1rem!important;text-align:center!important;color:#8290a2!important; }
+.exchange-empty-state i { display:block;font-size:1.7rem;color:#a1b1c7;margin-bottom:.3rem; }
+.exchange-empty-state strong { display:block;color:#56667a;font-size:.83rem;font-weight:700; }
+.exchange-empty-state span { display:block;font-size:.75rem;margin-top:.2rem; }
+.exchange-empty-state-sm { padding:1.25rem 1rem!important; }
+.exchange-empty-state-sm i { font-size:1.4rem; }
+.layout-wrapper.layout-horizontal .wes-business-day-notice { background:#eff7ff!important;color:#365c87!important;border:1px solid #cfe1f5!important;border-inline-start:3px solid #347bc1!important;border-radius:9px!important;padding:.85rem 1rem!important;font-size:.82rem;line-height:1.5; }
+.layout-wrapper.layout-horizontal .wes-business-day-notice strong { color:#214f83; }
+@media(max-width:767.98px) {
+    .layout-wrapper.layout-horizontal .exchange-hero { padding:1rem;gap:.85rem; }
+    .exchange-hero h3 { font-size:1.35rem; }
+    .exchange-hero-actions,.exchange-hero-actions .btn { width:100%; }
+    .exchange-section-card > .card-header,.exchange-section-card > .card-body { padding:.9rem; }
+    .exchange-filters { padding:.65rem; }
+    .exchange-filter-submit,.exchange-filter-submit .btn { width:100%; }
+}
