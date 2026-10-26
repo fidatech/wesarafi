@@ -1967,3 +1967,29 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card .card-body { padding:1.1rem; }
 .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-form-card :is(.form-control,.form-select) { border-radius:8px; }
 @media(max-width:767.98px) { .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-header,.wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table { padding:.85rem; } .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters { padding:.7rem; } }
+
+/* UI-03: reference-matched content surfaces for the Exchange module.
+   Scope excludes top navbar, sidebar, print and exported documents. */
+.wes-compact .content-wrapper .wes-exchange-reference { --wes-ref-border:#e0e8f2; --wes-ref-muted:#647b9b; --wes-ref-blue:#1768d5; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero { background:linear-gradient(125deg,var(--bs-body-bg,#fff),var(--bs-tertiary-bg,#f6faff))!important; border:1px solid var(--wes-ref-border)!important; border-radius:14px!important; padding:1.35rem 1.5rem!important; box-shadow:0 6px 18px rgba(30,61,107,.045)!important; border-inline-start:1px solid var(--wes-ref-border)!important; margin-bottom:1rem; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero h3,
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero h4 { font-size:1.5rem; font-weight:800; letter-spacing:-.025em; color:var(--bs-heading-color,#142d53); }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero p { color:var(--wes-ref-muted); opacity:1; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero .btn-primary { border-radius:9px; padding:.7rem 1rem; font-weight:700; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table,
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form { border:1px solid var(--wes-ref-border)!important; border-radius:14px!important; background:var(--bs-body-bg,#fff); box-shadow:0 5px 20px rgba(30,61,107,.04)!important; overflow:hidden; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table { padding:1rem; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table > .card-header { padding:.45rem .2rem 1rem; background:transparent; border:0; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table > .card-body { padding:0; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table :is(h4,h5.card-title,h5) { color:var(--bs-heading-color,#183557); font-weight:750; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table .wes-institutional-table { margin:0!important; width:100%!important; border:1px solid #dce6f2; border-radius:9px; overflow-x:auto; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table .table thead th { background:var(--bs-tertiary-bg,#eff5fc); color:var(--bs-heading-color,#253e5f); padding:.88rem .75rem; font-size:.76rem; font-weight:750; white-space:nowrap; border-bottom:1px solid #dce6f2; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table .table tbody td { padding:.85rem .75rem; vertical-align:middle; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table .table { margin-bottom:0; }
+.wes-compact .content-wrapper .wes-exchange-reference :is(.exchange-filters,.wes-reference-filters) { background:var(--bs-tertiary-bg,#f4f8fd); border:1px solid #e7edf5; border-radius:10px; padding:1rem; margin-inline:0; }
+.wes-compact .content-wrapper .wes-exchange-reference :is(.exchange-filters,.wes-reference-filters) .form-label { font-size:.77rem; font-weight:700; color:var(--bs-secondary-color,#465f80); }
+.wes-compact .content-wrapper .wes-exchange-reference :is(.exchange-filters,.wes-reference-filters) :is(.form-control,.form-select) { background-color:var(--bs-body-bg,#fff); border-radius:8px; min-height:40px; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form .card-header { background:var(--bs-tertiary-bg,#f5f8fc); border-bottom:1px solid #e7edf5; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form .card-body { padding:1.2rem; }
+.wes-compact .content-wrapper .wes-exchange-reference .wes-reference-form :is(.form-control,.form-select) { border-radius:8px; }
+@media(max-width:767.98px){ .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-hero { padding:1rem!important; } .wes-compact .content-wrapper .wes-exchange-reference .wes-reference-table { padding:.75rem; } .wes-compact .content-wrapper .wes-exchange-reference :is(.exchange-filters,.wes-reference-filters) { padding:.75rem; } }

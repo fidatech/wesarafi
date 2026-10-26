@@ -8,8 +8,8 @@
 @section('content')
     <div class="row g-3">
         <div class="col-lg-2">@include('layouts.menu.exchange-sidebar')</div>
-        <div class="col-lg-10 fb-content">
-            <div class="fb-header">
+        <div class="col-lg-10 fb-content wes-exchange-reference">
+            <div class="fb-header wes-reference-hero">
                 <div class="d-flex justify-content-between align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -28,7 +28,7 @@
             </div>
 
             <div class="fb-main">
-                <div class="card mb-4" id="createCard" style="display:none;">
+                <div class="card mb-4 wes-reference-form" id="createCard" style="display:none;">
                     <div class="card-header text-dark py-2">
                         <h4 class="mb-0"><i class="bx bx-transfer me-2"></i> New Auction Trade</h4>
                     </div>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
 
-                <div class="fb-table-wrapper" id="tableCard">
+                <div class="fb-table-wrapper wes-reference-table" id="tableCard">
                     <h4 class="card-title mb-3">Auction Trades</h4>
                     <div class="table-responsive wes-institutional-table">
                         <table class="table-sm table-hover table-bordered nowrap table align-middle" id="auctionTable">

@@ -207,7 +207,7 @@ class CustomerExchangeTest extends TestCase
     {
         $this->get(route('exchange.customers.index'))->assertOk()
             ->assertSee('New exchange')->assertSee('Customer details')
-            ->assertSee('id="exchangeEditor" class="card exchange-card mb-4"  hidden', false);
+            ->assertSee('id="exchangeEditor" class="card exchange-card wes-reference-form mb-4"  hidden', false);
     }
 
     public function test_walk_in_requires_sanction_confirmation(): void
