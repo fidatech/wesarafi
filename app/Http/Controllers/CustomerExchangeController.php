@@ -150,9 +150,13 @@ class CustomerExchangeController extends Controller
                 if (abs((float) $data['rate'] - $defaultRate) > 0.00000001) {
                     // Preserve the quoted currency pair and operator. The normalized AFN
                     // rate is an observation, not an official buy/sell valuation quote.
-                    $normalized = $data['rate_operator'] === 'divide'
-                        ? $toRate / (float) $data['rate']
-                        : $toRate * (float) $data['rate'];
+                    // AFN is always one AFN per unit, even when the customer
+                    // negotiates a custom AFN-to-foreign-currency quote.
+                    $normalized = Currency::whereKey($data['from_currency_id'])->value('code') === 'AFN'
+                        ? 1.0
+                        : ($data['rate_operator'] === 'divide'
+                            ? $toRate / (float) $data['rate']
+                            : $toRate * (float) $data['rate']);
                     FxRateUpdate::create([
                         'branch_id' => $data['branch_id'], 'currency_id' => $data['from_currency_id'],
                         'to_currency_id' => $data['to_currency_id'], 'rate_date' => $data['date'],

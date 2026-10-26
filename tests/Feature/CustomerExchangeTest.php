@@ -113,6 +113,25 @@ class CustomerExchangeTest extends TestCase
         ]))->assertOk()->assertJsonPath('multiply_rate', 69);
     }
 
+    public function test_afn_source_custom_quote_keeps_base_rate_one_and_preserves_pair(): void
+    {
+        $afn = Currency::where('code', 'AFN')->firstOrFail();
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        $data = $this->payload();
+        $data['from_currency_id'] = $afn->id;
+        $data['to_currency_id'] = $usd->id;
+        $data['rate'] = 70;
+        $data['rate_operator'] = 'divide';
+        $this->post(route('exchange.customers.store'), $data)->assertSessionHasNoErrors();
+        $exchange = CustomerExchange::latest('id')->firstOrFail();
+        $history = \App\Models\FxRateUpdate::where('customer_exchange_id', $exchange->id)->firstOrFail();
+        $this->assertSame((int) $afn->id, (int) $history->currency_id);
+        $this->assertSame((int) $usd->id, (int) $history->to_currency_id);
+        $this->assertEqualsWithDelta(1, (float) $history->rate_afn_per_unit, 0.00000001);
+        $this->assertEqualsWithDelta(70, (float) $history->quoted_rate, 0.00000001);
+        $this->assertSame('divide', $history->rate_operator);
+    }
+
     private function payload(): array
     {
         return [
