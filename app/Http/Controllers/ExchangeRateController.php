@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Branch, Currency, FxRate};
+use App\Models\{Branch, Currency, FxRate, FxRateUpdate};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,10 +15,40 @@ class ExchangeRateController extends Controller
         $date = $request->date('date')?->toDateString() ?? now()->toDateString();
         $rates = FxRate::where('branch_id', $branch)->whereDate('as_of', $date)->get()->groupBy('currency_id');
 
-        return view('exchange.rates.index', compact('branch', 'date', 'rates') + [
+        $updates = FxRateUpdate::with(['currency', 'creator'])->where('branch_id', $branch)
+            ->whereDate('rate_date', $date)->orderByDesc('recorded_at')->orderByDesc('id')->paginate(50)->withQueryString();
+        $latest = FxRateUpdate::where('branch_id', $branch)->whereDate('rate_date', $date)
+            ->orderByDesc('recorded_at')->orderByDesc('id')->get()->unique('currency_id')->keyBy('currency_id');
+
+        return view('exchange.rates.index', compact('branch', 'date', 'rates', 'updates', 'latest') + [
             'branches' => Branch::orderBy('name')->get(),
             'currencies' => Currency::where('is_active', true)->orderBy('code')->get(),
         ]);
+    }
+
+    public function storeIntraday(Request $request)
+    {
+        $data = $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'date' => 'required|date|before_or_equal:today',
+            'currency_id' => 'required|exists:currencies,id',
+            'rate' => 'required|numeric|min:0.000001',
+        ]);
+        abort_unless(auth()->user()->hasRole('Super Admin') || (int) auth()->user()->branch_id === (int) $data['branch_id'], 403);
+        $currency = Currency::findOrFail($data['currency_id']);
+        if ($currency->code === 'AFN') {
+            throw ValidationException::withMessages(['rate' => 'AFN is the base currency and remains 1.']);
+        }
+        FxRateUpdate::create([
+            'branch_id' => $data['branch_id'],
+            'currency_id' => $currency->id,
+            'rate_date' => $data['date'],
+            'rate_afn_per_unit' => $data['rate'],
+            'created_by' => auth()->id(),
+            'recorded_at' => now(),
+        ]);
+        return redirect()->route('exchange.rates.index', ['branch_id' => $data['branch_id'], 'date' => $data['date']])
+            ->with('success', 'Intraday exchange rate recorded. Previous rates are preserved.');
     }
 
     public function store(Request $request)

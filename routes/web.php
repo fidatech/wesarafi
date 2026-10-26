@@ -419,6 +419,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('exchange/customers/{exchange}', [CustomerExchangeController::class, 'destroy'])->name('exchange.customers.destroy');
     Route::get('exchange/rates', [ExchangeRateController::class, 'index'])->name('exchange.rates.index');
     Route::post('exchange/rates', [ExchangeRateController::class, 'store'])->name('exchange.rates.store');
+    Route::post('exchange/rates/intraday', [ExchangeRateController::class, 'storeIntraday'])->name('exchange.rates.intraday.store');
 
     // Remittances
     Route::prefix('remittances')->name('remittances.')->group(function () {
