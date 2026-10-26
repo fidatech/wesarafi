@@ -87,6 +87,32 @@ class CustomerExchangeTest extends TestCase
         $this->assertSame(1, \App\Models\FxRateUpdate::where('customer_exchange_id', $exchange->id)->count());
     }
 
+    public function test_midpoint_prefers_latest_effective_rate_date_not_latest_entry_timestamp(): void
+    {
+        $branch = Branch::firstOrFail();
+        $usd = Currency::where('code', 'USD')->firstOrFail();
+        foreach ([['2026-09-26', 60, 62], ['2026-09-27', 68, 70]] as [$date, $buy, $sell]) {
+            \App\Models\FxRateUpdate::create([
+                'branch_id' => $branch->id, 'currency_id' => $usd->id,
+                'rate_date' => $date, 'rate_afn_per_unit' => ($buy + $sell) / 2,
+                'buy_rate_afn' => $buy, 'sell_rate_afn' => $sell,
+                'source' => 'manual', 'recorded_at' => now(),
+            ]);
+        }
+        // An older effective date is entered after the newer quote.
+        \App\Models\FxRateUpdate::create([
+            'branch_id' => $branch->id, 'currency_id' => $usd->id,
+            'rate_date' => '2026-09-26', 'rate_afn_per_unit' => 55,
+            'buy_rate_afn' => 54, 'sell_rate_afn' => 56,
+            'source' => 'manual', 'recorded_at' => now()->addSecond(),
+        ]);
+        $this->getJson(route('exchange.customers.quote', [
+            'branch_id' => $branch->id, 'date' => '2026-09-27',
+            'from_currency_id' => $usd->id,
+            'to_currency_id' => Currency::where('code', 'AFN')->value('id'),
+        ]))->assertOk()->assertJsonPath('multiply_rate', 69);
+    }
+
     private function payload(): array
     {
         return [
