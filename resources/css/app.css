@@ -1924,3 +1924,24 @@ select.is-invalid + .select2-container .select2-selection {
         height: var(--wes-fixed-menu-height);
     }
 }
+
+/* UI-01 opt-in design primitives; reference: All Customers screenshot.
+   Do not target navbar/sidebar, PDF, exported or printable documents. */
+.wes-compact .content-wrapper .wes-ui-page-header { background:var(--bs-body-bg,#fff); border:1px solid #e0e8f2; border-radius:13px; padding:1.3rem 1.4rem; box-shadow:0 5px 18px rgba(28,56,92,.035); gap:1rem; flex-wrap:wrap; }
+.wes-compact .content-wrapper .wes-ui-page-header h4 { font-weight:750; color:var(--bs-heading-color,#172f53); letter-spacing:-.02em; }
+.wes-compact .content-wrapper .wes-ui-page-header .btn-primary { border-radius:9px; padding:.65rem 1rem; font-weight:650; }
+.wes-compact .content-wrapper .wes-ui-filter-card { border:1px solid #e0e8f2; border-radius:13px; background:var(--bs-body-bg,#fff); box-shadow:0 4px 14px rgba(28,56,92,.03); }
+.wes-compact .content-wrapper .wes-ui-filter-card > .card-body { background:var(--bs-tertiary-bg,#f5f8fc); border-radius:10px; margin:1rem; padding:1rem; }
+.wes-compact .content-wrapper .wes-ui-filter-card .form-label { font-size:.76rem; font-weight:700; color:var(--bs-secondary-color,#425a78); }
+.wes-compact .content-wrapper .wes-ui-filter-card :is(.form-control,.form-select) { min-height:40px; border-radius:8px; background-color:var(--bs-body-bg,#fff); }
+.wes-compact .content-wrapper .wes-ui-filter-card .btn { border-radius:8px; min-height:39px; }
+.wes-compact .content-wrapper .wes-ui-table-card { border:1px solid #e0e8f2; border-radius:13px; background:var(--bs-body-bg,#fff); padding:1rem; box-shadow:0 4px 14px rgba(28,56,92,.035); }
+.wes-compact .content-wrapper .wes-ui-table-card .wes-institutional-table { border:1px solid #dce5f0; border-radius:9px; overflow-x:auto; }
+.wes-compact .content-wrapper .wes-ui-table-card .table > thead > tr > th { background:var(--bs-tertiary-bg,#eff5fc); color:var(--bs-heading-color,#263b54); font-weight:700; font-size:.75rem; padding:.85rem .8rem; white-space:nowrap; border-bottom:1px solid #dce5f0; }
+.wes-compact .content-wrapper .wes-ui-table-card .table > tbody > tr > td { padding:.8rem; vertical-align:middle; }
+.wes-compact .content-wrapper .wes-ui-table-card > .card-body { padding:1rem 0 0; }
+.wes-compact .content-wrapper .wes-ui-empty { text-align:center; padding:2.25rem 1rem!important; color:var(--bs-secondary-color,#71829a); }
+.wes-ui-empty i { display:block; font-size:2rem; margin-bottom:.55rem; color:#6997d0; }
+.wes-ui-empty strong { display:block; color:var(--bs-heading-color,#243c5a); font-size:.95rem; }
+.wes-ui-empty span { display:block; margin-top:.35rem; font-size:.8rem; }
+@media(max-width:767.98px) { .wes-compact .content-wrapper .wes-ui-page-header { padding:1rem; } .wes-compact .content-wrapper .wes-ui-filter-card > .card-body { margin:.7rem; padding:.75rem; } .wes-compact .content-wrapper .wes-ui-table-card { padding:.7rem; } }
