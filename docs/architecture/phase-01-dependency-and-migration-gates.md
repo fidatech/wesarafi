@@ -36,3 +36,15 @@ Repository assessment dated 2026-10-26. **No tenancy package installation, datab
 ## Remaining roadmap phases
 
 02 Stancl multi-tenancy; 03 central Fida administration; 04 Sarafi daily operations; 05 finance and accounting controls; 06 DAB quarterly/annual reporting; 07 Regulatory Connect API; 08 DAB inspection portal; 09 AML/CFT; 10 public website/demo; 11 security/QA/deployment readiness.
+
+## Executable ownership guard (2026-10-26)
+
+`tests/Unit/Architecture/TenancyOwnershipInventoryTest.php` now checks that every
+active literal `Schema::create('table')` in the migration tree has an explicit
+ownership decision in `phase-01-table-inventory.md`. It strips PHP comments to
+avoid treating disabled legacy declarations as live schema. A second test
+protects the decisions for core financial and identity tables.
+
+**Scope limit:** dynamic package-created tables, `Schema::table` changes, runtime
+foreign keys and MySQL connection isolation still require independent inspection
+and disposable-database tests. These checks are not proof of tenant isolation.
