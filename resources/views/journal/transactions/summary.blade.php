@@ -1,7 +1,7 @@
 <div class="row">
   @foreach ($summary as $currency => $totals)
     <div class="col-md-4 mb-3">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm wes-journal-summary">
         <div class="card-body">
           <h6 class="text-muted mb-1">{{ $currency }}</h6>
           <div class="fs-5 mb-2"><strong>{{ $isTreasury ? 'Current treasury balance:' : 'Current balance:' }}</strong> {{ ($isTreasury ? number_format($totals['current_balance'], 2) : \App\Support\LedgerBalance::format($totals['current_balance'])) }}</div>

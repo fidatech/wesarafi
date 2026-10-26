@@ -8,8 +8,8 @@
 @section('content')
     <div class="row g-3">
         <div class="col-lg-2">@include('layouts.menu.journal-sidebar')</div>
-        <div class="col-lg-10 fb-content">
-            <div class="fb-header d-flex justify-content-between align-items-center mb-3">
+        <div class="col-lg-10 fb-content wes-journal-reference">
+            <div class="fb-header wes-journal-header d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Branch Treasury Journal</h5>
                 <a href="#" class="btn btn-outline-danger" id="exportPDF">
                     <i class="bx bx-download"></i> Export PDF
@@ -20,9 +20,9 @@
             <div class="fb-main">
                 <div id="summaryCards"></div>
 
-                <div class="card">
+                <div class="card wes-journal-table-card">
                     <div class="card-body">
-                        <div class="row g-2 mb-3">
+                        <div class="row g-2 mb-3 wes-journal-filters">
                             <div class="col-md-2">
                                 <select id="filterEntryScope" class="form-select" aria-label="Journal entries" required>
                                     <option value="cash">Safe / Treasury</option>

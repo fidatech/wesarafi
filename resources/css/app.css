@@ -2014,3 +2014,25 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-payment .fb-inline-form-header { background:var(--bs-tertiary-bg,#f5f8fc); padding:1rem; border-bottom:1px solid #e4ebf5; }
 .wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-payment .fb-inline-form-body { padding:1.2rem; }
 @media(max-width:767.98px){.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-header{padding:1rem}.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-card>.card-body{padding:.85rem}.wes-compact .content-wrapper .wes-remittance-reference .wes-remittance-table{margin:.7rem;width:calc(100% - 1.4rem)}}
+
+/* UI-05: Journal reference design. Scoped to operational content only. */
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-header { background:linear-gradient(120deg,var(--bs-body-bg,#fff),var(--bs-tertiary-bg,#f6faff)); border:1px solid #e0e8f2; border-radius:14px; padding:1.25rem 1.4rem; box-shadow:0 5px 18px rgba(30,61,107,.04); margin-bottom:1rem; gap:1rem; flex-wrap:wrap; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-header :is(h4,h5) { color:var(--bs-heading-color,#183557); font-size:1.45rem; font-weight:800; letter-spacing:-.025em; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-header .btn { border-radius:9px; font-weight:650; padding:.65rem 1rem; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-filter-card { border:1px solid #e0e8f2; border-radius:13px; background:var(--bs-body-bg,#fff); box-shadow:0 5px 18px rgba(30,61,107,.035); }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-filter-card>.card-body { background:var(--bs-tertiary-bg,#f5f8fc); border-radius:10px; margin:1rem; padding:1rem; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-filters { background:var(--bs-tertiary-bg,#f5f8fc); border:1px solid #e4ebf5; border-radius:10px; padding:1rem; margin-inline:0; }
+.wes-compact .content-wrapper .wes-journal-reference :is(.wes-journal-filters,.wes-journal-filter-card) .form-label { font-size:.77rem; font-weight:700; color:var(--bs-secondary-color,#465f80); }
+.wes-compact .content-wrapper .wes-journal-reference :is(.form-select,.form-control) { border-radius:8px; min-height:40px; background-color:var(--bs-body-bg,#fff); }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card { border:1px solid #e0e8f2; border-radius:13px; padding:1rem; background:var(--bs-body-bg,#fff); box-shadow:0 5px 18px rgba(30,61,107,.035); }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card>.card-body { padding:.4rem 0; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card>.card-header { background:transparent; padding:.3rem 0 1rem; border:0; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .wes-institutional-table { border:1px solid #dce6f2; border-radius:9px; overflow-x:auto; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .table { margin-bottom:0; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .table thead th { background:var(--bs-tertiary-bg,#eff5fc); padding:.85rem .75rem; color:var(--bs-heading-color,#253e5f); font-size:.76rem; font-weight:750; white-space:nowrap; border-bottom:1px solid #dce6f2; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .table tbody td { padding:.85rem .75rem; vertical-align:middle; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .border.rounded.p-3.mb-3 { background:var(--bs-body-bg,#fff); border-color:#dce6f2!important; border-radius:10px!important; }
+.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card .border.rounded.p-3.mb-3 .wes-institutional-table { margin-block:1rem; }
+.wes-compact .content-wrapper .wes-journal-reference .btn { border-radius:8px; }
+.wes-compact .content-wrapper .wes-journal-summary { border:1px solid #e0e8f2; border-radius:12px; box-shadow:0 4px 15px rgba(30,61,107,.035)!important; }
+@media(max-width:767.98px){.wes-compact .content-wrapper .wes-journal-reference .wes-journal-header{padding:1rem}.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card{padding:.75rem}.wes-compact .content-wrapper .wes-journal-reference .wes-journal-filter-card>.card-body{margin:.7rem;padding:.75rem}}
