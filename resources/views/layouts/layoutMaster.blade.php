@@ -32,7 +32,12 @@
                         <div class="container-fluid flex-grow-1 container-p-y">
                 @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
                 @if($businessDayView && $businessDayView['status'] === 'not_opened')
-                    <div class="alert alert-info wes-business-day-notice" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day not opened.</strong> An authorized user must save opening rates before financial transactions can be posted.</div>
+                    <div class="alert alert-info wes-business-day-notice" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day opening required.</strong> Financial transactions are blocked until today’s opening rates are saved.
+                        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('manage business day'))
+                            <button type="button" class="btn btn-primary btn-sm ms-2" id="btnOpenBusinessDayRequired">Open business day</button>
+                        @else
+                            <span class="d-block small mt-1">Contact your branch manager or an authorized administrator to open the day.</span>
+                        @endif</div>
                 @endif
                 @if($businessDayView && $businessDayView['closed'])
                     <div class="alert alert-warning wes-business-day-notice" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
@@ -151,6 +156,8 @@
                 }
 
                 // OPEN
+                $('#btnOpenBusinessDayRequired').on('click', function() { $('#btnFxOpen').trigger('click'); });
+
                 $('#btnFxOpen').on('click', function() {
                     const d = $('#open_date').val() || (new Date()).toISOString().slice(0, 10);
                     const b = $('#open_branch_id').val() || 1;

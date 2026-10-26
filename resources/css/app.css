@@ -1785,3 +1785,15 @@ select.is-invalid + .select2-container .select2-selection {
     margin: 0 0 12px !important;
     width: 100%;
 }
+
+/* Consistent breathing room around cards in desktop and mobile workspaces. */
+.layout-wrapper.layout-horizontal .fb-content,
+.layout-wrapper.layout-horizontal .container-p-y > .row:has(> [class*="col-"] > .fb-sidebar) > [class*="col-"]:not(:has(> .fb-sidebar)) {
+    padding-inline: clamp(1rem, 1.6vw, 1.5rem) !important;
+}
+@media (max-width: 1199.98px) {
+    .layout-wrapper.layout-horizontal .fb-content,
+    .layout-wrapper.layout-horizontal .container-p-y > .row:has(> [class*="col-"] > .fb-sidebar) > [class*="col-"]:not(:has(> .fb-sidebar)) {
+        padding-inline: 0.85rem !important;
+    }
+}
