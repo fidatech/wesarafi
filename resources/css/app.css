@@ -1742,3 +1742,14 @@ select.is-invalid + .select2-container .select2-selection {
         max-width: 100%;
     }
 }
+
+/* The business-day status alert is a sibling of the horizontal menu and
+   workspace. Keep it above the workspace instead of allowing the framework's
+   row-direction .layout-page to reserve a second sidebar-sized column. */
+.layout-wrapper.layout-horizontal .layout-page {
+    flex-direction: column;
+}
+.layout-wrapper.layout-horizontal .layout-page > .content-wrapper {
+    width: 100%;
+    min-width: 0;
+}
