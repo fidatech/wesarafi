@@ -114,3 +114,90 @@
     --wes-ui-ink: #e4edfa; --wes-ui-secondary: #a8b9d0; --wes-ui-stroke: #35465e;
   }
 }
+
+/* Content workspace: coherent spacing, surfaces and forms across modules.
+   Do not alter the top navigation, module menu or sidebar. */
+@media screen {
+  .wes-compact .content-wrapper {
+    --wes-workspace-bg: #f4f7fc;
+    --wes-workspace-surface: #fff;
+    --wes-workspace-border: #dfe8f3;
+    --wes-workspace-shadow: 0 5px 18px rgba(31, 63, 111, .045);
+    background: var(--wes-workspace-bg);
+  }
+  .wes-compact .content-wrapper > .container-fluid.container-p-y {
+    padding: 16px 20px 24px!important;
+    min-width: 0;
+  }
+  .wes-compact .content-wrapper > .container-fluid > .row { --bs-gutter-x: 16px; --bs-gutter-y: 14px; }
+  .wes-compact .content-wrapper :is(.fb-content,.fb-main) { min-width: 0; }
+  .wes-compact .content-wrapper .fb-main { padding: 12px 14px 20px!important; }
+  .wes-compact .content-wrapper .fb-content > :is(.card,.fb-header,.fb-table-wrapper,.wes-list-hero) { margin-bottom: 14px; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card,
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .fb-table-wrapper {
+    background: var(--wes-workspace-surface);
+    border: 1px solid var(--wes-workspace-border);
+    border-radius: 14px;
+    box-shadow: var(--wes-workspace-shadow);
+    min-width: 0;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-header {
+    background: #f9fbfe;
+    border-bottom: 1px solid var(--wes-workspace-border);
+    padding: 14px 18px;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-body { padding: 18px; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-footer {
+    background: #fbfcff; border-top: 1px solid var(--wes-workspace-border); padding: 12px 18px;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-header :is(h3,h4,h5) {
+    margin: 0; color: var(--wes-ui-ink); font-size: 1.05rem; font-weight: 700;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) :is(.form-label, .col-form-label) {
+    color: var(--wes-ui-ink); font-size: .83rem; font-weight: 650; margin-bottom: 6px;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) :is(.form-control,.form-select) {
+    min-height: 40px; border: 1px solid var(--wes-workspace-border);
+    border-radius: 9px; padding: .5rem .75rem; background-color: var(--wes-workspace-surface);
+    color: var(--wes-ui-ink); box-shadow: 0 1px 2px rgba(31,63,111,.025);
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) textarea.form-control { min-height: 90px; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) :is(.form-control,.form-select):focus {
+    border-color: #6ca7f6; box-shadow: 0 0 0 3px rgba(37, 112, 219, .12);
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .select2-container .select2-selection--single {
+    min-height: 40px; border: 1px solid var(--wes-workspace-border); border-radius: 9px;
+    display: flex; align-items: center;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .select2-container .select2-selection__rendered {
+    line-height: 1.45; padding-inline-start: 12px; padding-inline-end: 28px;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .select2-container .select2-selection__arrow { height: 100%; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .btn:not(.btn-close) {
+    font-size: .84rem; font-weight: 650; line-height: 1.4;
+    border-radius: 9px; padding: .55rem .85rem;
+  }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .btn.btn-sm:not(.btn-close) { padding: .35rem .6rem; font-size: .78rem; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .btn.btn-lg:not(.btn-close) { padding: .7rem 1.1rem; font-size: .96rem; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) :is(.text-muted,.form-text,small) { line-height: 1.5; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .alert { border-radius: 10px; padding: 12px 14px; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) :is(.table-responsive,.wes-institutional-table) { max-width: 100%; }
+  .wes-compact .content-wrapper :is(.fb-main,.fb-content) .table-responsive > .table { margin-bottom: 0; }
+  @media (max-width: 991.98px) {
+    .wes-compact .content-wrapper > .container-fluid.container-p-y { padding: 12px!important; }
+    .wes-compact .content-wrapper .fb-main { padding: 10px!important; }
+  }
+  @media (max-width: 575.98px) {
+    .wes-compact .content-wrapper > .container-fluid.container-p-y { padding: 8px!important; }
+    .wes-compact .content-wrapper .fb-main { padding: 8px!important; }
+    .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-body { padding: 12px; }
+    .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > .card-header { padding: 12px; }
+  }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper {
+    --wes-workspace-bg: #172232;
+    --wes-workspace-surface: #202d40;
+    --wes-workspace-border: #35465e;
+    --wes-workspace-shadow: 0 5px 18px rgba(0,0,0,.12);
+  }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper :is(.fb-main,.fb-content) > .card > :is(.card-header,.card-footer) { background: #26354a; }
+}
