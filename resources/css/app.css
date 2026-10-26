@@ -2036,3 +2036,32 @@ select.is-invalid + .select2-container .select2-selection {
 .wes-compact .content-wrapper .wes-journal-reference .btn { border-radius:8px; }
 .wes-compact .content-wrapper .wes-journal-summary { border:1px solid #e0e8f2; border-radius:12px; box-shadow:0 4px 15px rgba(30,61,107,.035)!important; }
 @media(max-width:767.98px){.wes-compact .content-wrapper .wes-journal-reference .wes-journal-header{padding:1rem}.wes-compact .content-wrapper .wes-journal-reference .wes-journal-table-card{padding:.75rem}.wes-compact .content-wrapper .wes-journal-reference .wes-journal-filter-card>.card-body{margin:.7rem;padding:.75rem}}
+
+/* Shared workspace correction: the content column is a layout region, NOT a card.
+   Keep actual cards as the only bordered surfaces. Do not affect module sidebars. */
+@media screen {
+  body.wes-compact .content-wrapper .container-p-y > .row > .fb-content,
+  body.wes-compact .content-wrapper .container-p-y > .row:has(> [class*="col-"] > .fb-sidebar) > [class*="col-"]:not(:has(> .fb-sidebar)) {
+    border: 0!important;
+    border-radius: 0!important;
+    background: transparent!important;
+    box-shadow: none!important;
+    outline: 0!important;
+    padding: 0 4px!important;
+    min-width: 0;
+  }
+  body.wes-compact .content-wrapper .container-p-y > .row > .fb-content > .fb-main {
+    border: 0!important;
+    border-radius: 0!important;
+    background: transparent!important;
+    box-shadow: none!important;
+    padding: 0!important;
+    margin: 0!important;
+  }
+  @media(max-width:767.98px) {
+    body.wes-compact .content-wrapper .container-p-y > .row > .fb-content,
+    body.wes-compact .content-wrapper .container-p-y > .row:has(> [class*="col-"] > .fb-sidebar) > [class*="col-"]:not(:has(> .fb-sidebar)) {
+      padding-inline: 0!important;
+    }
+  }
+}
