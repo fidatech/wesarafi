@@ -1901,3 +1901,26 @@ select.is-invalid + .select2-container .select2-selection {
     .wes-day-notice-icon { width: 32px; height: 32px; flex-basis: 32px; }
     .wes-day-notice-action { margin-inline-start: 42px; }
 }
+
+/* Dashboard content starts below BOTH fixed navigation bars, regardless of
+   whether the business-day notice is rendered. Earlier generic content rules
+   must not override the dashboard's full chrome offset. */
+@media (min-width: 1200px) {
+    .layout-wrapper.layout-horizontal .dashboard-layout-page > .content-wrapper {
+        padding-top: var(--wes-fixed-chrome-height) !important;
+    }
+}
+@media (max-width: 1199.98px) {
+    .layout-wrapper.layout-horizontal .dashboard-layout-page > .content-wrapper {
+        padding-top: 0 !important;
+    }
+}
+/* The template also injects a 66px content offset at runtime. Add only the
+   missing menu-height inside the dashboard container, with or without notice. */
+@media (min-width: 1200px) {
+    .dashboard-layout-page .container-fluid.container-p-y:has(> .wes-dashboard)::before {
+        content: '';
+        display: block;
+        height: var(--wes-fixed-menu-height);
+    }
+}
