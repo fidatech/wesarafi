@@ -1753,3 +1753,29 @@ select.is-invalid + .select2-container .select2-selection {
     width: 100%;
     min-width: 0;
 }
+
+/* Shared spacing for the fixed desktop menu and collapsed mobile menu.
+   The business-day notice belongs inside the page content, not alongside it. */
+@media (min-width: 1200px) {
+    .layout-wrapper.layout-horizontal .layout-page > .content-wrapper {
+        padding-top: calc(var(--wes-fixed-menu-height) - 2px);
+    }
+    .layout-wrapper.layout-horizontal .layout-page > .content-wrapper:has(.wes-dashboard) {
+        padding-top: calc(var(--wes-fixed-menu-height) - 2px) !important;
+    }
+}
+@media (max-width: 1199.98px) {
+    .layout-wrapper.layout-horizontal .layout-page > .content-wrapper {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+}
+.layout-wrapper.layout-horizontal .container-p-y > .alert[role="status"] {
+    margin: 0 0 10px !important;
+}
+@media (max-width: 1199.98px) {
+    /* The navbar already precedes .layout-page in normal flow on mobile. */
+    .layout-wrapper.layout-horizontal .layout-page {
+        padding-top: 0 !important;
+    }
+}

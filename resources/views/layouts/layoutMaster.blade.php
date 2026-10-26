@@ -25,6 +25,11 @@
                 <div class="layout-page{{ request()->routeIs('dashboard') ? ' dashboard-layout-page' : '' }}">
 
                     @include('layouts.menubar')
+                    <div class="content-wrapper">
+                        {{-- ✅ Optional Breadcrumb (Remove if not needed) --}}
+                        {{-- @include('layouts.breadcrumb') --}}
+
+                        <div class="container-fluid flex-grow-1 container-p-y">
                 @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
                 @if($businessDayView && $businessDayView['status'] === 'not_opened')
                     <div class="alert alert-info mx-3 mt-3 mb-0" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day not opened.</strong> An authorized user must save opening rates before financial transactions can be posted.</div>
@@ -33,11 +38,7 @@
                     <div class="alert alert-warning mx-3 mt-3 mb-0" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
                 @endif
 
-                    <div class="content-wrapper">
-                        {{-- ✅ Optional Breadcrumb (Remove if not needed) --}}
-                        {{-- @include('layouts.breadcrumb') --}}
 
-                        <div class="container-fluid flex-grow-1 container-p-y">
                             @hasSection('content')
                                 @yield('content')
                             @else
