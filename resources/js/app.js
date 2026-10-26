@@ -1,3 +1,4 @@
+import '../css/table-reference.css';
 // jQuery
 import $ from 'jquery';
 window.$ = $;
@@ -206,6 +207,24 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', syncLegacyFormTables, { once: true });
 } else {
     syncLegacyFormTables();
+}
+
+// Apply the same heading/filter surfaces to every existing list without
+// moving controls or replacing their event handlers and server-side tables.
+function styleTablePages() {
+    document.querySelectorAll('.content-wrapper .table').forEach(table => {
+        if (table.closest('.modal, form, #createCard, .fb-inline-form-panel')) return;
+        const card = table.closest('.fb-table-wrapper, .card, .wes-reference-table');
+        if (!card) return;
+        const title = card.querySelector(':scope > .card-title, :scope > .card-header, :scope > .d-flex:has(.card-title)');
+        title?.classList.add('wes-table-heading');
+        card.querySelectorAll('.row:has([id^="filter"])').forEach(row => row.classList.add('wes-table-filters'));
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', styleTablePages, { once: true });
+} else {
+    styleTablePages();
 }
 
 // Inline Blade page scripts are intentionally executed only after this module

@@ -156,6 +156,8 @@
 
 
 
+            if (window.location.hash === '#create') $('#toggleCreate').trigger('click');
+
             $.get("{{ route('accounts.regular_customers.count') }}", function(data) {
                 $('input[name="account_code"]').val('ACC-' + ('000' + (parseInt(data) + 1)).slice(-3));
             });

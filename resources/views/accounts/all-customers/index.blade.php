@@ -12,36 +12,27 @@
         <div class="col-lg-2">@include('layouts.menu.accounts-sidebar')</div>
         {{-- Main Content --}}
         <div class="col-lg-10 fb-content wes-accounts-ui">
-            {{-- Sticky Header --}}
-            <div class="fb-header wes-accounts-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('dashboard') }}" class="text-primary text-decoration-none">
-                                    <i class="bx bx-home-alt me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="breadcrumb-item active">All Customers</li>
-                        </ol>
-                    </nav>
+            <header class="wes-list-hero">
+                <div class="wes-list-heading">
+                    <span class="wes-list-icon" aria-hidden="true"><i class="bx bx-group"></i></span>
+                    <div><h1>All Customers</h1><p>Manage all customer accounts, view balances and transaction details.</p></div>
                 </div>
-            </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-danger export-customers" data-format="pdf"><i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i> Export PDF</button>
+                    <button type="button" class="btn btn-outline-success export-customers" data-format="xlsx"><i class="bx bx-spreadsheet" aria-hidden="true"></i> Export Excel</button>
+                </div>
+            </header>
 
             {{-- Scrollable Table Area --}}
             <div class="fb-main">
                 {{-- Table + Pagination --}}
                 <div class="fb-table-wrapper wes-accounts-table" id="tableCard">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <h4 class="card-title mb-0">All Customers</h4>
-                        <div class="d-flex gap-2"><button type="button" class="btn btn-outline-danger export-customers" data-format="pdf">Export PDF</button><button type="button" class="btn btn-outline-success export-customers" data-format="xlsx">Export Excel</button></div>
-                    </div>
                     <div class="row g-2 mb-3 wes-accounts-filters">
-                        <div class="col-md-3"><label for="filterCustomerType" class="form-label">Type</label><select id="filterCustomerType" class="form-select"><option value="">All types</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name_en }}</option>@endforeach</select></div>
-                        <div class="col-md-2"><label for="filterStatus" class="form-label">Status</label><select id="filterStatus" class="form-select"><option value="">All statuses</option><option value="1">Active</option><option value="0">Inactive</option></select></div>
-                        <div class="col-md-2"><label for="filterBalance" class="form-label">Balance</label><select id="filterBalance" class="form-select"><option value="">All balances</option><option value="credit">Credit (Cr)</option><option value="debit">Debit (Dr)</option><option value="zero">Zero</option><option value="nonzero">Non-zero</option></select></div>
-                        <div class="col-md-2"><label for="filterCurrency" class="form-label">Currency</label><select id="filterCurrency" class="form-select"><option value="">All currencies</option>@foreach($currencies as $currency)<option value="{{ $currency->id }}">{{ $currency->code }}</option>@endforeach</select></div>
-                        <div class="col-md-3"><label for="customerSearch" class="form-label">Search</label><input id="customerSearch" class="form-control" placeholder="Name, code or phone"></div>
+                        <div class="col-md-3"><label for="filterCustomerType" class="form-label"><i class="bi bi-stack" aria-hidden="true"></i>Type</label><select id="filterCustomerType" class="form-select"><option value="">All types</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name_en }}</option>@endforeach</select></div>
+                        <div class="col-md-2"><label for="filterStatus" class="form-label"><i class="bi bi-circle-fill" aria-hidden="true"></i>Status</label><select id="filterStatus" class="form-select"><option value="">All statuses</option><option value="1">Active</option><option value="0">Inactive</option></select></div>
+                        <div class="col-md-2"><label for="filterBalance" class="form-label"><i class="bx bx-coin-stack" aria-hidden="true"></i>Balance</label><select id="filterBalance" class="form-select"><option value="">All balances</option><option value="credit">Credit (Cr)</option><option value="debit">Debit (Dr)</option><option value="zero">Zero</option><option value="nonzero">Non-zero</option></select></div>
+                        <div class="col-md-2"><label for="filterCurrency" class="form-label"><i class="bx bx-transfer" aria-hidden="true"></i>Currency</label><select id="filterCurrency" class="form-select"><option value="">All currencies</option>@foreach($currencies as $currency)<option value="{{ $currency->id }}">{{ $currency->code }}</option>@endforeach</select></div>
+                        <div class="col-md-3"><label for="customerSearch" class="form-label"><i class="bx bx-search" aria-hidden="true"></i>Search</label><input id="customerSearch" class="form-control" placeholder="Name, code or phone"></div>
                     </div>
 
                     <div class="table-responsive wes-institutional-table">
@@ -77,6 +68,22 @@
 
             const filters = () => ({customer_type: $('#filterCustomerType').val(), status: $('#filterStatus').val(), balance: $('#filterBalance').val(), currency_id: $('#filterCurrency').val(), q: $('#customerSearch').val()});
             const table = $('#customersTable').DataTable({
+                language: {
+                    emptyTable: `<span class="wes-empty-title">No customers found</span>There are no customers matching your current filters.<br><a class="btn wes-empty-action" href="{{ route('accounts.regular_customers.index') }}#create">+ Add New Customer</a>`,
+                    zeroRecords: `<span class="wes-empty-title">No customers found</span>There are no customers matching your current filters.<br><a class="btn wes-empty-action" href="{{ route('accounts.regular_customers.index') }}#create">+ Add New Customer</a>`
+                },
+                drawCallback: function () {
+                    const api = this.api();
+                    const container = api.table().container();
+                    let count = container.querySelector('.wes-list-count');
+                    if (!count) {
+                        count = document.createElement('span');
+                        count.className = 'wes-list-count';
+                        count.setAttribute('aria-live', 'polite');
+                        container.querySelector('.dt-layout-end, .row:first-child > :last-child')?.append(count);
+                    }
+                    count.textContent = `${api.page.info().recordsDisplay.toLocaleString()} customers`;
+                },
                 processing: true,
                 serverSide: true,
                 searching: false,
