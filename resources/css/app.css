@@ -1779,3 +1779,9 @@ select.is-invalid + .select2-container .select2-selection {
         padding-top: 0 !important;
     }
 }
+
+/* Notices sit at the top of the actual page workspace, not above the sidebar. */
+.layout-wrapper.layout-horizontal .wes-business-day-notice {
+    margin: 0 0 12px !important;
+    width: 100%;
+}

@@ -32,10 +32,10 @@
                         <div class="container-fluid flex-grow-1 container-p-y">
                 @php($businessDayView = auth()->check() ? \App\Services\DailyBalanceState::forBranch((int) (auth()->user()->branch_id ?: 1)) : null)
                 @if($businessDayView && $businessDayView['status'] === 'not_opened')
-                    <div class="alert alert-info mx-3 mt-3 mb-0" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day not opened.</strong> An authorized user must save opening rates before financial transactions can be posted.</div>
+                    <div class="alert alert-info wes-business-day-notice" role="status"><i class="bx bx-info-circle me-2"></i><strong>Business day not opened.</strong> An authorized user must save opening rates before financial transactions can be posted.</div>
                 @endif
                 @if($businessDayView && $businessDayView['closed'])
-                    <div class="alert alert-warning mx-3 mt-3 mb-0" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
+                    <div class="alert alert-warning wes-business-day-notice" role="status"><i class="bx bx-lock-alt me-2"></i><strong>Business day closed.</strong> All data changes are locked for this branch until 12:00 AM Kabul time. Reports remain available.</div>
                 @endif
 
 
@@ -50,6 +50,18 @@
                 </div>
             </div>
         </div>
+        <script>
+            // Place branch notices inside the actual module workspace, after its sidebar.
+            // Other pages keep the notice in the normal content container.
+            document.querySelectorAll('.wes-business-day-notice').forEach((notice) => {
+                const page = notice.closest('.container-p-y');
+                const row = page?.querySelector(':scope > .row');
+                const workspace = row && Array.from(row.children).find((column) =>
+                    column.matches('[class*="col-"]') && !column.querySelector('.fb-sidebar')
+                );
+                if (workspace) workspace.prepend(notice);
+            });
+        </script>
         @include('layouts.partials.fx-modals')
 
         {{-- Page scripts are held inert until the Vite module has initialized its UI globals. --}}
