@@ -14,15 +14,15 @@
             <div class="fb-main">
                 <div id="summaryCards"></div>
 
-                <div class="card wes-journal-table-card">
-                <div class="fb-header wes-journal-header d-flex justify-content-between align-items-center mb-3">
+                <section class="wes-journal-table-card wes-journal-flat-list">
+                <div class="wes-journal-list-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Branch Treasury Journal</h5>
                 <a href="#" class="btn btn-outline-danger" id="exportPDF">
                     <i class="bx bx-download"></i> Export PDF
                 </a>
 
             </div>
-                    <div class="card-body">
+                    <div class="wes-journal-list-content">
                         <div class="row g-2 mb-3 wes-journal-filters">
                             <div class="col-md-2">
                                 <select id="filterEntryScope" class="form-select" aria-label="Journal entries" required>
@@ -77,7 +77,7 @@
                             </thead>
                         </table></div>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </div>

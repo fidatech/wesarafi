@@ -608,3 +608,36 @@
   .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header .btn { margin-inline-start: auto; }
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .fb-main > .card > .fb-header.wes-blade-card-header { border-color: #35465e!important; }
 }
+
+/* Journal: one list surface, not a card nested inside another card. */
+@media screen {
+  body.wes-compact .content-wrapper .wes-journal-flat-list {
+    display: block;
+    background: #fff!important;
+    border: 1px solid #dfe8f4!important;
+    border-radius: 12px!important;
+    box-shadow: 0 4px 16px rgba(25,60,106,.04)!important;
+    padding: 0!important;
+    overflow: hidden;
+  }
+  body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header {
+    min-height: 0!important;
+    margin: 0!important;
+    padding: 12px 16px!important;
+    background: transparent!important;
+    border: 0!important;
+    border-bottom: 1px solid #e7edf6!important;
+    border-radius: 0!important;
+    box-shadow: none!important;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header h5 { font-size: 1rem; font-weight: 700; color: #172d50; }
+  body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-content { padding: 12px 16px 16px!important; background: transparent!important; border: 0!important; box-shadow: none!important; }
+  body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-filters { padding: 0!important; margin: 0 0 12px!important; background: transparent!important; border: 0!important; border-radius: 0!important; box-shadow: none!important; }
+  body.wes-compact .content-wrapper .wes-journal-flat-list .table-responsive { border: 0!important; border-radius: 0!important; box-shadow: none!important; }
+  @media(max-width:767.98px) { body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-content { padding: 10px!important; } }
+  html[data-bs-theme="dark"] body.wes-compact .content-wrapper .wes-journal-flat-list { background: #202d40!important; border-color: #35465e!important; }
+  html[data-bs-theme="dark"] body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header { border-color: #35465e!important; }
+  html[data-bs-theme="dark"] body.wes-compact .content-wrapper .wes-journal-flat-list .wes-journal-list-header h5 { color: #e4edfa; }
+}
