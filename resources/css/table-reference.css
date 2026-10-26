@@ -286,3 +286,60 @@
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-filters,
   html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-accounts-ui .wes-accounts-table .table thead th { background: #26354a!important; }
 }
+
+/* R-03A.2: compact, minimal account headers and a wider working area. */
+@media screen {
+  .wes-compact .content-wrapper > .container-fluid.container-p-y {
+    padding-inline: 10px!important;
+  }
+  .wes-compact .content-wrapper > .container-fluid.container-p-y > .row {
+    --bs-gutter-x: 8px;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui {
+    padding-inline: 2px!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui > .wes-list-hero {
+    min-height: 0!important;
+    padding: 12px 16px!important;
+    margin-bottom: 10px!important;
+    border-radius: 10px!important;
+    background: #fff!important;
+    box-shadow: none!important;
+    gap: 12px;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-list-heading { gap: 11px; }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-list-icon {
+    width: 40px!important;
+    height: 40px!important;
+    font-size: 22px!important;
+    border-radius: 10px!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-list-hero h1 {
+    font-size: 1.2rem!important;
+    line-height: 1.25!important;
+    font-weight: 720;
+    letter-spacing: -.02em;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-list-hero p {
+    margin-top: 2px;
+    font-size: .78rem!important;
+    line-height: 1.35;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .wes-list-hero .btn {
+    min-height: 34px!important;
+    padding: .38rem .65rem!important;
+    font-size: .78rem!important;
+    border-radius: 7px!important;
+  }
+  .wes-compact .content-wrapper .wes-accounts-ui .fb-main > .wes-accounts-table {
+    padding: 14px!important;
+    border-radius: 10px!important;
+  }
+  @media (max-width: 767.98px) {
+    .wes-compact .content-wrapper > .container-fluid.container-p-y { padding-inline: 6px!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui { padding-inline: 0!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui > .wes-list-hero { padding: 10px 12px!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui .wes-list-hero h1 { font-size: 1.08rem!important; }
+    .wes-compact .content-wrapper .wes-accounts-ui .fb-main > .wes-accounts-table { padding: 10px!important; }
+  }
+}
