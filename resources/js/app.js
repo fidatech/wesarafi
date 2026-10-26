@@ -96,6 +96,41 @@ $(function () {
         }
     });
 
+    // Place list actions at the end of the list card header, rather than
+    // maintaining a separate action-only card above the table.
+    document.querySelectorAll('.fb-content').forEach(content => {
+        const header = Array.from(content.children).find(el => el.classList.contains('fb-header'));
+        if (!header || !header.querySelector('button, a.btn, [role="button"]')) return;
+        const workspace = Array.from(content.children).find(el => el.classList.contains('fb-main'));
+        if (!workspace) return;
+        const list = Array.from(workspace.children).find(el =>
+            el.matches('.fb-table-wrapper, .wes-reference-table') ||
+            (el.matches('.card') && !el.matches('#createCard, .wes-accounts-form-card, .fb-inline-form-panel') && el.querySelector('table'))
+        );
+        if (!list || list.querySelector(':scope > .wes-integrated-card-header')) return;
+
+        const heading = document.createElement('div');
+        heading.className = 'card-header wes-integrated-card-header';
+        const label = header.querySelector('h1,h2,h3,h4,h5,h6,.breadcrumb-item.active')?.textContent?.trim();
+        const title = document.createElement('h4');
+        title.className = 'wes-integrated-card-title';
+        title.textContent = label || document.title.split(' - ')[0] || 'Records';
+        heading.appendChild(title);
+        const actions = document.createElement('div');
+        actions.className = 'wes-integrated-card-actions';
+        header.querySelectorAll('button, a.btn, [role="button"]').forEach(button => {
+            if (button.closest('.breadcrumb')) return;
+            actions.appendChild(button); // move actual element: retain handlers and attributes
+        });
+        if (!actions.children.length) return;
+        heading.appendChild(actions);
+        list.prepend(heading);
+        header.remove();
+        list.classList.add('wes-integrated-card');
+        const oldTitle = Array.from(list.children).find(el => el.matches('.card-title'));
+        if (oldTitle && oldTitle.textContent.trim() === title.textContent.trim()) oldTitle.remove();
+    });
+
     const currentPath = window.location.pathname.replace(/\/$/, '');
     $('.fb-sidebar button').each(function () {
         const handler = this.getAttribute('onclick') || '';

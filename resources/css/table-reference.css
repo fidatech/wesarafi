@@ -505,3 +505,53 @@
   html[data-bs-theme="dark"] body.wes-compact .modal :is(.modal-title,.form-label,.col-form-label) { color: #e4edfa; }
   html[data-bs-theme="dark"] body.wes-compact .modal :is(.form-control,.form-select,.select2-selection--single) { background-color: #26354a; color: #e4edfa; border-color: #35465e; }
 }
+
+/* List actions share the actual table card header; no additional header panel. */
+@media screen {
+  .wes-compact .content-wrapper .wes-integrated-card {
+    padding-top: 0!important;
+    overflow: visible;
+  }
+  .wes-compact .content-wrapper .wes-integrated-card > .wes-integrated-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 11px 14px!important;
+    margin: 0 0 12px!important;
+    background: transparent!important;
+    border: 0!important;
+    border-bottom: 1px solid #e7edf6!important;
+    border-radius: 0!important;
+    box-shadow: none!important;
+    min-height: 0!important;
+  }
+  .wes-compact .content-wrapper .wes-integrated-card-title {
+    margin: 0;
+    color: #172d50;
+    font-size: 1rem;
+    font-weight: 720;
+    line-height: 1.3;
+  }
+  .wes-compact .content-wrapper .wes-integrated-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-inline-start: auto;
+  }
+  .wes-compact .content-wrapper .wes-integrated-card-actions .btn {
+    min-height: 34px;
+    padding: .38rem .7rem!important;
+    font-size: .8rem!important;
+    border-radius: 8px;
+  }
+  @media(max-width:575.98px) {
+    .wes-compact .content-wrapper .wes-integrated-card > .wes-integrated-card-header { padding: 10px!important; }
+    .wes-compact .content-wrapper .wes-integrated-card-actions { max-width: 100%; }
+  }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-integrated-card-title { color: #e4edfa; }
+  html[data-bs-theme="dark"] .wes-compact .content-wrapper .wes-integrated-card > .wes-integrated-card-header { border-color: #35465e!important; }
+}
